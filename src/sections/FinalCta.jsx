@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Reveal from '../components/Reveal.jsx'
+import Fx from '../lib/fx.jsx'
 import BlochSphere from '../components/figures/BlochSphere.jsx'
 import FigCaption from '../components/figures/FigCaption.jsx'
+import Mosaic from '../components/Mosaic.jsx'
 import { postJson } from '../lib/submit.js'
 
 const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
@@ -74,7 +75,7 @@ function SignalForm() {
   return (
     <div id="signal" className="signal">
       <div>
-        <span className="signal-kicker">The free tier · No application needed</span>
+        <span className="signal-kicker label">The free tier · No application needed</span>
         <h3>
           Not ready for the Round? <em>Read The Signal.</em>
         </h3>
@@ -97,7 +98,11 @@ function SignalForm() {
           </p>
         )}
         {(status === 'idle' || status === 'sending' || status === 'error') && (
-          <form className="signal-form" onSubmit={handleSubmit} aria-label="Subscribe to The Signal newsletter">
+          <form
+            className="signal-form"
+            onSubmit={handleSubmit}
+            aria-label="Subscribe to The Signal newsletter"
+          >
             <label className="visually-hidden" htmlFor="signal-email">
               Email address
             </label>
@@ -113,7 +118,7 @@ function SignalForm() {
             />
             <button
               type="submit"
-              className="btn btn-on-dark"
+              className="btn btn-primary"
               aria-busy={status === 'sending'}
               disabled={status === 'sending'}
             >
@@ -137,53 +142,53 @@ function SignalForm() {
 
 export default function FinalCta() {
   return (
-    <section id="join" className="section cta-final" aria-labelledby="join-title">
-      <span className="ghost-num" aria-hidden="true">
-        06
-      </span>
+    <Fx as="section" id="join" className="section cta-final ground-dark" aria-labelledby="join-title">
+      <Mosaic className="mosaic-corner is-left" cols={8} rows={4} seed={53} />
       <div className="container">
         <div className="cta-head">
-          <Reveal>
-            <p className="kicker">
+          <div>
+            <p className="kicker" data-fade>
               <strong>06</strong> The Ask
             </p>
-            <h2 id="join-title" className="section-title">
+            <h2 id="join-title" className="section-title" data-split>
               If you’re building quantum, you should be in the room.
             </h2>
-            <p className="lede">
+            <p className="lede" data-fade>
               One action. The founding cohort is forming now — 15–25 funded quantum founders, by
               application only.
             </p>
-          </Reveal>
-          <Reveal as="figure" className="qfig cta-fig" delay={0.15}>
-            <BlochSphere />
+          </div>
+          <figure className="qfig cta-fig" data-fade>
+            <div data-draw>
+              <BlochSphere />
+            </div>
             <FigCaption num="04">
               A state holds both answers until it is measured. Applying is the measurement.
             </FigCaption>
-          </Reveal>
+          </figure>
         </div>
 
-        <div className="cta-steps">
+        <div className="cta-steps" data-stagger>
           {STEPS.map((step, i) => (
-            <Reveal key={step.title} className="cta-step" delay={i * 0.08}>
-              <span className="step-num">Step 0{i + 1}</span>
+            <div key={step.title} className="cta-step">
+              <span className="step-num label">Step 0{i + 1}</span>
               <h3>{step.title}</h3>
               <p>{step.body}</p>
-            </Reveal>
+            </div>
           ))}
         </div>
 
-        <Reveal className="cta-actions">
+        <div className="cta-actions" data-fade>
           <Link to="/apply" className="btn btn-primary">
             Apply for membership
             <span className="btn-arrow" aria-hidden="true">
               →
             </span>
           </Link>
-          <p className="aside-note">$300 / month · Founding rate locked for the first cohort</p>
-        </Reveal>
+          <p className="aside-note label">$300 / month · Founding rate locked for the first cohort</p>
+        </div>
 
-        <Reveal className="faq">
+        <div className="faq" data-fade>
           <h3>Fair questions</h3>
           {FAQS.map((item) => (
             <details key={item.q} className="faq-item">
@@ -191,12 +196,12 @@ export default function FinalCta() {
               <p className="faq-body">{item.a}</p>
             </details>
           ))}
-        </Reveal>
+        </div>
 
-        <Reveal>
+        <div data-fade>
           <SignalForm />
-        </Reveal>
+        </div>
       </div>
-    </section>
+    </Fx>
   )
 }

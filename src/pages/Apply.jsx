@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Reveal from '../components/Reveal.jsx'
+import Fx from '../lib/fx.jsx'
 import { postJson } from '../lib/submit.js'
 
 const APPLY_ENDPOINT = import.meta.env.VITE_APPLY_ENDPOINT
@@ -85,14 +85,14 @@ export default function Apply() {
   const showForm = status === 'idle' || status === 'sending' || status === 'error'
 
   return (
-    <div className="apply-page">
+    <Fx className="apply-page">
       <div className="container">
         <Link to="/" className="back-link">
           <span aria-hidden="true">←</span> Back to the page
         </Link>
 
         {status === 'sent' && (
-          <Reveal className="apply-success" as="section" aria-live="polite">
+          <section className="apply-success ground-dark" aria-live="polite" data-fade>
             <h2>Application received.</h2>
             <p>
               Every application is reviewed personally — you’ll hear from us either way. If the
@@ -101,11 +101,11 @@ export default function Apply() {
             <Link to="/" className="btn btn-ghost">
               Return to the page
             </Link>
-          </Reveal>
+          </section>
         )}
 
         {status === 'preview' && (
-          <Reveal className="apply-success" as="section" aria-live="polite">
+          <section className="apply-success ground-dark" aria-live="polite" data-fade>
             <h2>Application noted — intake opens at launch.</h2>
             <p>
               This is a preview build: your application was not transmitted and nothing was
@@ -114,15 +114,15 @@ export default function Apply() {
             <Link to="/#signal" className="btn btn-ghost">
               Read The Signal — free
             </Link>
-          </Reveal>
+          </section>
         )}
 
         {showForm && (
           <div className="apply-grid">
-            <Reveal className="apply-side" as="aside">
+            <aside className="apply-side ground-dark" data-fade>
               <h1>Apply to join The Round.</h1>
               <p className="lede">
-                The vetted inner circle of The Quantum Collective — for founders and co-founders
+                The vetted inner circle of The Ground State Society — for founders and co-founders
                 of funded quantum startups.
               </p>
               <ul className="apply-facts">
@@ -132,9 +132,9 @@ export default function Apply() {
                 <li>Placement in a peer circle matched to your stage and modality</li>
                 <li>Not a founder? The Signal is free — no application needed</li>
               </ul>
-            </Reveal>
+            </aside>
 
-            <Reveal delay={0.1}>
+            <div data-fade>
               <form
                 className={`apply-form${attempted ? ' was-validated' : ''}`}
                 onSubmit={handleSubmit}
@@ -316,10 +316,10 @@ export default function Apply() {
                   {!APPLY_ENDPOINT && !preFunded && ' Preview — intake opens at launch.'}
                 </p>
               </form>
-            </Reveal>
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </Fx>
   )
 }

@@ -18,8 +18,8 @@ export default function BlochSphere() {
         </marker>
       </defs>
       {/* sphere + equator */}
-      <circle cx="90" cy="95" r="62" fill="none" stroke="var(--mushroom)" strokeWidth="1.3" />
-      <ellipse cx="90" cy="95" rx="62" ry="19" fill="none" stroke="var(--mushroom)" strokeWidth="1" strokeDasharray="3 5" />
+      <circle cx="90" cy="95" r="62" fill="none" stroke="var(--fig-stroke)" strokeWidth="1.3" />
+      <ellipse cx="90" cy="95" rx="62" ry="19" fill="none" stroke="var(--fig-stroke)" strokeWidth="1" strokeDasharray="3 5" />
       {/* z axis */}
       <line x1="90" y1="22" x2="90" y2="168" stroke="var(--line-strong)" strokeWidth="1" />
       <text x="98" y="22" className="bs-ket">
@@ -39,7 +39,7 @@ export default function BlochSphere() {
         strokeWidth="1.6"
         markerEnd="url(#bs-arrow)"
       />
-      <circle cx="90" cy="95" r="2.4" fill="var(--obsidian)" />
+      <circle cx="90" cy="95" r="2.4" fill="var(--ink)" />
       {/* projection onto the measurement axis */}
       <line x1="132" y1="55" x2="90" y2="55" stroke="var(--accent-display)" strokeWidth="1" strokeDasharray="2 4" opacity="0.7" />
       <text x="124" y="46" className="bs-psi">

@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom'
 import Mark from './Mark.jsx'
+import Mosaic from './Mosaic.jsx'
 
 export default function Footer() {
   return (
-    <footer className="footer">
+    <footer className="footer ground-dark">
+      <Mosaic className="mosaic-corner" cols={12} rows={3} seed={71} />
       <div className="container">
         <div className="footer-grid">
           <div>
             <div className="footer-brand">
-              <Mark size={30} onDark />
+              <Mark size={34} />
               <div>
-                <p className="footer-wordmark">The Quantum Collective</p>
+                <p className="footer-wordmark">The Ground State Society</p>
                 <p className="footer-tag">
                   The private, members-only network for funded quantum founders. Built early, on
                   purpose — to be the default room as the field grows tenfold.
@@ -19,7 +21,7 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <h4>The Page</h4>
+            <h4 className="label">The Page</h4>
             <ul className="footer-links">
               <li>
                 <Link to="/#problem">The Problem</Link>
@@ -36,7 +38,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4>Join</h4>
+            <h4 className="label">Join</h4>
             <ul className="footer-links">
               <li>
                 <Link to="/apply">Apply for membership</Link>
@@ -50,9 +52,9 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="footer-bottom">
+        <div className="footer-bottom label">
           <p>© 2026 Altivum Inc. All rights reserved.</p>
-          <p>Membership by application only.</p>
+          <p>E₀ — membership by application only.</p>
         </div>
       </div>
     </footer>

@@ -1,7 +1,7 @@
-# The Quantum Collective — Landing Page
+# The Ground State Society — Landing Page
 
-The landing page for **The Quantum Collective**, the private, members-only network for funded
-quantum founders ($300/month). Built with React + Vite. Copy is sourced from
+The landing page for **The Ground State Society**, the private, members-only network for
+funded quantum founders ($300/month). Built with React + Vite. Copy is sourced from
 `quantum_round_premium_strategy.pdf`; the section structure follows the page blueprint in
 `SPA.jpg` (Hero · Problem · Story · Proof · Features · CTA — displayed on the page as
 sections 01–06).
@@ -9,55 +9,50 @@ sections 01–06).
 ## Stack
 
 - [Vite](https://vite.dev/) + [React](https://react.dev/) + [React Router](https://reactrouter.com/)
-- Self-hosted fonts via Fontsource (Fraunces, Hanken Grotesk, IBM Plex Mono) — no third-party requests
+- [GSAP](https://gsap.com/) (ScrollTrigger, SplitText, DrawSVG) — scroll choreography
+- [Three.js](https://threejs.org/) via [React Three Fiber](https://r3f.docs.pmnd.rs/) — the hero's ground-state particle scene (lazy-loaded chunk)
+- Self-hosted fonts via Fontsource (Archivo Variable with the width axis, IBM Plex Mono) — no third-party requests
 - No CSS framework — hand-written design system in `src/styles/`
 
-### Palettes (strict 60/20/10/10, comparable via the nav toggle)
+## Design system
 
-Three candidate palettes share the same 60/20/10/10 roles. The pill toggle in the nav
-switches between them (persisted in `localStorage`, applied pre-paint by an inline script in
-`index.html`, implemented as a `data-theme` attribute override of the design tokens).
-
-**Palette 01 — default**
+**Palette** — strict 60/20/10/10 plus black architectural panels:
 
 | Token | Hex | Share | Use |
 | --- | --- | --- | --- |
-| `--parchment` | `#E7E1D4` | 60% | Base canvas / backgrounds |
-| `--chestnut` | `#B0664E` | 20% | CTAs, highlights, active states |
-| `--mushroom` | `#A4988C` | 10% | Borders, dividers, section bands |
-| `--obsidian` | `#05040B` | 10% | Text, headings, footer |
+| `--ghost` | `#F7F7FF` | 60% | Base canvas (light ground) |
+| `--powder` | `#C1D8E2` | 20% | CTAs, highlights, accent panels |
+| `--sand` | `#B7A781` | 10% | Figure tags, source labels, warm hairlines |
+| `--umber` | `#432D16` | 10% | Body ink on light ground |
+| `--black` | `#08080A` | — | The architectural panel tone (hero, Proof, CTA, footer, figure bands) |
 
-**Palette B — `data-theme="olive"`**
+Everything flows through semantic tokens (`--bg`, `--ink`, `--accent`, `--line`, …) defined
+in `src/styles/tokens.css`. Dark panels apply the `.ground-dark` class, which re-resolves
+the same tokens for black ground — components and SVG figures work on both grounds
+unchanged.
 
-| Role | Hex | Share |
-| --- | --- | --- |
-| Base (Sage) | `#E3E4DC` | 60% |
-| Accent (Silver) | `#C4C4C6` | 20% |
-| Secondary (Olive) | `#827D65` | 10% |
-| Dark (Darkmoss) | `#494637` | 10% |
+Contrast spine (AA throughout): Umber on Ghost 12.1:1; ghost on black 18.6:1; powder on
+black 13.3:1; sand on black 8.4:1; button labels ≥ 8.7:1. On light ground, powder is too
+light for text, so accent text uses pressed powders: `#4A6878` small (5.6:1) and `#6E8C9E`
+large/display (3.3:1).
 
-**Palette C — `data-theme="powder"`**
+**Type** — Archivo Variable: wide (`font-stretch` 116–122%) heavy caps for display, normal
+width for body; IBM Plex Mono for the label layer (nav, kickers, data, captions). Physics
+notation (ħω, α, β, kets) is exempted from the uppercase transform — case is meaning.
 
-| Role | Hex | Share |
-| --- | --- | --- |
-| Base (Ghost) | `#F7F7FF` | 60% |
-| Accent (Powder) | `#C1D8E2` | 20% |
-| Secondary (Sand) | `#B7A781` | 10% |
-| Dark (Umber) | `#432D16` | 10% |
+**Motion** — `src/lib/fx.jsx` registers GSAP once and exposes a declarative `<Fx>` wrapper:
+`data-split` (masked line reveals), `data-fade`, `data-stagger`, `data-draw` (scroll-scrubbed
+SVG draw-ins), `data-count` (stat counters), `data-cells` (mosaic). All tweens run inside
+`gsap.matchMedia('(prefers-reduced-motion: no-preference)')` — under reduced motion the page
+renders complete and static. The hero pins and scrubs on desktop only; scrolling feeds
+energy into the particle cloud, which relaxes back to the ground state on release.
 
-Palette C's contrast spine: body Umber-on-Ghost 12.1:1; button labels Umber-on-Powder 8.7:1;
-accent text uses pressed powders (`#4A6878` small ≈5.6:1, `#6E8C9E` large ≈3.3:1); Sand
-serves footer muted text directly (5.5:1 on Umber).
-
-Defined as CSS custom properties in `src/styles/tokens.css`. Contrast notes (palette 01):
-body text is Obsidian on Parchment (≈16:1); buttons use Obsidian labels on Chestnut fills
-(≈4.7:1, AA); Mushroom is decorative-only on light ground and is used for muted text only on
-the Obsidian footer (≈7:1). Small chestnut-toned labels use `--chestnut-ink` (#8B5340), a
-pressed shade of Chestnut that passes AA (≈4.7:1) on Parchment — pure Chestnut text appears
-only at large sizes. Palette 02 mirrors the same system: its silver accent is far too light
-for text on the sage base (1.36:1), so accent text uses darkened silvers (`#5C5C60` small
-≈5.2:1, `#7E7E81` large ≈3.2:1), text alphas rise to offset the softer dark tone
-(body ≈7.4:1, button labels ≈5.5:1), and footer muted text switches to a sage alpha (≈4.9:1).
+**The hero scene** (`src/three/GroundStateScene.jsx`) is physically honest: a wireframe
+harmonic well V(r) = ½kr², a particle ensemble relaxing into the gaussian ground-state
+density |ψ₀|², a powder ring marking E₀ = ½ħω at the classical turning radius — and
+zero-point breathing that never stops (Δx·Δp ≥ ħ/2). Deterministic seed, DPR clamped at
+1.75, render loop suspended when the hero leaves the viewport, static settled frame under
+reduced motion, and a quiet error boundary if WebGL is unavailable.
 
 ## Install
 
@@ -79,6 +74,9 @@ Opens at `http://localhost:5173`.
 npm run build    # outputs to dist/
 npm run preview  # serve the production build locally
 ```
+
+The three.js scene is split into its own chunk and loaded after first paint; initial JS is
+~138 kB gzip.
 
 ## Routes
 
@@ -134,7 +132,9 @@ Setup:
 ```
 src/
   styles/        tokens.css (palette/type), base.css (reset/primitives), components.css
-  components/    Nav, Footer, Mark (brand), Interference (hero figure), Reveal (scroll reveal)
-  sections/      Hero (03), Problem (04), Story (05), Proof (06), Inside (07), FinalCta (08)
+  lib/           fx.jsx (GSAP system), submit.js (form POST helper)
+  three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
+  components/    Nav, Footer, Mark (brand), Mosaic, HeroScene, figures/
+  sections/      Hero (01), Problem (02), Story (03), Proof (04), Inside (05), FinalCta (06)
   pages/         Landing, Apply
 ```

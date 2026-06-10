@@ -43,16 +43,14 @@ export default function WaveParticle() {
       preserveAspectRatio="xMidYMid meet"
     >
       <line x1="0" y1={MID} x2={W} y2={MID} stroke="var(--line)" strokeWidth="1" strokeDasharray="2 6" />
-      <path className="wp-wave" d={wavePath()} fill="none" stroke="var(--mushroom)" strokeWidth="1.4" />
+      <path d={wavePath()} fill="none" stroke="var(--fig-stroke)" strokeWidth="1.4" />
       {DOTS.map((d, i) => (
         <circle
           key={d.x}
-          className="wp-dot"
-          style={{ transitionDelay: `${0.9 + i * 0.07}s` }}
           cx={d.x}
           cy={d.y}
           r={d.r}
-          fill={i === DOTS.length - 1 ? 'var(--accent-display)' : 'var(--mushroom)'}
+          fill={i === DOTS.length - 1 ? 'var(--accent-display)' : 'var(--fig-stroke)'}
         />
       ))}
     </svg>

@@ -1,23 +1,28 @@
-import Reveal from '../components/Reveal.jsx'
+import Fx from '../lib/fx.jsx'
+import Mosaic from '../components/Mosaic.jsx'
 
 const STATS = [
   {
     value: '$4.1B',
+    count: { n: '4.1', prefix: '$', suffix: 'B', decimals: '1' },
     label: 'Venture capital into quantum startups in 2025 — up from $2.0B in 2024.',
     source: 'Crunchbase',
   },
   {
     value: '96%',
+    count: { n: '96', prefix: '', suffix: '%', decimals: '0' },
     label: 'Share of global quantum funding concentrated in ~45 dense clusters.',
     source: 'The Quantum Insider',
   },
   {
     value: '~$20B',
+    count: { n: '20', prefix: '~$', suffix: 'B', decimals: '0' },
     label: 'Projected quantum computing market by 2030, from ~$3.5B in 2025.',
     source: 'MarketsandMarkets',
   },
   {
     value: '~30×',
+    count: { n: '30', prefix: '~', suffix: '×', decimals: '0' },
     label: 'Return on the $3,600 annual fee from a single warm intro that lands one $100K check.',
     source: 'The ROI math',
   },
@@ -68,38 +73,43 @@ function MatrixCell({ value }) {
 
 export default function Proof() {
   return (
-    <section id="proof" className="section proof" aria-labelledby="proof-title">
-      <span className="ghost-num" aria-hidden="true">
-        04
-      </span>
+    <Fx as="section" id="proof" className="section proof ground-dark" aria-labelledby="proof-title">
+      <Mosaic className="mosaic-corner" cols={10} rows={5} seed={29} />
       <div className="container">
-        <Reveal>
-          <p className="kicker">
-            <strong>04</strong> The Proof
-          </p>
-          <h2 id="proof-title" className="section-title">
-            Receipts, not vibes.
-          </h2>
-          <p className="lede">
-            Premium founder networks are a proven category. Curated rooms measurably change
-            company outcomes. And quantum is the rare market that is both flooded with capital
-            and still small enough to convene.
-          </p>
-        </Reveal>
+        <p className="kicker" data-fade>
+          <strong>04</strong> The Proof
+        </p>
+        <h2 id="proof-title" className="section-title" data-split>
+          Receipts, not vibes.
+        </h2>
+        <p className="lede" data-fade>
+          Premium founder networks are a proven category. Curated rooms measurably change
+          company outcomes. And quantum is the rare market that is both flooded with capital
+          and still small enough to convene.
+        </p>
 
-        <div className="stats">
-          {STATS.map((s, i) => (
-            <Reveal key={s.value} className="stat" delay={i * 0.07}>
-              <p className="stat-value">{s.value}</p>
+        <div className="stats" data-stagger>
+          {STATS.map((s) => (
+            <div key={s.value} className="stat">
+              <p className="stat-value">
+                <span
+                  data-count={s.count.n}
+                  data-prefix={s.count.prefix}
+                  data-suffix={s.count.suffix}
+                  data-decimals={s.count.decimals}
+                >
+                  {s.value}
+                </span>
+              </p>
               <p className="stat-label">
                 {s.label}
-                <span className="stat-source">{s.source}</span>
+                <span className="stat-source label">{s.source}</span>
               </p>
-            </Reveal>
+            </div>
           ))}
         </div>
 
-        <Reveal as="figure" className="proof-quote">
+        <figure className="proof-quote" data-fade>
           <blockquote>
             <p>
               “Access to the right network is a growth multiplier… being in the right rooms,
@@ -107,14 +117,14 @@ export default function Proof() {
               product-market fit.”
             </p>
           </blockquote>
-          <figcaption>Y Combinator — on why curated networks compound</figcaption>
-        </Reveal>
+          <figcaption className="label">Y Combinator — on why curated networks compound</figcaption>
+        </figure>
 
         <div className="proof-tables">
-          <Reveal>
+          <div data-fade>
             <div className="table-wrap">
               <table className="compare-table">
-                <caption>What the premium peer-network market charges</caption>
+                <caption className="label">What the premium peer-network market charges</caption>
                 <thead>
                   <tr>
                     <th scope="col">Network</th>
@@ -131,7 +141,7 @@ export default function Proof() {
                     </tr>
                   ))}
                   <tr className="is-us">
-                    <th scope="row">The Quantum Collective</th>
+                    <th scope="row">The Ground State Society</th>
                     <td>$3,600 / yr ($300 / mo)</td>
                     <td>Funded quantum founders</td>
                   </tr>
@@ -143,19 +153,19 @@ export default function Proof() {
               high-signal, modest enough that a funded founder expenses it without a second
               thought. And the only one built for quantum.
             </p>
-          </Reveal>
+          </div>
 
-          <Reveal>
+          <div data-fade>
             <div className="table-wrap">
               <table className="compare-table">
-                <caption>The only room with every box checked</caption>
+                <caption className="label">The only room with every box checked</caption>
                 <thead>
                   <tr>
                     <th scope="col">Attribute</th>
                     <th scope="col">Free communities & consortia</th>
                     <th scope="col">Accelerators</th>
                     <th scope="col">Generalist premium networks</th>
-                    <th scope="col">The Quantum Collective</th>
+                    <th scope="col">The Ground State Society</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,9 +191,9 @@ export default function Proof() {
               game, curation creates the signal, and confidentiality makes the real
               conversations possible.
             </p>
-          </Reveal>
+          </div>
         </div>
       </div>
-    </section>
+    </Fx>
   )
 }

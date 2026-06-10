@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import Reveal from '../components/Reveal.jsx'
+import Fx from '../lib/fx.jsx'
 import EnergyLevels from '../components/figures/EnergyLevels.jsx'
 import FigCaption from '../components/figures/FigCaption.jsx'
 
@@ -58,32 +58,29 @@ const RECEIPT_INCLUDED = [
 
 export default function Inside() {
   return (
-    <section id="inside" className="section" aria-labelledby="inside-title">
-      <span className="ghost-num" aria-hidden="true">
-        05
-      </span>
+    <Fx as="section" id="inside" className="section" aria-labelledby="inside-title">
       <div className="container">
-        <Reveal>
-          <p className="kicker">
-            <strong>05</strong> Inside the Round
-          </p>
-          <h2 id="inside-title" className="section-title">
-            What $300 a month actually buys.
-          </h2>
-          <p className="lede">
-            Two promises, deliberately: <strong>the room</strong> — an elite peer network you
-            cannot reach cold — and <strong>the acceleration</strong> — concrete resources that
-            move your company forward.
-          </p>
-        </Reveal>
+        <p className="kicker" data-fade>
+          <strong>05</strong> Inside the Round
+        </p>
+        <h2 id="inside-title" className="section-title" data-split>
+          What $300 a month actually buys.
+        </h2>
+        <p className="lede" data-fade>
+          Two promises, deliberately: <strong>the room</strong> — an elite peer network you
+          cannot reach cold — and <strong>the acceleration</strong> — concrete resources that
+          move your company forward.
+        </p>
 
         <div className="stack-groups">
-          <Reveal>
-            <h3 className="stack-group-title">A — The Room</h3>
-            <ul className="stack-list">
+          <div data-fade>
+            <h3 className="stack-group-title">
+              <span className="label">A</span> The Room
+            </h3>
+            <ul className="stack-list" data-stagger>
               {ROOM.map((item, i) => (
                 <li key={item.title} className="stack-item">
-                  <span className="stack-num" aria-hidden="true">
+                  <span className="stack-num label" aria-hidden="true">
                     0{i + 1}
                   </span>
                   <div>
@@ -93,13 +90,15 @@ export default function Inside() {
                 </li>
               ))}
             </ul>
-          </Reveal>
-          <Reveal delay={0.12}>
-            <h3 className="stack-group-title">B — The Acceleration</h3>
-            <ul className="stack-list">
+          </div>
+          <div data-fade>
+            <h3 className="stack-group-title">
+              <span className="label">B</span> The Acceleration
+            </h3>
+            <ul className="stack-list" data-stagger>
               {ACCELERATION.map((item, i) => (
                 <li key={item.title} className="stack-item">
-                  <span className="stack-num" aria-hidden="true">
+                  <span className="stack-num label" aria-hidden="true">
                     0{i + 5}
                   </span>
                   <div>
@@ -109,11 +108,11 @@ export default function Inside() {
                 </li>
               ))}
             </ul>
-          </Reveal>
+          </div>
         </div>
 
         <div className="receipt-row-layout">
-          <Reveal className="receipt-intro">
+          <div className="receipt-intro" data-fade>
             <h3>The ROI receipt</h3>
             <p>
               Partner credits, legal discounts, and expert sessions carry hard-dollar value
@@ -125,14 +124,15 @@ export default function Inside() {
               And the headline math: at $3,600 a year, one warm intro that leads to one $100K
               check returns roughly thirty times the fee.
             </p>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <div className="receipt" role="img" aria-label="Itemized receipt: every membership deliverable included for $3,600 per year; one $100K introduction returns about 30 times the fee; a year of conference travel costs $3,000 to $10,000 for comparison">
-              <span className="receipt-stamp">Application only</span>
-              <p className="receipt-head">The Quantum Collective</p>
-              <p className="receipt-sub">The Round — annual membership</p>
+          </div>
+          <div data-fade>
+            {/* Real text, read naturally by AT — no role=img summary needed */}
+            <div className="receipt ground-dark">
+              <span className="receipt-stamp label">Application only</span>
+              <p className="receipt-head">The Ground State Society</p>
+              <p className="receipt-sub label">The Round — annual membership</p>
               <hr className="receipt-rule" />
-              <p className="receipt-label">Itemized</p>
+              <p className="receipt-label label">Itemized</p>
               {RECEIPT_INCLUDED.map((item) => (
                 <p key={item} className="receipt-line">
                   <span className="item">{item}</span>
@@ -152,39 +152,39 @@ export default function Inside() {
                 <span className="val">~30×</span>
               </p>
               <hr className="receipt-rule" />
-              <p className="receipt-label">For comparison</p>
+              <p className="receipt-label label">For comparison</p>
               <p className="receipt-line">
                 <span className="item">A year of conference travel</span>
                 <span className="dots" />
                 <span className="val">$3–10K</span>
               </p>
-              <p className="receipt-foot">Expensable · Billed monthly · Vetted founders only</p>
+              <p className="receipt-foot label">Expensable · Billed monthly · Vetted founders only</p>
             </div>
-          </Reveal>
+          </div>
         </div>
 
-        <Reveal className="tiers-head">
-          <div>
-            <h3 className="stack-group-title" style={{ borderBottom: 'none', marginBottom: 0 }}>
-              The Tiers
-            </h3>
+        <div className="tiers-head">
+          <div data-fade>
+            <h3 className="stack-group-title is-bare">The Tiers</h3>
             <p className="tiers-lede">
               Membership is quantized: three discrete states, no continuum between them.
             </p>
           </div>
-          <figure className="qfig">
-            <EnergyLevels />
+          <figure className="qfig ground-dark" data-fade>
+            <div data-draw>
+              <EnergyLevels />
+            </div>
             <FigCaption num="03">
               Discrete levels, E<sub>n</sub> ∝ n². The only transition up from the ground state
               is an application.
             </FigCaption>
           </figure>
-        </Reveal>
-        <div className="tiers">
-          <Reveal className="tier" as="article" aria-label="The Signal tier">
+        </div>
+        <div className="tiers" data-stagger>
+          <article className="tier" aria-label="The Signal tier">
             <div className="tier-head">
               <h3 className="tier-name">The Signal</h3>
-              <p className="tier-aud">Every quantum builder</p>
+              <p className="tier-aud label">Every quantum builder</p>
             </div>
             <p className="tier-price">
               Free<small>forever</small>
@@ -201,15 +201,17 @@ export default function Inside() {
               <Link to="/#signal" className="btn btn-ghost">
                 Join free
               </Link>
-              <p className="tier-note">The outer ring — open to founders, engineers, researchers, students.</p>
+              <p className="tier-note">
+                The outer ring — open to founders, engineers, researchers, students.
+              </p>
             </div>
-          </Reveal>
+          </article>
 
-          <Reveal className="tier is-featured" as="article" delay={0.1} aria-label="The Round tier">
+          <article className="tier is-featured ground-dark" aria-label="The Round tier">
             <div className="tier-head">
-              <span className="tier-flag">The Product</span>
+              <span className="tier-flag label">The Product</span>
               <h3 className="tier-name">The Round</h3>
-              <p className="tier-aud">Funded quantum founders</p>
+              <p className="tier-aud label">Funded quantum founders</p>
             </div>
             <p className="tier-price">
               $300<small>/ month</small>
@@ -230,12 +232,12 @@ export default function Inside() {
               </Link>
               <p className="tier-note">Founding cohort: locked-in rate, permanent founding badge.</p>
             </div>
-          </Reveal>
+          </article>
 
-          <Reveal className="tier" as="article" delay={0.2} aria-label="Patrons and Partners tier">
+          <article className="tier" aria-label="Patrons and Partners tier">
             <div className="tier-head">
               <h3 className="tier-name">Patrons & Partners</h3>
-              <p className="tier-aud">Sponsors & allies</p>
+              <p className="tier-aud label">Sponsors & allies</p>
             </div>
             <p className="tier-price">
               Invitation<small>only</small>
@@ -254,9 +256,9 @@ export default function Inside() {
               </Link>
               <p className="tier-note">Sponsorship subsidizes member value — it never dilutes the room.</p>
             </div>
-          </Reveal>
+          </article>
         </div>
       </div>
-    </section>
+    </Fx>
   )
 }

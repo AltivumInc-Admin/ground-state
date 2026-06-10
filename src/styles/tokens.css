@@ -1,151 +1,100 @@
 /* ============================================================
-   The Quantum Collective — Design Tokens
-   Palette discipline: 60% base / 20% accent / 10% secondary / 10% dark
-   Two comparable palettes, toggled via data-theme on <html>:
-     (default) Palette 01 — Parchment / Chestnut / Mushroom / Obsidian
-     [data-theme='olive'] Palette 02 — Sage / Silver / Olive / Darkmoss
+   The Ground State Society — Design Tokens
+   Palette discipline: 60% Ghost / 20% Powder / 10% Sand / 10% Umber,
+   with black as the architectural panel tone ("hints of black").
+   Grounds: light (default, :root) and dark (.ground-dark) — every
+   color flows through the semantic tokens, so the same component
+   works on both grounds without per-component color rules.
    ============================================================ */
 
 :root {
-  /* ---- The four ---- */
-  --parchment: #e7e1d4;
-  --chestnut: #b0664e;
-  --mushroom: #a4988c;
-  --obsidian: #05040b;
+  /* ---- The four + black ---- */
+  --ghost: #f7f7ff;
+  --powder: #c1d8e2;
+  --sand: #b7a781;
+  --umber: #432d16;
+  --black: #08080a; /* panel black */
+  --black-raised: #101014; /* raised surfaces on black */
+  --black-deep: #050507; /* pressed areas on black */
 
-  /* ---- Derived washes & alphas (same four pigments only) ---- */
-  --parchment-raised: #ede8dd; /* cards / receipt paper, a half-tone up */
-  --parchment-deep: #ded7c6; /* pressed areas, input fields */
-  --ink: var(--obsidian);
-  --ink-soft: rgba(5, 4, 11, 0.74); /* secondary text — AA on parchment */
-  --ink-mute: rgba(5, 4, 11, 0.62); /* captions — ~5.4:1 on parchment, AA at any size */
-  --chestnut-ink: #8b5340; /* accent pressed darker for small text — 4.7:1 on parchment */
-  --accent-display: var(--chestnut); /* accent for large text & decorative glyphs on light ground */
-  --focus-ring: var(--accent-display); /* keyboard focus — ≥3:1 on light ground in both palettes */
-  --accent-shadow: rgba(176, 102, 78, 0.45);
-  --btn-edge: var(--chestnut); /* primary button border */
-  --line: rgba(164, 152, 140, 0.55); /* hairlines */
-  --line-strong: rgba(164, 152, 140, 0.9);
-  --mushroom-band: rgba(164, 152, 140, 0.18); /* section tint bands */
-  --mushroom-ghost: rgba(164, 152, 140, 0.34); /* oversized decorative numerals */
-  --chestnut-wash: rgba(176, 102, 78, 0.09);
-  --chestnut-line: rgba(176, 102, 78, 0.45);
-  --on-dark-mute: rgba(231, 225, 212, 0.62); /* muted text on the dark ground */
-  --footer-mute: var(--mushroom); /* muted footer labels — 7.2:1 on obsidian */
-  --footer-line: rgba(164, 152, 140, 0.3);
-  --nav-veil: rgba(231, 225, 212, 0.88);
-  --on-dark-line: rgba(231, 225, 212, 0.35);
-  --on-accent-line: rgba(5, 4, 11, 0.45);
-  --state-ghost-a: rgba(176, 102, 78, 0.4); /* superposition ghost states (hero type) */
-  --state-ghost-b: rgba(5, 4, 11, 0.18);
+  /* ---- Light ground (default) ----
+     body Umber on Ghost 12.1:1 · small accent #4A6878 5.6:1 ·
+     large accent #6E8C9E 3.3:1 · muted ink ~4.6:1 */
+  --bg: var(--ghost);
+  --bg-raised: #ffffff;
+  --bg-deep: #ebedf5;
+  --ink: var(--umber);
+  --ink-soft: rgba(67, 45, 22, 0.82);
+  --ink-mute: rgba(67, 45, 22, 0.68);
+  --accent: #4a6878; /* powder pressed to slate — AA at any size */
+  --accent-display: #6e8c9e; /* deep powder — large text & glyphs only */
+  --accent-raw: var(--powder); /* fills, never text on light ground */
+  --line: rgba(67, 45, 22, 0.14); /* hairlines */
+  --line-strong: rgba(67, 45, 22, 0.38);
+  --sand-line: rgba(183, 167, 129, 0.6); /* warm hairline accent */
+  --sand-band: rgba(183, 167, 129, 0.12);
+  --fig-stroke: rgba(67, 45, 22, 0.5); /* figure line-art */
+  --focus-ring: #4a6878;
+  --btn-solid: var(--black); /* primary button — the black hint on light */
+  --btn-solid-ink: var(--ghost);
+  --selection-bg: var(--umber);
+  --selection-ink: var(--ghost);
 
-  /* ---- Type ---- */
-  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
-  --font-body: 'Hanken Grotesk Variable', 'Avenir Next', 'Segoe UI', sans-serif;
+  /* ---- Type ----
+     Display: Archivo wide + black (DOSS-style architectural caps).
+     Body: Archivo at normal width. Labels/data: IBM Plex Mono. */
+  --font-display: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
 
   --text-xs: 0.72rem;
   --text-sm: 0.875rem;
   --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
-  --text-lede: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
-  --text-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
-  --text-h2: clamp(2rem, 1.35rem + 2.7vw, 3.25rem);
-  --text-h1: clamp(2.6rem, 1.5rem + 4.2vw, 4.4rem);
+  --text-lede: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
+  --text-h3: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
+  --text-h2: clamp(2rem, 1.2rem + 3.1vw, 3.7rem);
+  --text-wordmark: clamp(2.6rem, 9.3vw, 9.2rem);
+  --text-stat: clamp(2.8rem, 2rem + 3.4vw, 5.3rem);
 
   /* ---- Rhythm ---- */
-  --space-section: clamp(5rem, 4rem + 6vw, 9.5rem);
-  --container: 72rem;
-  --container-pad: clamp(1.25rem, 4vw, 2.5rem);
-  --radius: 4px;
-  --nav-h: 4.25rem;
-  --anchor-offset: calc(var(--nav-h) + 1.25rem); /* every scroll-margin-top derives from this */
+  --space-section: clamp(5.5rem, 4rem + 7vw, 11rem);
+  --container: 84rem;
+  --container-pad: clamp(1.25rem, 4vw, 3rem);
+  --radius: 0px; /* sharp, architectural */
+  --nav-h: 4.5rem;
+  --anchor-offset: calc(var(--nav-h) + 1rem);
 
   /* ---- Motion ---- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --reveal-duration: 0.9s;
 }
 
 /* ============================================================
-   Palette 02 — Sage #E3E4DC / Silver #C4C4C6 / Olive #827D65 /
-   Darkmoss #494637, same 60/20/10/10 roles.
-   The dark tone is far lighter than Obsidian (max contrast 7.4:1
-   vs 16:1), so text alphas rise and accent text gets its own
-   darkened silvers to hold WCAG AA:
-     - body #494637 on #E3E4DC ............ 7.4:1
-     - button label #494637 on #C4C4C6 .... 5.5:1
-     - small accent text #5C5C60 .......... 5.2:1
-     - large accent text #7E7E81 .......... 3.2:1
-     - footer muted rgba(sage .72) ........ 4.9:1 on #494637
+   Dark ground — the black architectural panels.
+   Ghost on black 18.6:1 · Powder on black 13.3:1 ·
+   Sand on black 8.4:1 · muted ghost alpha ~7:1.
    ============================================================ */
 
-[data-theme='olive'] {
-  --parchment: #e3e4dc;
-  --chestnut: #c4c4c6;
-  --mushroom: #827d65;
-  --obsidian: #494637;
+.ground-dark {
+  --bg: var(--black);
+  --bg-raised: var(--black-raised);
+  --bg-deep: var(--black-deep);
+  --ink: var(--ghost);
+  --ink-soft: rgba(247, 247, 255, 0.78);
+  --ink-mute: rgba(247, 247, 255, 0.6);
+  --accent: var(--powder);
+  --accent-display: var(--powder);
+  --accent-raw: var(--powder);
+  --line: rgba(247, 247, 255, 0.12);
+  --line-strong: rgba(247, 247, 255, 0.34);
+  --sand-line: rgba(183, 167, 129, 0.45);
+  --sand-band: rgba(183, 167, 129, 0.1);
+  --fig-stroke: rgba(247, 247, 255, 0.55);
+  --focus-ring: var(--powder);
+  --btn-solid: var(--powder); /* primary on black — powder carries the accent share */
+  --btn-solid-ink: var(--black);
+  --selection-bg: var(--powder);
+  --selection-ink: var(--black);
 
-  --parchment-raised: #eaebe4;
-  --parchment-deep: #d8d9cf;
-  --ink-soft: rgba(73, 70, 55, 0.85);
-  --ink-mute: rgba(73, 70, 55, 0.82);
-  --chestnut-ink: #5c5c60;
-  --accent-display: #7e7e81;
-  --accent-shadow: rgba(73, 70, 55, 0.3);
-  --btn-edge: #827d65;
-  --line: rgba(130, 125, 101, 0.55);
-  --line-strong: rgba(130, 125, 101, 0.9);
-  --mushroom-band: rgba(130, 125, 101, 0.16);
-  --mushroom-ghost: rgba(130, 125, 101, 0.32);
-  --chestnut-wash: rgba(196, 196, 198, 0.28);
-  --chestnut-line: rgba(130, 125, 101, 0.6);
-  --on-dark-mute: rgba(227, 228, 220, 0.78);
-  --footer-mute: rgba(227, 228, 220, 0.72);
-  --footer-line: rgba(227, 228, 220, 0.25);
-  --nav-veil: rgba(227, 228, 220, 0.88);
-  --on-dark-line: rgba(227, 228, 220, 0.35);
-  --on-accent-line: rgba(73, 70, 55, 0.45);
-  --state-ghost-a: rgba(126, 126, 129, 0.5);
-  --state-ghost-b: rgba(73, 70, 55, 0.22);
-}
-
-/* ============================================================
-   Palette C — Ghost #F7F7FF / Powder #C1D8E2 / Sand #B7A781 /
-   Umber #432D16, same 60/20/10/10 roles.
-   Contrast spine (computed):
-     - body #432D16 on #F7F7FF ............ 12.1:1
-     - button label #432D16 on #C1D8E2 .... 8.7:1
-     - powder on umber (dark surfaces) .... 8.7:1
-     - small accent text #4A6878 .......... 5.6:1
-     - large accent text #6E8C9E .......... 3.3:1
-     - sand footer-mute on umber .......... 5.5:1
-   ============================================================ */
-
-[data-theme='powder'] {
-  --parchment: #f7f7ff;
-  --chestnut: #c1d8e2;
-  --mushroom: #b7a781;
-  --obsidian: #432d16;
-
-  --parchment-raised: #ffffff;
-  --parchment-deep: #ebedf5;
-  --ink-soft: rgba(67, 45, 22, 0.8); /* ~6.7:1 on ghost */
-  --ink-mute: rgba(67, 45, 22, 0.72); /* ~5.2:1 on ghost */
-  --chestnut-ink: #4a6878; /* powder pressed to slate — 5.6:1 */
-  --accent-display: #6e8c9e; /* deep powder for large text — 3.3:1 */
-  --accent-shadow: rgba(67, 45, 22, 0.25);
-  --btn-edge: #6e8c9e;
-  --line: rgba(183, 167, 129, 0.55);
-  --line-strong: rgba(183, 167, 129, 0.9);
-  --mushroom-band: rgba(183, 167, 129, 0.14);
-  --mushroom-ghost: rgba(183, 167, 129, 0.32);
-  --chestnut-wash: rgba(193, 216, 226, 0.35);
-  --chestnut-line: rgba(183, 167, 129, 0.6);
-  --on-dark-mute: rgba(247, 247, 255, 0.75); /* ~7.5:1 on umber */
-  --footer-mute: var(--mushroom); /* sand passes 5.5:1 on umber */
-  --footer-line: rgba(183, 167, 129, 0.35);
-  --nav-veil: rgba(247, 247, 255, 0.88);
-  --on-dark-line: rgba(247, 247, 255, 0.35);
-  --on-accent-line: rgba(67, 45, 22, 0.45);
-  --state-ghost-a: rgba(110, 140, 158, 0.5);
-  --state-ghost-b: rgba(67, 45, 22, 0.2);
+  background-color: var(--bg);
+  color: var(--ink);
 }

@@ -1,22 +1,17 @@
-import Reveal from '../components/Reveal.jsx'
+import Fx from '../lib/fx.jsx'
 
 export default function Story() {
   return (
-    <section id="story" className="section story" aria-labelledby="story-title">
-      <span className="ghost-num" aria-hidden="true">
-        03
-      </span>
+    <Fx as="section" id="story" className="section story" aria-labelledby="story-title">
       <div className="container">
-        <Reveal>
-          <p className="kicker">
-            <strong>03</strong> The Story
-          </p>
-          <h2 id="story-title" className="section-title">
-            Built by an operator. Planted early, on purpose.
-          </h2>
-        </Reveal>
+        <p className="kicker" data-fade>
+          <strong>03</strong> The Story
+        </p>
+        <h2 id="story-title" className="section-title" data-split>
+          Built by an operator. Planted early, on purpose.
+        </h2>
         <div className="story-grid">
-          <Reveal className="story-body">
+          <div className="story-body" data-fade>
             <p>
               Quantum is consolidating into roughly <strong>45 dense clusters that capture 96%
               of global funding</strong>, and capital is flooding in — billion-dollar state
@@ -27,7 +22,7 @@ export default function Story() {
             <p>
               That window does not stay open. <strong>Whoever becomes the default room for
               quantum founders now owns that position as the field grows tenfold.</strong> The
-              Quantum Collective exists to be that room — recruited founder by founder, vetted
+              Ground State Society exists to be that room — recruited founder by founder, vetted
               application by application, starting with a founding cohort of 15–25.
             </p>
             <p>
@@ -39,29 +34,31 @@ export default function Story() {
             <p className="story-sign">
               “We’d rather under-promise and over-deliver than sell you a network that doesn’t
               exist yet.”
-              <small>Christian Perez — Founder, Altivum Inc.</small>
+              <small className="label">Christian Perez — Founder, Altivum Inc.</small>
             </p>
-          </Reveal>
-          <div className="story-aside">
-            <Reveal className="story-panel" delay={0.1} as="aside">
+          </div>
+          <div className="story-aside" data-stagger>
+            <aside className="story-panel ground-dark">
+              <span className="panel-tag label">Today</span>
               <h3>What’s real today</h3>
               <p>
                 A hand-picked founding cohort, curated peer circles, expert sessions arranged
                 personally, and an Operator’s Library written from real quantum-on-AWS
                 experience. Small — and high-signal by construction.
               </p>
-            </Reveal>
-            <Reveal className="story-panel is-accent" delay={0.2} as="aside">
+            </aside>
+            <aside className="story-panel ground-dark is-accent">
+              <span className="panel-tag label">Founding terms</span>
               <h3>The founding-member deal</h3>
               <p>
                 Early members are helping build the network they’re paying for — so founding
                 members join at a locked-in rate that never goes up, and carry the founding badge
                 permanently. Early belief, rewarded.
               </p>
-            </Reveal>
+            </aside>
           </div>
         </div>
       </div>
-    </section>
+    </Fx>
   )
 }
