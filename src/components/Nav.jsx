@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Mark from './Mark.jsx'
+import PaletteToggle from './PaletteToggle.jsx'
 
 const SECTIONS = [
-  { num: '03', id: 'network', label: 'The Network' },
-  { num: '04', id: 'problem', label: 'The Problem' },
-  { num: '05', id: 'story', label: 'The Story' },
-  { num: '06', id: 'proof', label: 'The Proof' },
+  { num: '03', id: 'network', label: 'Network' },
+  { num: '04', id: 'problem', label: 'Problem' },
+  { num: '05', id: 'story', label: 'Story' },
+  { num: '06', id: 'proof', label: 'Proof' },
   { num: '07', id: 'inside', label: 'Inside' },
   { num: '08', id: 'join', label: 'Join' },
 ]
@@ -47,8 +48,10 @@ export default function Nav() {
           <span>The Quantum Collective</span>
         </Link>
 
-        <nav aria-label="Page sections">
-          <button
+        <div className="nav-tools">
+          <PaletteToggle />
+          <nav aria-label="Page sections">
+            <button
             type="button"
             className="nav-toggle"
             aria-expanded={open}
@@ -76,7 +79,8 @@ export default function Nav() {
               </Link>
             </li>
           </ul>
-        </nav>
+          </nav>
+        </div>
       </div>
     </header>
   )

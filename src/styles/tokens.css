@@ -1,6 +1,9 @@
 /* ============================================================
    The Quantum Collective — Design Tokens
-   Palette discipline: 60% Parchment / 20% Chestnut / 10% Mushroom / 10% Obsidian
+   Palette discipline: 60% base / 20% accent / 10% secondary / 10% dark
+   Two comparable palettes, toggled via data-theme on <html>:
+     (default) Palette 01 — Parchment / Chestnut / Mushroom / Obsidian
+     [data-theme='olive'] Palette 02 — Sage / Silver / Olive / Darkmoss
    ============================================================ */
 
 :root {
@@ -16,14 +19,22 @@
   --ink: var(--obsidian);
   --ink-soft: rgba(5, 4, 11, 0.74); /* secondary text — AA on parchment */
   --ink-mute: rgba(5, 4, 11, 0.62); /* captions — ~5.4:1 on parchment, AA at any size */
-  --chestnut-ink: #8b5340; /* chestnut pressed darker for small text — 4.7:1 on parchment */
+  --chestnut-ink: #8b5340; /* accent pressed darker for small text — 4.7:1 on parchment */
+  --accent-display: var(--chestnut); /* accent for large text & decorative glyphs on light ground */
+  --accent-shadow: rgba(176, 102, 78, 0.45);
+  --btn-edge: var(--chestnut); /* primary button border */
   --line: rgba(164, 152, 140, 0.55); /* hairlines */
   --line-strong: rgba(164, 152, 140, 0.9);
   --mushroom-band: rgba(164, 152, 140, 0.18); /* section tint bands */
   --mushroom-ghost: rgba(164, 152, 140, 0.34); /* oversized decorative numerals */
   --chestnut-wash: rgba(176, 102, 78, 0.09);
   --chestnut-line: rgba(176, 102, 78, 0.45);
-  --on-dark-mute: rgba(231, 225, 212, 0.62); /* muted text on obsidian */
+  --on-dark-mute: rgba(231, 225, 212, 0.62); /* muted text on the dark ground */
+  --footer-mute: var(--mushroom); /* muted footer labels — 7.2:1 on obsidian */
+  --footer-line: rgba(164, 152, 140, 0.3);
+  --nav-veil: rgba(231, 225, 212, 0.88);
+  --on-dark-line: rgba(231, 225, 212, 0.35);
+  --on-accent-line: rgba(5, 4, 11, 0.45);
 
   /* ---- Type ---- */
   --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
@@ -47,4 +58,45 @@
   /* ---- Motion ---- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --reveal-duration: 0.9s;
+}
+
+/* ============================================================
+   Palette 02 — Sage #E3E4DC / Silver #C4C4C6 / Olive #827D65 /
+   Darkmoss #494637, same 60/20/10/10 roles.
+   The dark tone is far lighter than Obsidian (max contrast 7.4:1
+   vs 16:1), so text alphas rise and accent text gets its own
+   darkened silvers to hold WCAG AA:
+     - body #494637 on #E3E4DC ............ 7.4:1
+     - button label #494637 on #C4C4C6 .... 5.5:1
+     - small accent text #5C5C60 .......... 5.2:1
+     - large accent text #7E7E81 .......... 3.2:1
+     - footer muted rgba(sage .72) ........ 4.9:1 on #494637
+   ============================================================ */
+
+[data-theme='olive'] {
+  --parchment: #e3e4dc;
+  --chestnut: #c4c4c6;
+  --mushroom: #827d65;
+  --obsidian: #494637;
+
+  --parchment-raised: #eaebe4;
+  --parchment-deep: #d8d9cf;
+  --ink-soft: rgba(73, 70, 55, 0.85);
+  --ink-mute: rgba(73, 70, 55, 0.82);
+  --chestnut-ink: #5c5c60;
+  --accent-display: #7e7e81;
+  --accent-shadow: rgba(73, 70, 55, 0.3);
+  --btn-edge: #827d65;
+  --line: rgba(130, 125, 101, 0.55);
+  --line-strong: rgba(130, 125, 101, 0.9);
+  --mushroom-band: rgba(130, 125, 101, 0.16);
+  --mushroom-ghost: rgba(130, 125, 101, 0.32);
+  --chestnut-wash: rgba(196, 196, 198, 0.28);
+  --chestnut-line: rgba(130, 125, 101, 0.6);
+  --on-dark-mute: rgba(227, 228, 220, 0.78);
+  --footer-mute: rgba(227, 228, 220, 0.72);
+  --footer-line: rgba(227, 228, 220, 0.25);
+  --nav-veil: rgba(227, 228, 220, 0.88);
+  --on-dark-line: rgba(227, 228, 220, 0.35);
+  --on-accent-line: rgba(73, 70, 55, 0.45);
 }

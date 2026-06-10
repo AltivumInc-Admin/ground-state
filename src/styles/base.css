@@ -69,12 +69,12 @@ p {
 }
 
 ::selection {
-  background: var(--chestnut);
+  background: var(--accent-display);
   color: var(--parchment);
 }
 
 :focus-visible {
-  outline: 2px solid var(--chestnut);
+  outline: 2px solid var(--accent-display);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -164,7 +164,7 @@ p {
 .btn-primary {
   background: var(--chestnut);
   color: var(--obsidian);
-  border-color: var(--chestnut);
+  border-color: var(--btn-edge);
 }
 
 .btn-primary:hover {

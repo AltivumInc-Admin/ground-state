@@ -11,7 +11,13 @@ quantum founders ($300/month). Built with React + Vite. Copy is sourced from
 - Self-hosted fonts via Fontsource (Fraunces, Hanken Grotesk, IBM Plex Mono) — no third-party requests
 - No CSS framework — hand-written design system in `src/styles/`
 
-### Palette (strict 60/20/10/10)
+### Palettes (strict 60/20/10/10, comparable via the nav toggle)
+
+Two palettes share the same 60/20/10/10 roles. The pill toggle in the nav switches between
+them (persisted in `localStorage`, applied pre-paint by an inline script in `index.html`,
+implemented as a `data-theme` attribute override of the design tokens).
+
+**Palette 01 — default**
 
 | Token | Hex | Share | Use |
 | --- | --- | --- | --- |
@@ -20,11 +26,24 @@ quantum founders ($300/month). Built with React + Vite. Copy is sourced from
 | `--mushroom` | `#A4988C` | 10% | Borders, dividers, section bands |
 | `--obsidian` | `#05040B` | 10% | Text, headings, footer |
 
-Defined as CSS custom properties in `src/styles/tokens.css`. Contrast notes: body text is
-Obsidian on Parchment (≈16:1); buttons use Obsidian labels on Chestnut fills (≈4.7:1, AA);
-Mushroom is decorative-only on light ground and is used for muted text only on the Obsidian
-footer (≈7:1). Small chestnut-toned labels use `--chestnut-ink` (#8B5340), a pressed shade of
-Chestnut that passes AA (≈4.7:1) on Parchment — pure Chestnut text appears only at large sizes.
+**Palette 02 — `data-theme="olive"`**
+
+| Role | Hex | Share |
+| --- | --- | --- |
+| Base (Sage) | `#E3E4DC` | 60% |
+| Accent (Silver) | `#C4C4C6` | 20% |
+| Secondary (Olive) | `#827D65` | 10% |
+| Dark (Darkmoss) | `#494637` | 10% |
+
+Defined as CSS custom properties in `src/styles/tokens.css`. Contrast notes (palette 01):
+body text is Obsidian on Parchment (≈16:1); buttons use Obsidian labels on Chestnut fills
+(≈4.7:1, AA); Mushroom is decorative-only on light ground and is used for muted text only on
+the Obsidian footer (≈7:1). Small chestnut-toned labels use `--chestnut-ink` (#8B5340), a
+pressed shade of Chestnut that passes AA (≈4.7:1) on Parchment — pure Chestnut text appears
+only at large sizes. Palette 02 mirrors the same system: its silver accent is far too light
+for text on the sage base (1.36:1), so accent text uses darkened silvers (`#5C5C60` small
+≈5.2:1, `#7E7E81` large ≈3.2:1), text alphas rise to offset the softer dark tone
+(body ≈7.4:1, button labels ≈5.5:1), and footer muted text switches to a sage alpha (≈4.9:1).
 
 ## Install
 
