@@ -44,7 +44,7 @@ const ACCELERATION = [
 ]
 
 const RECEIPT_INCLUDED = [
-  'Curated peer circle (6–10, facilitated)',
+  'Curated peer circle (6–10)',
   'Warm capital introductions',
   'Expert office hours',
   'Operator’s Library',

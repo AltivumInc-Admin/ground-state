@@ -35,7 +35,7 @@
   --text-lede: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
   --text-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
   --text-h2: clamp(2rem, 1.35rem + 2.7vw, 3.25rem);
-  --text-h1: clamp(2.75rem, 1.7rem + 4.8vw, 5.25rem);
+  --text-h1: clamp(2.6rem, 1.5rem + 4.2vw, 4.4rem);
 
   /* ---- Rhythm ---- */
   --space-section: clamp(5rem, 4rem + 6vw, 9.5rem);
