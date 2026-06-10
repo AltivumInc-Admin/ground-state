@@ -107,3 +107,45 @@
   --state-ghost-a: rgba(126, 126, 129, 0.5);
   --state-ghost-b: rgba(73, 70, 55, 0.22);
 }
+
+/* ============================================================
+   Palette C — Ghost #F7F7FF / Powder #C1D8E2 / Sand #B7A781 /
+   Umber #432D16, same 60/20/10/10 roles.
+   Contrast spine (computed):
+     - body #432D16 on #F7F7FF ............ 12.1:1
+     - button label #432D16 on #C1D8E2 .... 8.7:1
+     - powder on umber (dark surfaces) .... 8.7:1
+     - small accent text #4A6878 .......... 5.6:1
+     - large accent text #6E8C9E .......... 3.3:1
+     - sand footer-mute on umber .......... 5.5:1
+   ============================================================ */
+
+[data-theme='powder'] {
+  --parchment: #f7f7ff;
+  --chestnut: #c1d8e2;
+  --mushroom: #b7a781;
+  --obsidian: #432d16;
+
+  --parchment-raised: #ffffff;
+  --parchment-deep: #ebedf5;
+  --ink-soft: rgba(67, 45, 22, 0.8); /* ~6.7:1 on ghost */
+  --ink-mute: rgba(67, 45, 22, 0.72); /* ~5.2:1 on ghost */
+  --chestnut-ink: #4a6878; /* powder pressed to slate — 5.6:1 */
+  --accent-display: #6e8c9e; /* deep powder for large text — 3.3:1 */
+  --accent-shadow: rgba(67, 45, 22, 0.25);
+  --btn-edge: #6e8c9e;
+  --line: rgba(183, 167, 129, 0.55);
+  --line-strong: rgba(183, 167, 129, 0.9);
+  --mushroom-band: rgba(183, 167, 129, 0.14);
+  --mushroom-ghost: rgba(183, 167, 129, 0.32);
+  --chestnut-wash: rgba(193, 216, 226, 0.35);
+  --chestnut-line: rgba(183, 167, 129, 0.6);
+  --on-dark-mute: rgba(247, 247, 255, 0.75); /* ~7.5:1 on umber */
+  --footer-mute: var(--mushroom); /* sand passes 5.5:1 on umber */
+  --footer-line: rgba(183, 167, 129, 0.35);
+  --nav-veil: rgba(247, 247, 255, 0.88);
+  --on-dark-line: rgba(247, 247, 255, 0.35);
+  --on-accent-line: rgba(67, 45, 22, 0.45);
+  --state-ghost-a: rgba(110, 140, 158, 0.5);
+  --state-ghost-b: rgba(67, 45, 22, 0.2);
+}

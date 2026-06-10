@@ -12,12 +12,21 @@ const THEMES = [
     tag: 'A',
     name: 'Palette A — Parchment, Chestnut, Mushroom, Obsidian',
     dots: ['#E7E1D4', '#B0664E', '#A4988C', '#05040B'],
+    chrome: '#E7E1D4',
   },
   {
     id: 'olive',
     tag: 'B',
     name: 'Palette B — Sage, Silver, Olive, Darkmoss',
     dots: ['#E3E4DC', '#C4C4C6', '#827D65', '#494637'],
+    chrome: '#E3E4DC',
+  },
+  {
+    id: 'powder',
+    tag: 'C',
+    name: 'Palette C — Ghost, Powder, Sand, Umber',
+    dots: ['#F7F7FF', '#C1D8E2', '#B7A781', '#432D16'],
+    chrome: '#F7F7FF',
   },
 ]
 
@@ -44,9 +53,8 @@ export default function PaletteToggle() {
       root.dataset.theme = theme
     }
     // Browser chrome follows the active palette (mirrors index.html pre-paint)
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'olive' ? '#E3E4DC' : '#E7E1D4')
+    const chrome = THEMES.find((t) => t.id === theme)?.chrome || THEMES[0].chrome
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', chrome)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => root.classList.remove('theme-swap'))
     })

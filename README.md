@@ -14,9 +14,9 @@ sections 01–06).
 
 ### Palettes (strict 60/20/10/10, comparable via the nav toggle)
 
-Two palettes share the same 60/20/10/10 roles. The pill toggle in the nav switches between
-them (persisted in `localStorage`, applied pre-paint by an inline script in `index.html`,
-implemented as a `data-theme` attribute override of the design tokens).
+Three candidate palettes share the same 60/20/10/10 roles. The pill toggle in the nav
+switches between them (persisted in `localStorage`, applied pre-paint by an inline script in
+`index.html`, implemented as a `data-theme` attribute override of the design tokens).
 
 **Palette 01 — default**
 
@@ -27,7 +27,7 @@ implemented as a `data-theme` attribute override of the design tokens).
 | `--mushroom` | `#A4988C` | 10% | Borders, dividers, section bands |
 | `--obsidian` | `#05040B` | 10% | Text, headings, footer |
 
-**Palette 02 — `data-theme="olive"`**
+**Palette B — `data-theme="olive"`**
 
 | Role | Hex | Share |
 | --- | --- | --- |
@@ -35,6 +35,19 @@ implemented as a `data-theme` attribute override of the design tokens).
 | Accent (Silver) | `#C4C4C6` | 20% |
 | Secondary (Olive) | `#827D65` | 10% |
 | Dark (Darkmoss) | `#494637` | 10% |
+
+**Palette C — `data-theme="powder"`**
+
+| Role | Hex | Share |
+| --- | --- | --- |
+| Base (Ghost) | `#F7F7FF` | 60% |
+| Accent (Powder) | `#C1D8E2` | 20% |
+| Secondary (Sand) | `#B7A781` | 10% |
+| Dark (Umber) | `#432D16` | 10% |
+
+Palette C's contrast spine: body Umber-on-Ghost 12.1:1; button labels Umber-on-Powder 8.7:1;
+accent text uses pressed powders (`#4A6878` small ≈5.6:1, `#6E8C9E` large ≈3.3:1); Sand
+serves footer muted text directly (5.5:1 on Umber).
 
 Defined as CSS custom properties in `src/styles/tokens.css`. Contrast notes (palette 01):
 body text is Obsidian on Parchment (≈16:1); buttons use Obsidian labels on Chestnut fills

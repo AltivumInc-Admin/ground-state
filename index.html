@@ -21,10 +21,11 @@
          Hexes mirror THEMES in src/components/PaletteToggle.jsx. */
       try {
         var t = localStorage.getItem('tqc-theme')
-        if (t && t !== 'ember') {
+        var chrome = { olive: '#E3E4DC', powder: '#F7F7FF' }
+        if (t && chrome[t]) {
           document.documentElement.dataset.theme = t
           var m = document.querySelector('meta[name="theme-color"]')
-          if (m && t === 'olive') m.setAttribute('content', '#E3E4DC')
+          if (m) m.setAttribute('content', chrome[t])
         }
       } catch (e) {}
     </script>
