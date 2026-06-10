@@ -325,6 +325,214 @@
   }
 }
 
+/* ---- The quantum figure system (fig. 01–04) ---- */
+
+/* Superposition type effect: the accent phrase loads as two offset ghost
+   states and collapses into one — measurement. Reduced motion skips it. */
+.superposition {
+  animation: state-collapse 1.7s var(--ease-out) 0.55s both;
+}
+
+@keyframes state-collapse {
+  0% {
+    text-shadow:
+      0.16em 0 0 var(--state-ghost-a),
+      -0.16em 0 0 var(--state-ghost-b);
+    opacity: 0.82;
+  }
+  60% {
+    text-shadow:
+      0.04em 0 0 var(--state-ghost-a),
+      -0.04em 0 0 var(--state-ghost-b);
+    opacity: 1;
+  }
+  100% {
+    text-shadow:
+      0 0 0 transparent,
+      0 0 0 transparent;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .superposition {
+    animation: none;
+    text-shadow: none;
+  }
+}
+
+.fig-caption {
+  display: block;
+  margin-top: 1rem;
+  max-width: 34ch;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.03em;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.fig-tag {
+  display: inline-block;
+  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--chestnut-ink);
+  margin-right: 0.6em;
+}
+
+.fig-ket {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--chestnut-ink);
+  letter-spacing: 0.06em;
+}
+
+.qfig {
+  margin: 0;
+}
+
+/* fig. 02 — wave–particle divider */
+.fig-divider {
+  padding-block: clamp(1rem, 2vw, 2rem);
+}
+
+.fig-divider .fig-caption {
+  margin-inline: auto;
+  text-align: center;
+  max-width: 52ch;
+}
+
+.wave-particle {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.wp-wave {
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  transition: stroke-dashoffset 1.8s var(--ease-out) 0.2s;
+}
+
+.reveal.is-in .wp-wave {
+  stroke-dashoffset: 0;
+}
+
+.wp-dot {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+.reveal.is-in .wp-dot {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-wave {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+
+  .wp-dot {
+    opacity: 1;
+  }
+}
+
+/* fig. 03 — energy levels (tiers) */
+.tiers-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+}
+
+.tiers-lede {
+  margin-top: 0.75rem;
+  color: var(--ink-soft);
+  max-width: 38ch;
+}
+
+.energy-levels {
+  width: min(20rem, 100%);
+  height: auto;
+}
+
+.el-name {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.el-sub {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  fill: var(--ink-soft);
+}
+
+.el-e {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-soft);
+}
+
+.el-hv {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  fill: var(--chestnut-ink);
+}
+
+@media (max-width: 860px) {
+  .tiers-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+/* fig. 04 — Bloch sphere (final CTA) */
+.cta-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+
+.cta-fig {
+  justify-self: center;
+}
+
+.bloch-sphere {
+  width: min(12rem, 100%);
+  height: auto;
+}
+
+.bs-ket,
+.bs-psi {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-soft);
+}
+
+.bs-psi {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--chestnut-ink);
+}
+
+@media (max-width: 860px) {
+  .cta-head {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-fig {
+    justify-self: start;
+  }
+}
+
 /* Interference mark — slow drift */
 .interference {
   width: min(100%, 26rem);

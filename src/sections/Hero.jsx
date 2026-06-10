@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Interference from '../components/Interference.jsx'
+import FigCaption from '../components/figures/FigCaption.jsx'
 import Reveal from '../components/Reveal.jsx'
 
 export default function Hero() {
@@ -12,7 +13,8 @@ export default function Hero() {
           </Reveal>
           <Reveal delay={0.08}>
             <h1 id="hero-title">
-              The private network for <span className="accent">funded quantum founders.</span>
+              The private network for{' '}
+              <span className="accent superposition">funded quantum founders.</span>
             </h1>
           </Reveal>
           <Reveal delay={0.16}>
@@ -43,8 +45,11 @@ export default function Hero() {
             </p>
           </Reveal>
         </div>
-        <Reveal delay={0.2} className="hero-figure">
+        <Reveal delay={0.2} className="hero-figure" as="figure">
           <Interference />
+          <FigCaption num="01" ket="|network⟩ = α|capital⟩ + β|builders⟩">
+            Two-source interference. Where coherent waves overlap, amplitude compounds.
+          </FigCaption>
         </Reveal>
       </div>
     </section>

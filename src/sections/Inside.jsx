@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import Reveal from '../components/Reveal.jsx'
+import EnergyLevels from '../components/figures/EnergyLevels.jsx'
+import FigCaption from '../components/figures/FigCaption.jsx'
 
 const ROOM = [
   {
@@ -161,10 +163,22 @@ export default function Inside() {
           </Reveal>
         </div>
 
-        <Reveal>
-          <h3 className="stack-group-title" style={{ borderBottom: 'none', marginBottom: 0 }}>
-            The Tiers
-          </h3>
+        <Reveal className="tiers-head">
+          <div>
+            <h3 className="stack-group-title" style={{ borderBottom: 'none', marginBottom: 0 }}>
+              The Tiers
+            </h3>
+            <p className="tiers-lede">
+              Membership is quantized: three discrete states, no continuum between them.
+            </p>
+          </div>
+          <figure className="qfig">
+            <EnergyLevels />
+            <FigCaption num="03">
+              Discrete levels, E<sub>n</sub> ∝ n². The only transition up from the ground state
+              is an application.
+            </FigCaption>
+          </figure>
         </Reveal>
         <div className="tiers">
           <Reveal className="tier" as="article" aria-label="The Signal tier">

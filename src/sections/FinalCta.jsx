@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Reveal from '../components/Reveal.jsx'
+import BlochSphere from '../components/figures/BlochSphere.jsx'
+import FigCaption from '../components/figures/FigCaption.jsx'
 
 const STEPS = [
   {
@@ -103,18 +105,26 @@ export default function FinalCta() {
         08
       </span>
       <div className="container">
-        <Reveal>
-          <p className="kicker">
-            <strong>08</strong> The Ask
-          </p>
-          <h2 id="join-title" className="section-title">
-            If you’re building quantum, you should be in the room.
-          </h2>
-          <p className="lede">
-            One action. The founding cohort is forming now — 15–25 funded quantum founders, by
-            application only.
-          </p>
-        </Reveal>
+        <div className="cta-head">
+          <Reveal>
+            <p className="kicker">
+              <strong>08</strong> The Ask
+            </p>
+            <h2 id="join-title" className="section-title">
+              If you’re building quantum, you should be in the room.
+            </h2>
+            <p className="lede">
+              One action. The founding cohort is forming now — 15–25 funded quantum founders, by
+              application only.
+            </p>
+          </Reveal>
+          <Reveal as="figure" className="qfig cta-fig" delay={0.15}>
+            <BlochSphere />
+            <FigCaption num="04">
+              A state holds both answers until it is measured. Applying is the measurement.
+            </FigCaption>
+          </Reveal>
+        </div>
 
         <div className="cta-steps">
           {STEPS.map((step, i) => (

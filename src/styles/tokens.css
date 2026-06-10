@@ -35,6 +35,8 @@
   --nav-veil: rgba(231, 225, 212, 0.88);
   --on-dark-line: rgba(231, 225, 212, 0.35);
   --on-accent-line: rgba(5, 4, 11, 0.45);
+  --state-ghost-a: rgba(176, 102, 78, 0.4); /* superposition ghost states (hero type) */
+  --state-ghost-b: rgba(5, 4, 11, 0.18);
 
   /* ---- Type ---- */
   --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
@@ -99,4 +101,6 @@
   --nav-veil: rgba(227, 228, 220, 0.88);
   --on-dark-line: rgba(227, 228, 220, 0.35);
   --on-accent-line: rgba(73, 70, 55, 0.45);
+  --state-ghost-a: rgba(126, 126, 129, 0.5);
+  --state-ghost-b: rgba(73, 70, 55, 0.22);
 }
