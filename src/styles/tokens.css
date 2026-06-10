@@ -1,0 +1,49 @@
+/* ============================================================
+   The Quantum Collective — Design Tokens
+   Palette discipline: 60% Parchment / 20% Chestnut / 10% Mushroom / 10% Obsidian
+   ============================================================ */
+
+:root {
+  /* ---- The four ---- */
+  --parchment: #e7e1d4;
+  --chestnut: #b0664e;
+  --mushroom: #a4988c;
+  --obsidian: #05040b;
+
+  /* ---- Derived washes & alphas (same four pigments only) ---- */
+  --parchment-raised: #ede8dd; /* cards / receipt paper, a half-tone up */
+  --parchment-deep: #ded7c6; /* pressed areas, input fields */
+  --ink: var(--obsidian);
+  --ink-soft: rgba(5, 4, 11, 0.74); /* secondary text — AA on parchment */
+  --ink-mute: rgba(5, 4, 11, 0.56); /* captions at >=16px only */
+  --line: rgba(164, 152, 140, 0.55); /* hairlines */
+  --line-strong: rgba(164, 152, 140, 0.9);
+  --mushroom-band: rgba(164, 152, 140, 0.18); /* section tint bands */
+  --mushroom-ghost: rgba(164, 152, 140, 0.34); /* oversized decorative numerals */
+  --chestnut-wash: rgba(176, 102, 78, 0.09);
+  --chestnut-line: rgba(176, 102, 78, 0.45);
+  --on-dark-mute: rgba(231, 225, 212, 0.62); /* muted text on obsidian */
+
+  /* ---- Type ---- */
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Hanken Grotesk Variable', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+
+  --text-xs: 0.72rem;
+  --text-sm: 0.875rem;
+  --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --text-lede: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
+  --text-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --text-h2: clamp(2rem, 1.35rem + 2.7vw, 3.25rem);
+  --text-h1: clamp(2.75rem, 1.7rem + 4.8vw, 5.25rem);
+
+  /* ---- Rhythm ---- */
+  --space-section: clamp(5rem, 4rem + 6vw, 9.5rem);
+  --container: 72rem;
+  --container-pad: clamp(1.25rem, 4vw, 2.5rem);
+  --radius: 4px;
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --reveal-duration: 0.9s;
+}
