@@ -1,0 +1,14 @@
+# Deploy parameters for the checkout stack. Secrets are NEVER stored here —
+# pass them on the command line:
+#   sam deploy --parameter-overrides \
+#     StripeSecretKey=$STRIPE_SECRET_KEY \
+#     StripeWebhookSecret=$STRIPE_WEBHOOK_SECRET \
+#     PriceMonthly=price_... PriceAnnual=price_...
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "gss-stripe-checkout"
+region = "us-east-2"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false

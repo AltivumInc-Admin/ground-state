@@ -83,6 +83,11 @@ The three.js scene is split into its own chunk and loaded after first paint; ini
 - `/` — the landing page
 - `/apply` — membership application
 - `/#signal` — The Signal free-newsletter capture
+- `/activate` — post-acceptance membership activation (plan choice → Stripe Checkout).
+  Deliberately unlinked from the page and nav: the URL travels only in acceptance emails,
+  per the intent boundary that cold visitors are never pushed to the $300 ask.
+- `/welcome` — Stripe's `success_url`; verifies the session against the backend before
+  claiming the membership is active.
 
 ## Form intake (environment variables)
 
@@ -105,6 +110,42 @@ body-size limit, and rate-limit per IP — client-side validation and `maxLength
 caps only. Add a honeypot/turnstile before real launch (newsletter endpoints attract
 subscription-bombing bots), and fill in the Content-Security-Policy template in
 `customHttp.yml` once the endpoint origins are known.
+
+## Stripe Checkout backend (`backend/checkout/`)
+
+Membership payment runs through Stripe Checkout sessions created by a small dependency-free
+Lambda (SAM stack `gss-stripe-checkout`, us-east-2) behind an API Gateway HTTP API:
+
+| Route | Purpose |
+| --- | --- |
+| `POST /checkout` | `{ plan: "monthly" \| "annual" }` → creates a subscription Checkout session, returns `{ url }` |
+| `GET /session?session_id=cs_...` | Safe status subset (`status`, `payment_status`, `customer_email`, `plan`) for `/welcome` |
+| `POST /webhook` | Stripe events, HMAC-verified (fail-closed until the signing secret is configured) |
+
+CORS is handled by the HTTP API (`CorsConfiguration` in `template.yaml`), not the Lambda.
+The Stripe catalog lives in the sandbox account: product **The Round — Membership** with
+prices `round_monthly` ($300/mo, founding rate) and `round_annual` ($3,600/yr), plus the
+`REFER-A-FOUNDER` coupon (100% off one invoice — apply only to monthly subscriptions).
+
+Local development:
+
+```bash
+node --env-file=.env.local backend/checkout/local.mjs   # handler on :8787
+# .env.local: VITE_CHECKOUT_ENDPOINT=http://localhost:8787
+```
+
+Deploy (secrets come from the environment, never from samconfig.toml):
+
+```bash
+cd backend/checkout
+sam deploy --parameter-overrides \
+  "StripeSecretKey=$STRIPE_SECRET_KEY PriceMonthly=price_... PriceAnnual=price_... StripeWebhookSecret=$STRIPE_WEBHOOK_SECRET"
+```
+
+Then set `VITE_CHECKOUT_ENDPOINT` to the stack's `ApiUrl` output (Amplify console for
+production). When it is unset, `/activate` renders an honest preview state. Before live
+keys: move secrets from Lambda env vars to SSM SecureString or Secrets Manager, drop
+`http://localhost:5173` from the CORS origins, and add throttling on `/checkout`.
 
 ## Deploying to AWS Amplify Hosting (GitHub CI/CD)
 
@@ -132,9 +173,11 @@ Setup:
 ```
 src/
   styles/        tokens.css (palette/type), base.css (reset/primitives), components.css
-  lib/           fx.jsx (GSAP system), submit.js (form POST helper)
+  lib/           fx.jsx (GSAP system), submit.js (form POST/JSON helpers)
   three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
   components/    Nav, Footer, Mark (brand), Mosaic, HeroScene, figures/
   sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05), Story (/story)
-  pages/         Landing, Story, Apply
+  pages/         Landing, Story, Apply, Activate, Welcome
+backend/
+  checkout/      SAM stack: Stripe Checkout sessions + webhook (template.yaml, src/handler.mjs)
 ```

@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Stripe Checkout backend for The Ground State Society — creates subscription
+  Checkout sessions, reads session status for the success page, and receives
+  signature-verified Stripe webhooks.
+
+Parameters:
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Stripe secret key (sk_test_... in test mode)
+  StripeWebhookSecret:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: >
+      Stripe webhook signing secret (whsec_...). Empty until the webhook
+      endpoint is registered; the /webhook route refuses traffic until set.
+  PriceMonthly:
+    Type: String
+    Description: Stripe price ID for The Round, monthly ($300/mo)
+  PriceAnnual:
+    Type: String
+    Description: Stripe price ID for The Round, annual ($3,600/yr)
+  SiteUrl:
+    Type: String
+    Default: https://groundstatesociety.com
+    Description: Origin the success/cancel URLs point back to
+
+Resources:
+  CheckoutApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # /checkout is unauthenticated and every request is a Stripe write —
+      # throttle hard. A vetted cohort activates one at a time, not in bursts.
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10
+        ThrottlingBurstLimit: 20
+      CorsConfiguration:
+        AllowOrigins:
+          - https://groundstatesociety.com
+          - https://www.groundstatesociety.com
+          - http://localhost:5173
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - content-type
+        MaxAge: 600
+
+  CheckoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: handler.handler
+      CodeUri: src/
+      Architectures:
+        - arm64
+      MemorySize: 256
+      Timeout: 15
+      # Blast-radius cap: a flood can never consume shared account
+      # concurrency or run unbounded Stripe writes
+      ReservedConcurrentExecutions: 10
+      Environment:
+        Variables:
+          STRIPE_SECRET_KEY: !Ref StripeSecretKey
+          STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
+          PRICE_MONTHLY: !Ref PriceMonthly
+          PRICE_ANNUAL: !Ref PriceAnnual
+          SITE_URL: !Ref SiteUrl
+      Events:
+        Checkout:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CheckoutApi
+            Path: /checkout
+            Method: POST
+        Session:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CheckoutApi
+            Path: /session
+            Method: GET
+        Webhook:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CheckoutApi
+            Path: /webhook
+            Method: POST
+
+  # Until a member system exists, the webhook's structured logs ARE the
+  # membership ledger (and they contain member emails) — own the log group
+  # explicitly so retention is bounded and deliberate, not account-default.
+  CheckoutLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CheckoutFunction}
+      RetentionInDays: 365
+
+Outputs:
+  ApiUrl:
+    Description: Base URL for the checkout API (set as VITE_CHECKOUT_ENDPOINT)
+    Value: !Sub https://${CheckoutApi}.execute-api.${AWS::Region}.amazonaws.com
