@@ -10,21 +10,31 @@ import Activate from './pages/Activate.jsx'
 import Welcome from './pages/Welcome.jsx'
 import { ScrollTrigger } from './lib/fx.jsx'
 
-/* Scrolls to top on route change, or to the anchor when a hash is present. */
+/* Scrolls to top on route change, or to the anchor when a hash is present.
+   Keyed on location.key so re-clicking the same anchor scrolls again. */
 function ScrollManager() {
-  const { pathname, hash } = useLocation()
+  const { pathname, hash, key } = useLocation()
 
   useEffect(() => {
     if (hash) {
       const el = document.getElementById(hash.slice(1))
-      if (el) el.scrollIntoView({ block: 'start' })
-    } else {
-      window.scrollTo(0, 0)
+      if (el) {
+        // Refresh BEFORE scrolling: html{scroll-behavior:smooth} makes
+        // scrollIntoView async, and a later refresh() restores the old
+        // scroll position — cancelling the glide mid-flight.
+        ScrollTrigger.refresh()
+        el.scrollIntoView({ block: 'start' })
+        return undefined
+      }
     }
+    // Route changes land at the top instantly — gliding up through the
+    // previous page's length reads as broken, and the instant jump can't
+    // be cancelled by the deferred refresh.
+    window.scrollTo({ top: 0, behavior: 'instant' })
     // Page height changes across routes — re-measure scroll triggers
     const id = requestAnimationFrame(() => ScrollTrigger.refresh())
     return () => cancelAnimationFrame(id)
-  }, [pathname, hash])
+  }, [pathname, hash, key])
 
   return null
 }
