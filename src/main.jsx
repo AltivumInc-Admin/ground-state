@@ -6,7 +6,8 @@ import { ScrollTrigger } from './lib/fx.jsx'
 import { initMagnetic } from './lib/magnetic.js'
 
 import '@fontsource-variable/archivo/wdth.css'
-import '@fontsource-variable/archivo/wdth-italic.css'
+/* No italic face: the one <em> phrase (.signal h3 em) renders as a
+   synthesized oblique — 101.68 kB of latin italic stays off the wire */
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/500.css'
 import '@fontsource/ibm-plex-mono/700.css'
