@@ -399,7 +399,7 @@
 /* ============ Problem ============ */
 
 .problem-grid {
-  margin-top: clamp(3rem, 5vw, 4.5rem);
+  margin-top: clamp(2.25rem, 3.5vw, 3.25rem);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-style: solid;
@@ -412,7 +412,7 @@
   border-style: solid;
   border-color: var(--line-strong);
   border-width: 0 0 1px 1px;
-  padding: clamp(1.6rem, 2.5vw, 2.4rem) clamp(1.3rem, 2vw, 1.8rem);
+  padding: clamp(1.4rem, 2vw, 1.9rem) clamp(1.2rem, 1.8vw, 1.6rem);
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s var(--ease-out);
@@ -424,7 +424,7 @@
 
 .card-num {
   color: var(--accent);
-  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: clamp(1.1rem, 2vw, 1.8rem);
 }
 
 .card-tag {
@@ -444,8 +444,8 @@
 }
 
 .whitespace-callout {
-  margin-top: clamp(3rem, 5vw, 4.5rem);
-  padding: clamp(2.2rem, 4.5vw, 4rem);
+  margin-top: clamp(2.25rem, 3.5vw, 3.25rem);
+  padding: clamp(1.8rem, 3.5vw, 3rem);
   display: grid;
   gap: 1.4rem;
 }
@@ -569,7 +569,7 @@
 /* ============ Figure divider ============ */
 
 .fig-divider {
-  padding-block: clamp(3rem, 6vw, 5.5rem);
+  padding-block: clamp(2.5rem, 4.5vw, 4rem);
 }
 
 .fig-divider svg {
@@ -653,7 +653,7 @@
 /* ============ Proof (black data panel) ============ */
 
 .stats {
-  margin-top: clamp(3rem, 5vw, 5rem);
+  margin-top: clamp(2.25rem, 3.5vw, 3.5rem);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 2.5rem 2rem;
@@ -691,7 +691,7 @@
 }
 
 .proof-quote {
-  margin-block: clamp(3.5rem, 6vw, 6rem) 0;
+  margin-block: clamp(2.5rem, 4vw, 4rem) 0;
   border-left: 2px solid var(--powder);
   padding-left: clamp(1.5rem, 3vw, 2.5rem);
 }
@@ -711,9 +711,12 @@
 }
 
 .proof-tables {
-  margin-top: clamp(3.5rem, 6vw, 6rem);
+  margin-top: clamp(2.5rem, 4vw, 4rem);
   display: grid;
-  gap: clamp(3rem, 5vw, 5rem);
+  /* minmax(0, …) lets .table-wrap actually scroll instead of blowing
+     out the column to the table's min-width on small screens */
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 4vw, 3.5rem);
 }
 
 .table-wrap {
@@ -805,7 +808,7 @@
 /* ============ Inside ============ */
 
 .stack-groups {
-  margin-block: clamp(3.5rem, 6vw, 5.5rem);
+  margin-block: clamp(2.5rem, 4vw, 3.75rem);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(2.5rem, 5vw, 5rem);
@@ -841,7 +844,7 @@
   display: grid;
   grid-template-columns: 2.6rem 1fr;
   gap: 1rem;
-  padding-block: 1.15rem;
+  padding-block: 0.9rem;
   border-top: 1px solid var(--line);
 }
 
@@ -871,7 +874,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(2.5rem, 5vw, 5rem);
   align-items: center;
-  margin-block: clamp(3.5rem, 6vw, 6rem);
+  margin-block: clamp(2.5rem, 4vw, 4rem);
 }
 
 .receipt-intro h3 {
@@ -889,7 +892,7 @@
   position: relative;
   max-width: 30rem;
   margin-inline: auto;
-  padding: clamp(2rem, 3.5vw, 2.6rem) clamp(1.6rem, 3vw, 2.2rem);
+  padding: clamp(1.7rem, 3vw, 2.2rem) clamp(1.5rem, 2.5vw, 2rem);
   font-family: var(--font-mono);
   font-size: 0.84rem;
   box-shadow: 12px 12px 0 rgba(193, 216, 226, 0.55);
@@ -924,7 +927,7 @@
 .receipt-rule {
   border: none;
   border-top: 1px dashed var(--line-strong);
-  margin: 1.2rem 0;
+  margin: 0.95rem 0;
 }
 
 .receipt-label {
@@ -936,7 +939,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.6rem;
-  padding-block: 0.22rem;
+  padding-block: 0.16rem;
 }
 
 .receipt-line .dots {
@@ -954,7 +957,7 @@
 }
 
 .receipt-foot {
-  margin-top: 1.5rem;
+  margin-top: 1.1rem;
   color: var(--ink-mute);
   font-size: 0.66rem;
 }
@@ -966,7 +969,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   gap: clamp(2rem, 4vw, 4rem);
   align-items: end;
-  margin-top: clamp(3.5rem, 6vw, 5.5rem);
+  margin-top: clamp(2.5rem, 4vw, 3.75rem);
 }
 
 .tiers-lede {
@@ -975,7 +978,7 @@
 }
 
 .tiers {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
@@ -987,7 +990,7 @@
   flex-direction: column;
   border: 1px solid var(--line-strong);
   background: var(--bg);
-  padding: clamp(1.8rem, 2.5vw, 2.3rem) clamp(1.5rem, 2vw, 1.9rem);
+  padding: clamp(1.5rem, 2vw, 1.9rem) clamp(1.3rem, 1.8vw, 1.7rem);
   transition: translate 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
 }
 
@@ -1007,7 +1010,7 @@
 }
 
 .tier-head {
-  min-height: 5.2rem;
+  min-height: 4.6rem;
 }
 
 .tier-flag {
@@ -1034,7 +1037,7 @@
   font-size: clamp(2.1rem, 1.8rem + 1.1vw, 2.7rem);
   line-height: 1;
   text-transform: uppercase;
-  margin-block: 1.5rem;
+  margin-block: 1.1rem;
 }
 
 .tier-price small {
@@ -1062,7 +1065,7 @@
 
 .tier-foot {
   margin-top: auto;
-  padding-top: 1.6rem;
+  padding-top: 1.3rem;
 }
 
 .tier-foot .btn {
@@ -1112,7 +1115,7 @@
 }
 
 .cta-steps {
-  margin-block: clamp(3rem, 5vw, 5rem);
+  margin-block: clamp(2.25rem, 3.5vw, 3.5rem);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-style: solid;
@@ -1131,7 +1134,7 @@
 .step-num {
   display: block;
   color: var(--sand);
-  margin-bottom: clamp(1.5rem, 3vw, 2.6rem);
+  margin-bottom: clamp(1rem, 2vw, 1.6rem);
 }
 
 .cta-step h3 {
@@ -1158,7 +1161,7 @@
 /* --- FAQ --- */
 
 .faq {
-  margin-top: clamp(3.5rem, 6vw, 6rem);
+  margin-top: clamp(2.5rem, 4vw, 4rem);
   max-width: 52rem;
 }
 
@@ -1219,7 +1222,7 @@
 /* --- The Signal --- */
 
 .signal {
-  margin-top: clamp(3.5rem, 6vw, 6rem);
+  margin-top: clamp(2.5rem, 4vw, 4rem);
   scroll-margin-top: var(--anchor-offset);
   border: 1px solid var(--line-strong);
   background: var(--bg-raised);
@@ -1492,15 +1495,6 @@ select {
   max-width: 56ch;
 }
 
-.route-note {
-  border: 1px solid var(--accent);
-  background: rgba(193, 216, 226, 0.18);
-  padding: 1.6rem;
-  display: grid;
-  gap: 1.1rem;
-  justify-items: start;
-}
-
 @media (max-width: 980px) {
   .apply-grid {
     grid-template-columns: 1fr;
@@ -1511,12 +1505,28 @@ select {
   }
 }
 
+/* ============ Story page ============ */
+
+.story-page {
+  padding-top: var(--nav-h);
+  min-height: 100vh;
+}
+
+/* Tuck the page actions up under the story's own section padding */
+.story-page-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: calc(var(--space-section) * -0.45);
+  padding-bottom: var(--space-section);
+}
+
 /* ============ Footer ============ */
 
 .footer {
   position: relative;
   border-top: 1px solid var(--line);
-  padding-top: clamp(3.5rem, 6vw, 5.5rem);
+  padding-top: clamp(3rem, 4.5vw, 4.25rem);
   overflow: clip;
 }
 
@@ -1581,7 +1591,7 @@ select {
 }
 
 .footer-bottom {
-  margin-top: clamp(3rem, 5vw, 4.5rem);
+  margin-top: clamp(2.25rem, 3.5vw, 3.25rem);
   padding-block: 1.6rem;
   border-top: 1px solid var(--line);
   display: flex;
@@ -1613,21 +1623,58 @@ select {
   pointer-events: none;
 }
 
-/* Cursor companion — trails the native cursor, grows over targets.
-   Enabled from JS on fine pointers without reduced motion. */
-.cursor-ring {
+/* Cursor companion — a measurement reticle. Four corner ticks ride
+   with the native cursor as a small frame; over interactive elements
+   they spring out and lock onto the target's bounds, like a viewfinder
+   acquiring its subject. mix-blend-mode: difference keeps the marks
+   legible on both grounds. Enabled from JS on fine pointers without
+   reduced motion. */
+.cursor-reticle {
   display: none;
   position: fixed;
-  top: -8px;
-  left: -8px;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid #fff;
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
   mix-blend-mode: difference;
-  opacity: 0.55;
+  opacity: 0;
   pointer-events: none;
   z-index: 300;
+}
+
+.cursor-reticle i {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 0 solid #fff;
+}
+
+.cursor-reticle i:nth-child(1) {
+  top: 0;
+  left: 0;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.cursor-reticle i:nth-child(2) {
+  top: 0;
+  right: 0;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+.cursor-reticle i:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.cursor-reticle i:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
 }
 
 /* fig. 04 live — the 3D Bloch sphere */

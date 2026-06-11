@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: 'A real conversation',
-    body: 'Every application is reviewed personally. We verify that you’re an operating founder of a funded quantum company — the vetting is the product.',
+    body: 'Every application is reviewed personally. We verify that you’re an operating quantum founder — the vetting is the product.',
   },
   {
     title: 'Placement',
@@ -26,11 +26,15 @@ const STEPS = [
 const FAQS = [
   {
     q: 'Why pay $300 a month when free quantum communities exist?',
-    a: 'Five structural reasons. Curation creates the signal floor open Discords can never reach. Payment creates skin in the game — paying members show up and share real information. Confidentiality is enforced, which makes conversations about burn, down rounds, and disputes possible. Warm capital intros have asymmetric value — one term sheet returns years of fees. And structured peer accountability with founders who actually understand quantum milestones has no free equivalent.',
+    a: 'Five structural reasons. Curation creates the signal floor open Discords can never reach. Payment creates skin in the game — paying members show up and share real information. Confidentiality is enforced, which makes conversations about burn, down rounds, and disputes possible. Warm capital intros have asymmetric value — one term sheet can return years of fees. And structured peer accountability with founders who actually understand quantum milestones has no free equivalent.',
+  },
+  {
+    q: 'What do I get for bringing another founder in?',
+    a: 'A month free. Refer a founder who passes vetting and joins, and your next month’s membership is waived. The network grows by vouching — and vouching is rewarded.',
   },
   {
     q: 'Who qualifies for The Round?',
-    a: 'Founders and co-founders of venture-funded, operating quantum startups — across hardware, software, sensing, networking, and post-quantum. Pre-funded founders start free in The Signal, and we convert them the day they raise.',
+    a: 'Founders and co-founders of operating quantum startups — across hardware, software, sensing, networking, and post-quantum. Funding stage is not the bar; the vetting is. If you’re building a real quantum company, apply — and The Signal stays free for every quantum builder either way.',
   },
   {
     q: 'I’m an engineer, researcher, or investor. Is there a place for me?',
@@ -148,13 +152,13 @@ export default function FinalCta() {
         <div className="cta-head">
           <div>
             <p className="kicker" data-fade>
-              <strong>06</strong> The Ask
+              <strong>05</strong> The Ask
             </p>
             <h2 id="join-title" className="section-title" data-split>
               If you’re building quantum, you should be in the room.
             </h2>
             <p className="lede" data-fade>
-              One action. The founding cohort is forming now — 15–25 funded quantum founders, by
+              One action. The founding cohort is forming now — 15–25 vetted quantum founders, by
               application only.
             </p>
           </div>

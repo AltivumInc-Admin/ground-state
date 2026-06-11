@@ -6,10 +6,9 @@ import { gsap, useGSAP, MOTION_OK } from '../lib/fx.jsx'
 const SECTIONS = [
   { num: '01', id: 'network', label: 'Network' },
   { num: '02', id: 'problem', label: 'Problem' },
-  { num: '03', id: 'story', label: 'Story' },
-  { num: '04', id: 'proof', label: 'Proof' },
-  { num: '05', id: 'inside', label: 'Inside' },
-  { num: '06', id: 'join', label: 'Join' },
+  { num: '03', id: 'proof', label: 'Proof' },
+  { num: '04', id: 'inside', label: 'Inside' },
+  { num: '05', id: 'join', label: 'Join' },
 ]
 
 export default function Nav() {
@@ -102,7 +101,7 @@ export default function Nav() {
         <p className="nav-tag label" aria-hidden="true">
           Members only
           <br />
-          Funded quantum founders
+          Vetted quantum founders
         </p>
 
         <nav aria-label="Page sections">
@@ -128,6 +127,16 @@ export default function Nav() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                to="/story"
+                className={`nav-link label${pathname === '/story' ? ' is-active' : ''}`}
+                onClick={() => setOpen(false)}
+              >
+                <em>06</em>
+                Story
+              </Link>
+            </li>
             <li>
               <Link to="/apply" className="btn btn-primary nav-cta" onClick={() => setOpen(false)}>
                 Apply

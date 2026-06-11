@@ -14,7 +14,7 @@ export default function Footer() {
               <div>
                 <p className="footer-wordmark">The Ground State Society</p>
                 <p className="footer-tag">
-                  The private, members-only network for funded quantum founders. Built early, on
+                  The private, members-only network for quantum founders. Built early, on
                   purpose — to be the default room as the field grows tenfold.
                 </p>
               </div>
@@ -27,7 +27,7 @@ export default function Footer() {
                 <Link to="/#problem">The Problem</Link>
               </li>
               <li>
-                <Link to="/#story">The Story</Link>
+                <Link to="/story">The Story</Link>
               </li>
               <li>
                 <Link to="/#proof">The Proof</Link>

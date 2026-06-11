@@ -75,6 +75,7 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
         scope.querySelectorAll('[data-draw]').forEach((el) => {
           const shapes = [...el.querySelectorAll('path, line, circle, ellipse, polyline')]
           if (!shapes.length) return
+          const scrub = parseFloat(el.dataset.drawScrub)
           // Stroked shapes draw in; fill-only shapes (the particle dots)
           // materialize afterwards, one by one — wave first, then its
           // discrete samples.
@@ -85,7 +86,9 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
               trigger: el,
               start: el.dataset.drawStart || 'top 90%',
               end: el.dataset.drawEnd || 'top 25%',
-              scrub: 1,
+              // Higher scrub = more lag behind the scrollbar; a flick
+              // can't rush the draw, it plays out over real seconds.
+              scrub: Number.isFinite(scrub) ? scrub : 1,
             },
           })
           if (drawables.length) {

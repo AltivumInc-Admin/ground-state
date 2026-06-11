@@ -85,10 +85,10 @@ export default function Hero() {
 
           <div className="bx bx-side">
             <p className="hero-lede">
-              The private network for funded quantum founders. The room where the people
+              The private network for quantum founders. The room where the people
               building the quantum economy share deal flow, hard-won lessons, and warm access
               to capital, customers, and talent.{' '}
-              <strong className="hero-roi">One warm intro pays for the year.</strong>
+              <strong className="hero-roi">Refer a founder who joins — take a month free.</strong>
             </p>
             <div className="hero-actions">
               <Link to="/apply" className="btn btn-primary">

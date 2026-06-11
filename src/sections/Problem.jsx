@@ -35,7 +35,7 @@ export default function Problem() {
           <strong>02</strong> The Problem
         </p>
         <h2 id="problem-title" className="section-title" data-split>
-          You run a funded quantum company. Where do you actually talk about it?
+          You run a quantum company. Where do you actually talk about it?
         </h2>
         <p className="lede" data-fade>
           Quantum is small and competitive. Founders chase the same customers, watch the same

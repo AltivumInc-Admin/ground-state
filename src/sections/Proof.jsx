@@ -23,8 +23,8 @@ const STATS = [
   {
     value: '~30×',
     count: { n: '30', prefix: '~', suffix: '×', decimals: '0' },
-    label: 'Return on the $3,600 annual fee from a single warm intro that lands one $100K check.',
-    source: 'The ROI math',
+    label: 'Return on the $3,600 annual fee if a single warm intro lands one $100K check.',
+    source: 'The ROI math, illustrated',
   },
 ]
 
@@ -77,7 +77,7 @@ export default function Proof() {
       <Mosaic className="mosaic-corner" cols={10} rows={5} seed={29} />
       <div className="container">
         <p className="kicker" data-fade>
-          <strong>04</strong> The Proof
+          <strong>03</strong> The Proof
         </p>
         <h2 id="proof-title" className="section-title" data-split>
           Receipts, not vibes.
@@ -143,14 +143,14 @@ export default function Proof() {
                   <tr className="is-us">
                     <th scope="row">The Ground State Society</th>
                     <td>$3,600 / yr ($300 / mo)</td>
-                    <td>Funded quantum founders</td>
+                    <td>Vetted quantum founders</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="table-note">
               The most accessible premium founder network on the market — serious enough to be
-              high-signal, modest enough that a funded founder expenses it without a second
+              high-signal, modest enough that a founder expenses it without a second
               thought. And the only one built for quantum.
             </p>
           </div>

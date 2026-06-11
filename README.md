@@ -1,10 +1,10 @@
 # The Ground State Society — Landing Page
 
 The landing page for **The Ground State Society**, the private, members-only network for
-funded quantum founders ($300/month). Built with React + Vite. Copy is sourced from
-`quantum_round_premium_strategy.pdf`; the section structure follows the page blueprint in
-`SPA.jpg` (Hero · Problem · Story · Proof · Features · CTA — displayed on the page as
-sections 01–06).
+quantum founders ($300/month, vetted by application — funding stage is not the bar). Built
+with React + Vite. Copy is sourced from `quantum_round_premium_strategy.pdf`; the original
+section structure followed the page blueprint in `SPA.jpg`, with The Story since moved to
+its own `/story` page (landing sections 01–05: Hero · Problem · Proof · Inside · CTA).
 
 ## Stack
 
@@ -95,9 +95,9 @@ Both forms submit JSON via `src/lib/submit.js` to endpoints injected at build ti
 
 Set them in the Amplify console (App settings → Environment variables) or in a local `.env`
 file; Vite inlines them at build. **When an endpoint is unset, the forms render an honest
-preview state** — nothing is transmitted or stored, and the UI says so. Self-identified
-pre-funded applicants are routed to The Signal instead of the application submit, per the
-strategy's funnel rule.
+preview state** — nothing is transmitted or stored, and the UI says so. Membership is open
+to operating quantum founders at any funding stage; vetting happens in review, not in the
+form.
 
 Endpoints must be `https://` (the client refuses anything else) and, since they accept
 unauthenticated public POSTs, the receiving side must re-validate shape and length, enforce a
@@ -135,6 +135,6 @@ src/
   lib/           fx.jsx (GSAP system), submit.js (form POST helper)
   three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
   components/    Nav, Footer, Mark (brand), Mosaic, HeroScene, figures/
-  sections/      Hero (01), Problem (02), Story (03), Proof (04), Inside (05), FinalCta (06)
-  pages/         Landing, Apply
+  sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05), Story (/story)
+  pages/         Landing, Story, Apply
 ```

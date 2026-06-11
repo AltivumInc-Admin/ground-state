@@ -15,17 +15,16 @@ const MODALITIES = [
 ]
 
 const STAGES = [
-  'Pre-seed (funded)',
+  'Pre-seed',
   'Seed',
   'Series A',
   'Series B or later',
   'Grant-funded (SBIR / government)',
-  'Not yet funded — interested in The Signal',
+  'Bootstrapped / not yet funded',
 ]
 
 const APPLICANT_TYPES = [
-  'Founder / co-founder of a funded quantum startup',
-  'Pre-funded founder',
+  'Founder / co-founder of a quantum startup',
   'Investor',
   'Partner / Patron (sponsorship)',
 ]
@@ -46,12 +45,6 @@ export default function Apply() {
   // idle | sending | sent | preview | error
   const [status, setStatus] = useState('idle')
   const [attempted, setAttempted] = useState(false)
-
-  // The Round is for funded founders — self-identified pre-funded
-  // applicants are routed to the free Signal tier instead of the paywall.
-  const preFunded =
-    form.applicantType === 'Pre-funded founder' ||
-    form.stage === 'Not yet funded — interested in The Signal'
 
   function update(e) {
     const { name, value } = e.target
@@ -123,7 +116,7 @@ export default function Apply() {
               <h1>Apply to join The Round.</h1>
               <p className="lede">
                 The vetted inner circle of The Ground State Society — for founders and co-founders
-                of funded quantum startups.
+                of operating quantum startups, at any funding stage.
               </p>
               <ul className="apply-facts">
                 <li>$300 / month — founding cohort joins at a locked-in rate</li>
@@ -284,36 +277,24 @@ export default function Apply() {
                   </p>
                 )}
 
-                {preFunded ? (
-                  <div className="route-note">
-                    <p>
-                      <strong>The Round is for funded founders — but you’re early, not out.</strong>{' '}
-                      Start free in The Signal; we’ll convert you the day you raise.
-                    </p>
-                    <Link to="/#signal" className="btn btn-primary">
-                      Join The Signal — free
-                    </Link>
-                  </div>
-                ) : (
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    aria-busy={status === 'sending'}
-                    disabled={status === 'sending'}
-                  >
-                    {status === 'sending' ? 'Submitting…' : 'Submit application'}
-                    {status !== 'sending' && (
-                      <span className="btn-arrow" aria-hidden="true">
-                        →
-                      </span>
-                    )}
-                  </button>
-                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  aria-busy={status === 'sending'}
+                  disabled={status === 'sending'}
+                >
+                  {status === 'sending' ? 'Submitting…' : 'Submit application'}
+                  {status !== 'sending' && (
+                    <span className="btn-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  )}
+                </button>
 
                 <p className="form-note">
                   Reviewed personally. Confidential. Applying creates no obligation — if the room
                   isn’t right for you, we’ll tell you.
-                  {!APPLY_ENDPOINT && !preFunded && ' Preview — intake opens at launch.'}
+                  {!APPLY_ENDPOINT && ' Preview — intake opens at launch.'}
                 </p>
               </form>
             </div>

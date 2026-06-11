@@ -5,7 +5,7 @@ export default function Story() {
     <Fx as="section" id="story" className="section story" aria-labelledby="story-title">
       <div className="container">
         <p className="kicker" data-fade>
-          <strong>03</strong> The Story
+          The Story
         </p>
         <h2 id="story-title" className="section-title" data-split>
           Built by an operator. Planted early, on purpose.

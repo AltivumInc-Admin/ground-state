@@ -61,7 +61,7 @@ export default function Inside() {
     <Fx as="section" id="inside" className="section" aria-labelledby="inside-title">
       <div className="container">
         <p className="kicker" data-fade>
-          <strong>05</strong> Inside the Round
+          <strong>04</strong> Inside the Round
         </p>
         <h2 id="inside-title" className="section-title" data-split>
           What $300 a month actually buys.
@@ -121,8 +121,9 @@ export default function Inside() {
               trying to find.
             </p>
             <p>
-              And the headline math: at $3,600 a year, one warm intro that leads to one $100K
-              check returns roughly thirty times the fee.
+              And the asymmetry: at $3,600 a year, a single warm intro that leads to a $100K
+              check would return roughly thirty times the fee. We don’t promise that outcome —
+              we build the room where it happens.
             </p>
           </div>
           <div data-fade>
@@ -147,9 +148,14 @@ export default function Inside() {
                 <span className="val">$3,600</span>
               </p>
               <p className="receipt-line is-roi">
-                <span className="item">One $100K intro, returned</span>
+                <span className="item">If one intro lands $100K</span>
                 <span className="dots" />
                 <span className="val">~30×</span>
+              </p>
+              <p className="receipt-line is-roi">
+                <span className="item">Refer a founder who joins</span>
+                <span className="dots" />
+                <span className="val">1 mo free</span>
               </p>
               <hr className="receipt-rule" />
               <p className="receipt-label label">For comparison</p>
@@ -211,7 +217,7 @@ export default function Inside() {
             <div className="tier-head">
               <span className="tier-flag label">The Product</span>
               <h3 className="tier-name">The Round</h3>
-              <p className="tier-aud label">Funded quantum founders</p>
+              <p className="tier-aud label">Operating quantum founders</p>
             </div>
             <p className="tier-price">
               $300<small>/ month</small>

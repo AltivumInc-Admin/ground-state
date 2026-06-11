@@ -57,7 +57,7 @@
   --text-stat: clamp(2.8rem, 2rem + 3.4vw, 5.3rem);
 
   /* ---- Rhythm ---- */
-  --space-section: clamp(5.5rem, 4rem + 7vw, 11rem);
+  --space-section: clamp(4rem, 3rem + 4.5vw, 7.5rem);
   --container: 84rem;
   --container-pad: clamp(1.25rem, 4vw, 3rem);
   --radius: 0px; /* sharp, architectural */
