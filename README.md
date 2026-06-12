@@ -175,7 +175,7 @@ The repo includes the two files Amplify reads:
 Setup:
 
 1. In the Amplify console, **Create new app → GitHub** and select
-   `AltivumInc-Admin/tqc`, branch `main`. Amplify detects Vite and uses the committed
+   `AltivumInc-Admin/ground-state`, branch `main`. Amplify detects Vite and uses the committed
    `amplify.yml`.
 2. **SPA routing**: Amplify auto-creates a 200 rewrite for detected SPAs. The exact rule is
    versioned at `infra/amplify-rewrites.json` — paste it under **Hosting → Rewrites and
