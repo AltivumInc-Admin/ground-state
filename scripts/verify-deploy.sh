@@ -19,7 +19,9 @@ if [ "$code" != "200" ]; then
   exit 1
 fi
 
-if ! curl -s -- "$BASE/apply" | grep -q '<div id="root">'; then
+# The root div carries data-prerendered since the landing route ships
+# prerendered — match the opening of the div, not the old empty shell.
+if ! curl -s -- "$BASE/apply" | grep -q '<div id="root"'; then
   echo "FAIL: $BASE/apply did not return the SPA shell"
   exit 1
 fi
