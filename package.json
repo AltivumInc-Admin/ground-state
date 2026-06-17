@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node --test \"backend/checkout/test/*.test.mjs\""
+    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\""
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
