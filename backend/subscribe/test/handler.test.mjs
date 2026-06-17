@@ -75,3 +75,31 @@ test('unknown route returns 404', async () => {
   const { handler } = fakes()
   assert.equal((await handler(event({ path: '/nope' }))).statusCode, 404)
 })
+
+test('verify consumes the token, confirms, and sets the session cookie', async () => {
+  const { handler } = fakes()
+  const res = await handler(event({ path: '/verify', body: { token: 'XYZ' } }))
+  assert.equal(res.statusCode, 200)
+  assert.equal(JSON.parse(res.body).next, 'https://quantum.altivum.ai/learn')
+  assert.equal(res.cookies.length, 1)
+  assert.match(res.cookies[0], /^session=.+\..+;/)
+  assert.match(res.cookies[0], /HttpOnly/)
+  assert.match(res.cookies[0], /SameSite=Lax/)
+})
+
+test('verify with a dead token returns 400 and no cookie', async () => {
+  const store = {
+    async createPending() { return { alreadyConfirmed: false } },
+    async consumeToken() { return null },
+    async confirm() { return false },
+  }
+  const handler = makeHandler({ store, email: { async sendMagicLink() {} } })
+  const res = await handler(event({ path: '/verify', body: { token: 'dead' } }))
+  assert.equal(res.statusCode, 400)
+  assert.equal(res.cookies, undefined)
+})
+
+test('verify missing token returns 400', async () => {
+  const { handler } = fakes()
+  assert.equal((await handler(event({ path: '/verify', body: {} }))).statusCode, 400)
+})

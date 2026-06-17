@@ -1,4 +1,5 @@
-import { generateToken, hashToken } from './crypto.mjs'
+import { generateToken, hashToken, signSession } from './crypto.mjs'
+import { buildSessionCookie } from './cookies.mjs'
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
 
@@ -47,11 +48,41 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
     return json(200, { ok: true })
   }
 
+  async function verify(event) {
+    let body
+    try {
+      body = JSON.parse(event.body || '')
+    } catch {
+      return json(400, { error: 'invalid_json' })
+    }
+    const token = typeof body?.token === 'string' ? body.token : ''
+    if (!token || token.length > 256) return json(400, { error: 'invalid_token' })
+
+    const found = await store.consumeToken(hashToken(token))
+    if (!found) return json(400, { error: 'invalid_token' })
+
+    const ok = await store.confirm(found.email)
+    if (!ok) return json(400, { error: 'invalid_token' })
+
+    const ttl = Number(process.env.SESSION_TTL_SEC || '2592000')
+    const session = signSession({
+      jti: generateToken(),
+      exp: Math.floor(Date.now() / 1000) + ttl,
+    })
+    return {
+      statusCode: 200,
+      cookies: [buildSessionCookie(session)],
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ok: true, next: `${process.env.MODULE_URL}/learn` }),
+    }
+  }
+
   return async function handler(event) {
     const method = event.requestContext?.http?.method
     const path = event.rawPath
     try {
       if (method === 'POST' && path === '/subscribe') return await subscribe(event)
+      if (method === 'POST' && path === '/verify') return await verify(event)
       return json(404, { error: 'not_found' })
     } catch (err) {
       console.error(JSON.stringify({ at: 'unhandled', route: path, message: err?.message }))
