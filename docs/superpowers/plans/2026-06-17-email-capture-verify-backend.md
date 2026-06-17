@@ -14,7 +14,8 @@
 
 ## Global Constraints
 
-- **Dependency-free Lambda:** no `node_modules` to install. Import `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`, `@aws-sdk/client-sesv2` from the **runtime-provided SDK v3** (confirmed available in nodejs22.x). `src/package.json` = `{ "type": "module" }` with **no dependencies**. (AWS recommends bundling for version pinning; we accept the runtime SDK to preserve the repo's zero-deps convention — revisit only if a runtime SDK update breaks behavior.)
+- **Dependency-free Lambda:** the shipped Lambda artifact has no bundled deps. Import `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`, `@aws-sdk/client-sesv2` from the **runtime-provided SDK v3** (confirmed available in nodejs22.x). `src/package.json` = `{ "type": "module" }` with **no dependencies** (SAM `CodeUri: src/` so nothing is bundled). (AWS recommends bundling for version pinning; we accept the runtime SDK to preserve the repo's zero-deps convention — revisit only if a runtime SDK update breaks behavior.)
+- **Test/build infra (amendment, post-Task-2):** those three AWS SDK v3 packages are added as **root `devDependencies`** so `node --test` and `sam build` resolve them locally. This does NOT bundle them into the Lambda (they live in the repo-root `node_modules`, outside `CodeUri: src/`); the shipped artifact stays dependency-free. The local tests import the SDK command classes (`PutCommand`, etc.) and `store.mjs`/`email.mjs` construct the SDK clients at import — both need the SDK resolvable at test time.
 - **Runtime:** `nodejs22.x`, `arm64`, `MemorySize: 256`, `Timeout: 15`, `ReservedConcurrentExecutions: 10` (mirror `backend/checkout`).
 - **Region:** `us-east-2` for all resources (Lambda, DynamoDB, SES, the HTTP API, and the **regional** ACM cert for `api.altivum.ai`).
 - **No enumeration:** `/subscribe` returns the **same** generic `200 { ok: true }` whether or not the email already exists. Never reveal membership state.
