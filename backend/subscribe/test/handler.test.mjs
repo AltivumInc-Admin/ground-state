@@ -51,12 +51,14 @@ test('invalid email returns 400', async () => {
   const { handler } = fakes()
   const res = await handler(event({ body: { email: 'nope', source: 'signal' } }))
   assert.equal(res.statusCode, 400)
+  assert.deepEqual(JSON.parse(res.body), { error: 'invalid_email' })
 })
 
 test('invalid source returns 400', async () => {
   const { handler } = fakes()
   const res = await handler(event({ body: { email: 'a@b.co', source: 'evil' } }))
   assert.equal(res.statusCode, 400)
+  assert.deepEqual(JSON.parse(res.body), { error: 'invalid_source' })
 })
 
 test('already-confirmed email still returns generic 200 without sending', async () => {
@@ -102,4 +104,11 @@ test('verify with a dead token returns 400 and no cookie', async () => {
 test('verify missing token returns 400', async () => {
   const { handler } = fakes()
   assert.equal((await handler(event({ path: '/verify', body: {} }))).statusCode, 400)
+})
+
+test('malformed JSON body returns 400 invalid_json', async () => {
+  const { handler } = fakes()
+  const res = await handler(event({ body: 'not-json' }))
+  assert.equal(res.statusCode, 400)
+  assert.deepEqual(JSON.parse(res.body), { error: 'invalid_json' })
 })

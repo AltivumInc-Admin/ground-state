@@ -24,7 +24,7 @@ Accepts `{ "token": "..." }` (the raw token from the magic link).
 
 - Hashes the token with `TOKEN_PEPPER` and looks it up in DynamoDB.
 - Consumes (deletes) the pending token and promotes the subscriber to confirmed.
-- Returns `{ "ok": true, "next": "<MODULE_URL>/learn" }` and sets an HttpOnly, SameSite=Strict session cookie valid for `SESSION_TTL_SEC` seconds.
+- Returns `{ "ok": true, "next": "<MODULE_URL>/learn" }` and sets an HttpOnly, SameSite=Lax session cookie valid for `SESSION_TTL_SEC` seconds.
 - Returns `{ "error": "invalid_token" }` on any mismatch or expiry — no information disclosure.
 
 ---

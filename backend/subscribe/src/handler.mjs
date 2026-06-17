@@ -62,7 +62,10 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
     if (!found) return json(400, { error: 'invalid_token' })
 
     const ok = await store.confirm(found.email)
-    if (!ok) return json(400, { error: 'invalid_token' })
+    if (!ok) {
+      console.error(JSON.stringify({ at: 'verify_consumed_unconfirmed' }))
+      return json(400, { error: 'invalid_token' })
+    }
 
     const ttl = Number(process.env.SESSION_TTL_SEC || '2592000')
     const session = signSession({
