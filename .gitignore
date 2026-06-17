@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 
+# SAM build/deploy artifacts
+.aws-sam/
+
 # Logs
 *.log
 npm-debug.log*
