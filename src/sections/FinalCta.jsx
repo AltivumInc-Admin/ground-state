@@ -57,6 +57,7 @@ const FAQS = [
 
 function SignalForm() {
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
   // idle | sending | sent | preview | error
   const [status, setStatus] = useState('idle')
 
@@ -70,7 +71,7 @@ function SignalForm() {
     }
     setStatus('sending')
     try {
-      await postJson(SIGNAL_ENDPOINT, { form: 'signal', email })
+      await postJson(SIGNAL_ENDPOINT, { form: 'signal', email, source: 'signal', website })
       setStatus('sent')
     } catch {
       setStatus('error')
@@ -96,7 +97,7 @@ function SignalForm() {
         <div role="status">
           {status === 'sent' && (
             <p className="signal-success">
-              <strong>You’re in.</strong> The next issue of The Signal will land in your inbox.
+              <strong>Check your inbox.</strong> Confirm your email and your free access opens right up.
             </p>
           )}
           {status === 'preview' && (
@@ -112,6 +113,17 @@ function SignalForm() {
             onSubmit={handleSubmit}
             aria-label="Subscribe to The Signal newsletter"
           >
+            {/* Honeypot — real users never fill this; bots do. Hidden from AT + tab order. */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+            />
             <label className="visually-hidden" htmlFor="signal-email">
               Email address
             </label>
