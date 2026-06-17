@@ -4,6 +4,7 @@ import {
   PutCommand,
   UpdateCommand,
   DeleteCommand,
+  GetCommand,
 } from '@aws-sdk/lib-dynamodb'
 
 export const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}))
@@ -115,7 +116,6 @@ export async function confirm(email) {
 }
 
 async function isConfirmed(email) {
-  const { GetCommand } = await import('@aws-sdk/lib-dynamodb')
   try {
     const res = await ddb.send(
       new GetCommand({ TableName: TABLE(), Key: { PK: `EMAIL#${email}` } }),

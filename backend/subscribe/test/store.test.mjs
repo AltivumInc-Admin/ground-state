@@ -4,6 +4,7 @@ import {
   PutCommand,
   UpdateCommand,
   DeleteCommand,
+  GetCommand,
 } from '@aws-sdk/lib-dynamodb'
 
 process.env.TABLE_NAME = 'Subscribers-test'
@@ -73,6 +74,27 @@ test('confirm transitions pending and is true', async () => {
 })
 
 test('confirm returns false when no pending record exists', async () => {
-  mock.method(ddb, 'send', async () => { throw new ConditionalCheckFailedException() })
+  let call = 0
+  mock.method(ddb, 'send', async (cmd) => {
+    call += 1
+    if (call === 1) throw new ConditionalCheckFailedException() // UpdateCommand fails
+    if (call === 2) {
+      assert.ok(cmd instanceof GetCommand)
+      return {} // GetCommand on non-existent item returns empty
+    }
+  })
   assert.equal(await confirm('a@b.co'), false)
+})
+
+test('confirm returns true when the record is already confirmed', async () => {
+  let call = 0
+  mock.method(ddb, 'send', async (cmd) => {
+    call += 1
+    if (call === 1) throw new ConditionalCheckFailedException() // UpdateCommand fails
+    if (call === 2) {
+      assert.ok(cmd instanceof GetCommand)
+      return { Item: { status: 'confirmed' } } // GetCommand returns confirmed item
+    }
+  })
+  assert.equal(await confirm('a@b.co'), true)
 })
