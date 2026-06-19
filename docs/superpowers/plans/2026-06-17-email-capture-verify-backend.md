@@ -10,6 +10,8 @@
 
 **Scope note:** This is **Plan 1 of 2**. Plan 2 (the module's content API + authorizer + `/learn` rendering refactor + gated notebooks + no-leak CI test) is authored separately in the `quantum-computing` session from Section 12 of the design spec. Plan 1 is independently shippable: it captures emails with double opt-in (D1), writes the unified tagged list (D2), and mints the session credential (D3 depends on). It does **not** require the module to exist.
 
+> **Revision (2026-06-18):** Built, then revised for the GSS dedicated-account migration. The stack now lives in account 659 on **`api.groundstatesociety.com`** (not `api.altivum.ai`), SES sends from `@groundstatesociety.com`, and `/verify` returns a **bearer token in the body instead of an HttpOnly cookie** (the module is now cross-site). Magic links are per-source (`signal` → `/confirm`). Deployed + verified alive in 659; 25/25 tests. See the spec's Revision note.
+
 **Design spec:** `docs/superpowers/specs/2026-06-17-quantum-module-email-gate-design.md`
 
 ## Global Constraints

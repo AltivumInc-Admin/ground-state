@@ -2,10 +2,21 @@
 
 **Date:** 2026-06-17
 **Author:** Christian Perez (with Claude Code)
-**Status:** Design — awaiting review before implementation planning
+**Status:** Implemented (revised 2026-06-18 — see Revision note).
 **Repos in scope:**
 - `ground-state` (this repo, `groundstatesociety.com`) — owns the shared email-capture backend + the "Signal" capture form
 - `quantum-computing` (`/Users/cperez/dev/altivum-dev/quantum`, `quantum.altivum.ai`) — the learning module; changes handed off as a brief (Section 12)
+
+> **Revision (2026-06-18) — account split + bearer token.** Ground State Society moved to its own AWS
+> account (659220242594) and `groundstatesociety.com` DNS now lives there, so the email gate is deployed
+> **in the GSS account on `groundstatesociety.com`**, not `altivum.ai`: API `api.groundstatesociety.com`,
+> SES sender `@groundstatesociety.com`. Because the quantum module (`quantum.altivum.ai`, still in the
+> shared account) is now **cross-site** from the API, the session **switches from an HttpOnly
+> `SameSite=Lax` cookie to a bearer token** returned in the `/verify` body (the module stores it and sends
+> `Authorization: Bearer` to the content API; CORS drops `AllowCredentials`). Magic-link destination is
+> per-source (`signal` → `/confirm` on the GSS site; `quantum-intro` → the module's verify page). D1/D2/D3
+> (double opt-in, unified tagged list, server-enforced) still hold — only the credential transport and the
+> hosting domain changed. Where the body below says cookie / `altivum.ai`, read bearer token / `groundstatesociety.com`.
 
 ---
 
