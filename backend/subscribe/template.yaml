@@ -3,48 +3,56 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   Shared double-opt-in email capture for The Ground State Society — /subscribe
   writes a source-tagged pending subscriber and sends a magic link; /verify
-  confirms and mints an HttpOnly session cookie. Unified list across the
-  landing site and the quantum learning module.
+  confirms and returns a signed bearer token. Unified list across the landing
+  site and the quantum learning module. Served on api.groundstatesociety.com.
 
 Parameters:
   SessionSecret:
     Type: String
     NoEcho: true
-    Description: HMAC secret for signing session cookies (from Secrets Manager).
+    Description: HMAC secret for signing the bearer access token (from Secrets Manager).
   TokenPepper:
     Type: String
     NoEcho: true
     Description: HMAC pepper for hashing magic-link tokens at rest.
   FromAddress:
     Type: String
-    Default: no-reply@altivum.ai
+    Default: no-reply@groundstatesociety.com
     Description: Verified SES sender address.
   ConfigSet:
     Type: String
     Default: gss-subscribe
     Description: SES configuration set (bounce/complaint publishing).
-  ModuleUrl:
+  SignalVerifyUrl:
     Type: String
-    Default: https://quantum.altivum.ai
-    Description: Origin the magic link and post-verify redirect point at.
-  CookieDomain:
+    Default: https://groundstatesociety.com/confirm
+    Description: Confirmation landing page for source=signal (the magic link points here).
+  QuantumVerifyUrl:
     Type: String
-    Default: .altivum.ai
+    Default: https://quantum.altivum.ai/verify
+    Description: Confirmation landing page for source=quantum-intro (the module gate).
   SessionTtlSec:
     Type: String
     Default: '2592000'
   ApiDomainName:
     Type: String
-    Default: api.altivum.ai
+    Default: api.groundstatesociety.com
   ApiCertArn:
     Type: String
     Description: Regional ACM cert ARN for ApiDomainName (us-east-2).
   AlarmEmail:
     Type: String
     Default: ''
+  ReservedConcurrency:
+    Type: Number
+    Default: 10
+    Description: >
+      Per-function reserved concurrency (blast-radius cap). Set to -1 to OMIT it —
+      required on a brand-new account still capped at 10 total Lambda concurrency.
 
 Conditions:
   HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
+  HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
 
 Resources:
   SubscribersTable:
@@ -68,14 +76,13 @@ Resources:
         ThrottlingRateLimit: 10
         ThrottlingBurstLimit: 20
       CorsConfiguration:
-        # Explicit allowlist — never '*' (incompatible with AllowCredentials).
+        # Explicit allowlist. Bearer token returned in the body (no cookies) — no AllowCredentials.
         AllowOrigins:
           - https://groundstatesociety.com
           - https://www.groundstatesociety.com
           - https://quantum.altivum.ai
         AllowMethods: [POST, OPTIONS]
         AllowHeaders: [content-type]
-        AllowCredentials: true
         MaxAge: 600
 
   SubscribeFunction:
@@ -87,7 +94,7 @@ Resources:
       Architectures: [arm64]
       MemorySize: 256
       Timeout: 15
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref ReservedConcurrency, !Ref AWS::NoValue]
       Environment:
         Variables:
           TABLE_NAME: !Ref SubscribersTable
@@ -95,8 +102,8 @@ Resources:
           TOKEN_PEPPER: !Ref TokenPepper
           FROM_ADDRESS: !Ref FromAddress
           CONFIG_SET: !Ref ConfigSet
-          MODULE_URL: !Ref ModuleUrl
-          COOKIE_DOMAIN: !Ref CookieDomain
+          SIGNAL_VERIFY_URL: !Ref SignalVerifyUrl
+          QUANTUM_VERIFY_URL: !Ref QuantumVerifyUrl
           SESSION_TTL_SEC: !Ref SessionTtlSec
       Policies:
         - Statement:
@@ -106,7 +113,7 @@ Resources:
             - Effect: Allow
               Action: ses:SendEmail
               Resource:
-                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/altivum.ai
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/groundstatesociety.com
                 - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}
       Events:
         Subscribe:
@@ -194,5 +201,5 @@ Outputs:
     Description: Custom-domain base URL (set as VITE_SIGNAL_ENDPOINT base + the module's NEXT_PUBLIC_SUBSCRIBE_URL)
     Value: !Sub https://${ApiDomainName}
   RegionalDomainTarget:
-    Description: Point api.altivum.ai DNS (CNAME/ALIAS) at this target
+    Description: Point api.groundstatesociety.com DNS (A/ALIAS) at this target
     Value: !GetAtt ApiDomain.RegionalDomainName

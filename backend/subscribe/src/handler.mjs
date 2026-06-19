@@ -1,5 +1,4 @@
 import { generateToken, hashToken, signSession } from './crypto.mjs'
-import { buildSessionCookie } from './cookies.mjs'
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
 
@@ -41,7 +40,12 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
       consentIp: clientIp(event),
     })
     if (!alreadyConfirmed) {
-      const link = `${process.env.MODULE_URL}/verify?token=${token}`
+      // The confirmation landing page is source-specific: Signal subscribers confirm on the
+      // ground-state site; quantum-intro subscribers confirm on the module (which then stores
+      // the returned bearer token to unlock content).
+      const verifyUrl =
+        source === 'signal' ? process.env.SIGNAL_VERIFY_URL : process.env.QUANTUM_VERIFY_URL
+      const link = `${verifyUrl}?token=${token}`
       await email.sendMagicLink({ to: emailAddr, link })
     }
     // Generic response either way — never reveal membership state.
@@ -68,16 +72,14 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
     }
 
     const ttl = Number(process.env.SESSION_TTL_SEC || '2592000')
-    const session = signSession({
+    const accessToken = signSession({
       jti: generateToken(),
       exp: Math.floor(Date.now() / 1000) + ttl,
     })
-    return {
-      statusCode: 200,
-      cookies: [buildSessionCookie(session)],
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ ok: true, next: `${process.env.MODULE_URL}/learn` }),
-    }
+    // Bearer token in the body (no cookie): the API is cross-site from the module, so the
+    // client stores this and sends it as `Authorization: Bearer` to the content API (Plan 2).
+    // The Signal /confirm page simply ignores it — confirming the address is all it needs.
+    return json(200, { ok: true, token: accessToken })
   }
 
   return async function handler(event) {

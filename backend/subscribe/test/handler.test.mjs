@@ -1,10 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-process.env.MODULE_URL = 'https://quantum.altivum.ai'
+process.env.SIGNAL_VERIFY_URL = 'https://groundstatesociety.com/confirm'
+process.env.QUANTUM_VERIFY_URL = 'https://quantum.altivum.ai/verify'
 process.env.TOKEN_PEPPER = 'pepper_test'
 process.env.SESSION_SECRET = 'session_test'
-process.env.COOKIE_DOMAIN = '.altivum.ai'
 process.env.SESSION_TTL_SEC = '2592000'
 
 const { makeHandler } = await import('../src/handler.mjs')
@@ -36,7 +36,15 @@ test('valid subscribe stores pending and sends a link, generic 200', async () =>
   assert.equal(calls.created[0].source, 'signal')
   assert.equal(calls.created[0].consentIp, '9.9.9.9')
   assert.equal(calls.sent.length, 1)
-  assert.match(calls.sent[0].link, /\/verify\?token=/)
+  // signal source -> the ground-state /confirm landing page
+  assert.match(calls.sent[0].link, /^https:\/\/groundstatesociety\.com\/confirm\?token=/)
+})
+
+test('quantum-intro subscribe links to the module verify page', async () => {
+  const { handler, calls } = fakes()
+  const res = await handler(event({ body: { email: 'a@b.co', source: 'quantum-intro' } }))
+  assert.equal(res.statusCode, 200)
+  assert.match(calls.sent[0].link, /^https:\/\/quantum\.altivum\.ai\/verify\?token=/)
 })
 
 test('honeypot filled returns 200 but stores/sends nothing', async () => {
@@ -78,15 +86,14 @@ test('unknown route returns 404', async () => {
   assert.equal((await handler(event({ path: '/nope' }))).statusCode, 404)
 })
 
-test('verify consumes the token, confirms, and sets the session cookie', async () => {
+test('verify consumes the token, confirms, and returns a bearer token in the body', async () => {
   const { handler } = fakes()
   const res = await handler(event({ path: '/verify', body: { token: 'XYZ' } }))
   assert.equal(res.statusCode, 200)
-  assert.equal(JSON.parse(res.body).next, 'https://quantum.altivum.ai/learn')
-  assert.equal(res.cookies.length, 1)
-  assert.match(res.cookies[0], /^session=.+\..+;/)
-  assert.match(res.cookies[0], /HttpOnly/)
-  assert.match(res.cookies[0], /SameSite=Lax/)
+  assert.equal(res.cookies, undefined) // cross-site: bearer token, not a cookie
+  const b = JSON.parse(res.body)
+  assert.equal(b.ok, true)
+  assert.match(b.token, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/) // signSession: base64url(payload).hex(sig)
 })
 
 test('verify with a dead token returns 400 and no cookie', async () => {
