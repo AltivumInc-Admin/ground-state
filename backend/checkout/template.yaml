@@ -34,8 +34,17 @@ Parameters:
       Email for checkout failure alarms. Empty disables the alarms; the SNS
       subscription must be confirmed from the email AWS sends on deploy.
 
+  ReservedConcurrency:
+    Type: Number
+    Default: 10
+    Description: >
+      Per-function reserved concurrency (blast-radius cap). Set to -1 to OMIT it
+      entirely — required on accounts whose total Lambda concurrency quota is too
+      low to reserve any (e.g. a brand-new account still capped at 10).
+
 Conditions:
   HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
+  HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
 
 Resources:
   CheckoutApi:
@@ -71,7 +80,7 @@ Resources:
       Timeout: 15
       # Blast-radius cap: a flood can never consume shared account
       # concurrency or run unbounded Stripe writes
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref ReservedConcurrency, !Ref AWS::NoValue]
       Environment:
         Variables:
           STRIPE_SECRET_KEY: !Ref StripeSecretKey
