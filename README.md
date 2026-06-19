@@ -96,7 +96,17 @@ Both forms submit JSON via `src/lib/submit.js` to endpoints injected at build ti
 | Variable | Form | Payload |
 | --- | --- | --- |
 | `VITE_APPLY_ENDPOINT` | `/apply` application | `{ form: "apply", name, email, company, role, applicantType, stage, modality, want }` |
-| `VITE_SIGNAL_ENDPOINT` | The Signal subscribe | `{ form: "signal", email }` |
+| `VITE_SIGNAL_ENDPOINT` | The Signal subscribe | `{ form: "signal", email, source: "signal", website }` |
+
+`VITE_SIGNAL_ENDPOINT` points at the `gss-subscribe` stack's `ApiUrl` output + `/subscribe`
+(e.g. `https://api.altivum.ai/subscribe`). Subscribers land on a unified, source-tagged
+list; `source: "signal"` identifies Signal signups. The double-opt-in flow sends a
+confirmation email — the subscriber's free access (the quantum module deliverable of the
+free Signal tier) opens only after they click the confirmation link.
+
+The `website` field is a honeypot: it is never shown or reachable by real users (offscreen,
+`aria-hidden`, `tabIndex={-1}`), so any non-empty value reliably marks a bot submission and
+the backend rejects it silently.
 
 Set them in the Amplify console (App settings → Environment variables) or in a local `.env`
 file; Vite inlines them at build. **When an endpoint is unset, the forms render an honest
@@ -107,9 +117,8 @@ form.
 Endpoints must be `https://` (the client refuses anything else) and, since they accept
 unauthenticated public POSTs, the receiving side must re-validate shape and length, enforce a
 body-size limit, and rate-limit per IP — client-side validation and `maxLength` are courtesy
-caps only. Add a honeypot/turnstile before real launch (newsletter endpoints attract
-subscription-bombing bots), and fill in the Content-Security-Policy template in
-`customHttp.yml` once the endpoint origins are known.
+caps only. Fill in the Content-Security-Policy template in `customHttp.yml` once the
+endpoint origins are known.
 
 ## Stripe Checkout backend (`backend/checkout/`)
 

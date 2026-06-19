@@ -3,12 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Landing page for The Ground State Society \u2014 the private, members-only network for funded quantum founders.",
+  "description": "Landing page for The Ground State Society — the private, members-only network for funded quantum founders.",
   "scripts": {
     "dev": "vite",
     "build": "vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node --test \"backend/checkout/test/*.test.mjs\""
+    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\""
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
@@ -22,6 +22,9 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1071.0",
+    "@aws-sdk/client-sesv2": "^3.1071.0",
+    "@aws-sdk/lib-dynamodb": "^3.1071.0",
     "@vitejs/plugin-react": "^5.0.0",
     "vite": "^7.0.0"
   }

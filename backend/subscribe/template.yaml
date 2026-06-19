@@ -1,0 +1,205 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Shared double-opt-in email capture for The Ground State Society — /subscribe
+  writes a source-tagged pending subscriber and sends a magic link; /verify
+  confirms and returns a signed bearer token. Unified list across the landing
+  site and the quantum learning module. Served on api.groundstatesociety.com.
+
+Parameters:
+  SessionSecret:
+    Type: String
+    NoEcho: true
+    Description: HMAC secret for signing the bearer access token (from Secrets Manager).
+  TokenPepper:
+    Type: String
+    NoEcho: true
+    Description: HMAC pepper for hashing magic-link tokens at rest.
+  FromAddress:
+    Type: String
+    Default: no-reply@groundstatesociety.com
+    Description: Verified SES sender address.
+  ConfigSet:
+    Type: String
+    Default: gss-subscribe
+    Description: SES configuration set (bounce/complaint publishing).
+  SignalVerifyUrl:
+    Type: String
+    Default: https://groundstatesociety.com/confirm
+    Description: Confirmation landing page for source=signal (the magic link points here).
+  QuantumVerifyUrl:
+    Type: String
+    Default: https://quantum.altivum.ai/verify
+    Description: Confirmation landing page for source=quantum-intro (the module gate).
+  SessionTtlSec:
+    Type: String
+    Default: '2592000'
+  ApiDomainName:
+    Type: String
+    Default: api.groundstatesociety.com
+  ApiCertArn:
+    Type: String
+    Description: Regional ACM cert ARN for ApiDomainName (us-east-2).
+  AlarmEmail:
+    Type: String
+    Default: ''
+  ReservedConcurrency:
+    Type: Number
+    Default: 10
+    Description: >
+      Per-function reserved concurrency (blast-radius cap). Set to -1 to OMIT it —
+      required on a brand-new account still capped at 10 total Lambda concurrency.
+
+Conditions:
+  HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
+  HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
+
+Resources:
+  SubscribersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SubscribeApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10
+        ThrottlingBurstLimit: 20
+      CorsConfiguration:
+        # Explicit allowlist. Bearer token returned in the body (no cookies) — no AllowCredentials.
+        AllowOrigins:
+          - https://groundstatesociety.com
+          - https://www.groundstatesociety.com
+          - https://quantum.altivum.ai
+        AllowMethods: [POST, OPTIONS]
+        AllowHeaders: [content-type]
+        MaxAge: 600
+
+  SubscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: handler.handler
+      CodeUri: src/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 15
+      ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref ReservedConcurrency, !Ref AWS::NoValue]
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref SubscribersTable
+          SESSION_SECRET: !Ref SessionSecret
+          TOKEN_PEPPER: !Ref TokenPepper
+          FROM_ADDRESS: !Ref FromAddress
+          CONFIG_SET: !Ref ConfigSet
+          SIGNAL_VERIFY_URL: !Ref SignalVerifyUrl
+          QUANTUM_VERIFY_URL: !Ref QuantumVerifyUrl
+          SESSION_TTL_SEC: !Ref SessionTtlSec
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:DeleteItem, dynamodb:GetItem]
+              Resource: !GetAtt SubscribersTable.Arn
+            - Effect: Allow
+              Action: ses:SendEmail
+              Resource:
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/groundstatesociety.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}
+      Events:
+        Subscribe:
+          Type: HttpApi
+          Properties: { ApiId: !Ref SubscribeApi, Path: /subscribe, Method: POST }
+        Verify:
+          Type: HttpApi
+          Properties: { ApiId: !Ref SubscribeApi, Path: /verify, Method: POST }
+
+  SubscribeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SubscribeFunction}
+      RetentionInDays: 365
+
+  ApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Ref ApiDomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref ApiCertArn
+          EndpointType: REGIONAL
+
+  ApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      DomainName: !Ref ApiDomain
+      ApiId: !Ref SubscribeApi
+      Stage: $default
+
+  SubscribeFailureMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref SubscribeLogGroup
+      FilterPattern: '?"\"at\":\"unhandled\""'
+      MetricTransformations:
+        - MetricNamespace: GSS/Subscribe
+          MetricName: SubscribeFailures
+          MetricValue: '1'
+          DefaultValue: 0
+
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlarmEmail
+    Properties:
+      Subscription:
+        - Endpoint: !Ref AlarmEmail
+          Protocol: email
+
+  SubscribeFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarmEmail
+    Properties:
+      AlarmDescription: Subscribe backend logged an unhandled error.
+      Namespace: GSS/Subscribe
+      MetricName: SubscribeFailures
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+
+  SubscribeCrashAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarmEmail
+    Properties:
+      AlarmDescription: Subscribe Lambda crashed or timed out.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SubscribeFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+
+Outputs:
+  ApiUrl:
+    Description: Custom-domain base URL (set as VITE_SIGNAL_ENDPOINT base + the module's NEXT_PUBLIC_SUBSCRIBE_URL)
+    Value: !Sub https://${ApiDomainName}
+  RegionalDomainTarget:
+    Description: Point api.groundstatesociety.com DNS (A/ALIAS) at this target
+    Value: !GetAtt ApiDomain.RegionalDomainName
