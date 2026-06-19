@@ -8,6 +8,7 @@ import StoryPage from './pages/Story.jsx'
 import Apply from './pages/Apply.jsx'
 import Activate from './pages/Activate.jsx'
 import Welcome from './pages/Welcome.jsx'
+import Confirm from './pages/Confirm.jsx'
 import { ScrollTrigger } from './lib/fx.jsx'
 
 /* Scrolls to top on route change, or to the anchor when a hash is present.
@@ -67,6 +68,8 @@ export default function App() {
           {/* Post-acceptance only — never linked from the page (see intent) */}
           <Route path="/activate" element={<Activate />} />
           <Route path="/welcome" element={<Welcome />} />
+          {/* Double-opt-in confirmation landing for The Signal (magic-link target) */}
+          <Route path="/confirm" element={<Confirm />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
