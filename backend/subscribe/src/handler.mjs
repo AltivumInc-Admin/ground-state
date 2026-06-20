@@ -46,7 +46,7 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
       const verifyUrl =
         source === 'signal' ? process.env.SIGNAL_VERIFY_URL : process.env.QUANTUM_VERIFY_URL
       const link = `${verifyUrl}?token=${token}`
-      await email.sendMagicLink({ to: emailAddr, link })
+      await email.sendMagicLink({ to: emailAddr, link, source })
     }
     // Generic response either way — never reveal membership state.
     return json(200, { ok: true })

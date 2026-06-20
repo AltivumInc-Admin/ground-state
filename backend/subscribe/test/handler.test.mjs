@@ -36,8 +36,9 @@ test('valid subscribe stores pending and sends a link, generic 200', async () =>
   assert.equal(calls.created[0].source, 'signal')
   assert.equal(calls.created[0].consentIp, '9.9.9.9')
   assert.equal(calls.sent.length, 1)
-  // signal source -> the ground-state /confirm landing page
+  // signal source -> the ground-state /confirm landing page + Signal-specific copy
   assert.match(calls.sent[0].link, /^https:\/\/groundstatesociety\.com\/confirm\?token=/)
+  assert.equal(calls.sent[0].source, 'signal')
 })
 
 test('quantum-intro subscribe links to the module verify page', async () => {
@@ -45,6 +46,7 @@ test('quantum-intro subscribe links to the module verify page', async () => {
   const res = await handler(event({ body: { email: 'a@b.co', source: 'quantum-intro' } }))
   assert.equal(res.statusCode, 200)
   assert.match(calls.sent[0].link, /^https:\/\/quantum\.altivum\.ai\/verify\?token=/)
+  assert.equal(calls.sent[0].source, 'quantum-intro')
 })
 
 test('honeypot filled returns 200 but stores/sends nothing', async () => {
