@@ -33,16 +33,17 @@ const app = (
   </StrictMode>
 )
 
-/* The Amplify catch-all serves the prerendered LANDING html for every
-   extensionless path — hydrating /apply against landing markup would
-   mismatch. Only "/" hydrates; other routes clear and client-render
-   exactly as before. */
-if (container.firstChild && window.location.pathname === '/') {
+/* Prerendered files (/, /story) stamp #root with data-route. The Amplify
+   catch-all serves the LANDING html for every other extensionless path, so we
+   hydrate ONLY when the served markup matches the current path — hydrating
+   /apply (or /story before its rewrite is live) against landing markup would
+   mismatch. Non-matching routes clear and client-render exactly as before. */
+if (container.firstChild && container.dataset.route === window.location.pathname) {
   hydrateRoot(container, app)
 } else {
   container.textContent = ''
   // The flag rides the prerendered markup — once that's wiped, a later
-  // client-side visit to / deserves its entrance animation.
+  // client-side visit deserves its entrance animation.
   delete container.dataset.prerendered
   createRoot(container).render(app)
 }

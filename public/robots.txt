@@ -1,4 +1,13 @@
+# The Ground State Society
+# Public content is open to all crawlers, including AI answer engines
+# (OAI-SearchBot, ChatGPT-User, PerplexityBot, Claude-SearchBot, Googlebot,
+# bingbot). Citations are welcome. The wildcard below already permits them;
+# only post-acceptance and tokenized pages are closed.
+
 User-agent: *
 Allow: /
 Disallow: /activate
 Disallow: /welcome
+Disallow: /confirm
+
+Sitemap: https://groundstatesociety.com/sitemap.xml

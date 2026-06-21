@@ -1,6 +1,12 @@
 [
   {
-    "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>",
+    "source": "/story",
+    "target": "/story.html",
+    "status": "200",
+    "condition": null
+  },
+  {
+    "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|xml)$)([^.]+$)/>",
     "status": "200",
     "target": "/index.html",
     "condition": null

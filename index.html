@@ -3,27 +3,118 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="The Ground State Society is the private, members-only network for quantum founders. Curated peer groups, warm capital introductions, and domain-deep acceleration. Application only. $300/month."
-    />
+    <meta name="description" content="The Ground State Society is the private, members-only network for quantum founders. Curated peer circles, warm capital introductions, and domain-deep acceleration. By application only — the free Signal tier is open to every quantum builder." />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="Christian Perez, Altivum Inc." />
     <meta name="theme-color" content="#08080A" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta property="og:title" content="The Ground State Society — The Private Network for Quantum Founders" />
-    <meta
-      property="og:description"
-      content="The room where the people building the quantum economy share deal flow, hard-won lessons, and warm access to capital, customers, and talent. By application only."
-    />
-    <meta property="og:type" content="website" />
     <link rel="canonical" href="https://groundstatesociety.com/" />
+    <meta property="og:title" content="The Ground State Society — The Private Network for Quantum Founders" />
+    <meta property="og:description" content="The room where the people building the quantum economy share deal flow, hard-won lessons, and warm access to capital, customers, and talent. By application only." />
+    <meta property="og:type" content="website" />
     <meta property="og:url" content="https://groundstatesociety.com/" />
     <meta property="og:site_name" content="The Ground State Society" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:image" content="https://groundstatesociety.com/og.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="The Ground State Society — a particle settled in a potential well." />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The Ground State Society — The Private Network for Quantum Founders" />
+    <meta name="twitter:description" content="The room where the people building the quantum economy share deal flow, hard-won lessons, and warm access to capital, customers, and talent. By application only." />
+    <meta name="twitter:image" content="https://groundstatesociety.com/og.png" />
+    <meta name="twitter:image:alt" content="The Ground State Society — a particle settled in a potential well." />
     <title>The Ground State Society — The Private Network for Quantum Founders</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://groundstatesociety.com/#organization",
+          "name": "The Ground State Society",
+          "alternateName": "Ground State Society",
+          "url": "https://groundstatesociety.com/",
+          "logo": { "@type": "ImageObject", "url": "https://groundstatesociety.com/favicon.svg" },
+          "image": "https://groundstatesociety.com/og.png",
+          "description": "The private, members-only network for operating quantum-computing founders — curated peer circles, warm capital introductions, and domain-deep acceleration. By application only.",
+          "slogan": "The private network for quantum founders.",
+          "foundingDate": "2026",
+          "knowsAbout": ["Quantum computing", "Quantum startups", "Deep-tech venture capital", "Quantum hardware", "Post-quantum cryptography"],
+          "areaServed": "Worldwide",
+          "founder": { "@id": "https://groundstatesociety.com/#founder" },
+          "parentOrganization": { "@id": "https://altivum.io/#organization" },
+          "hasOfferCatalog": { "@id": "https://groundstatesociety.com/#membership" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://groundstatesociety.com/#founder",
+          "name": "Christian Perez",
+          "jobTitle": "Founder",
+          "description": "Green Beret veteran who builds quantum systems on AWS; founder of Altivum Inc.",
+          "worksFor": { "@id": "https://altivum.io/#organization" },
+          "url": "https://altivum.io/"
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://altivum.io/#organization",
+          "name": "Altivum Inc.",
+          "url": "https://altivum.io/"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://groundstatesociety.com/#website",
+          "url": "https://groundstatesociety.com/",
+          "name": "The Ground State Society",
+          "publisher": { "@id": "https://groundstatesociety.com/#organization" },
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "OfferCatalog",
+          "@id": "https://groundstatesociety.com/#membership",
+          "name": "Membership tiers",
+          "provider": { "@id": "https://groundstatesociety.com/#organization" },
+          "itemListElement": [
+            {
+              "@type": "Offer",
+              "name": "The Signal",
+              "description": "Free tier for every quantum builder — the newsletter (funding moves and ecosystem intel), public webinars, and the open community channel.",
+              "price": "0",
+              "priceCurrency": "USD",
+              "category": "Free membership",
+              "availability": "https://schema.org/InStock",
+              "url": "https://groundstatesociety.com/#signal"
+            },
+            {
+              "@type": "Offer",
+              "name": "The Round",
+              "description": "Membership for operating quantum founders — a curated, confidential peer circle of 6 to 10, warm introductions to quantum-focused capital, expert office hours, a vetted directory and private channel, members-only events, and the Operator's Library. By application only.",
+              "price": "300",
+              "priceCurrency": "USD",
+              "category": "Paid membership",
+              "availability": "https://schema.org/LimitedAvailability",
+              "url": "https://groundstatesociety.com/apply",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "300",
+                "priceCurrency": "USD",
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "name": "Patrons & Partners",
+              "description": "Invitation-only tier for cloud platforms, deep-tech VCs, and IP firms — credible access and brand association. Never seats in the core peer circles.",
+              "category": "Invitation only",
+              "availability": "https://schema.org/LimitedAvailability",
+              "url": "https://groundstatesociety.com/apply"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

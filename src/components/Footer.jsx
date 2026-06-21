@@ -17,6 +17,10 @@ export default function Footer() {
                   The private, members-only network for quantum founders. Built early, on
                   purpose — to be the default room as the field grows tenfold.
                 </p>
+                <p className="footer-tag">
+                  Operated by <Link to="/story">Christian Perez</Link>, founder of Altivum Inc.
+                  — a Green Beret veteran who builds quantum systems on AWS.
+                </p>
               </div>
             </div>
           </div>
