@@ -1,0 +1,39 @@
+{
+  "projectId": "00ddbcd5-73fc-4e47-9c57-f65ec2e5cafc",
+  "shape": "package",
+  "pkg": "ground-state-society-landing",
+  "globalName": "GroundState",
+  "srcDir": "src",
+  "entry": ".design-sync/synth-entry.jsx",
+  "extraEntries": ["react-router-dom"],
+  "provider": { "component": "MemoryRouter" },
+  "readmeHeader": ".design-sync/conventions.md",
+  "extraFonts": [
+    "node_modules/@fontsource-variable/archivo/wdth.css",
+    "node_modules/@fontsource/ibm-plex-mono/400.css",
+    "node_modules/@fontsource/ibm-plex-mono/500.css",
+    "node_modules/@fontsource/ibm-plex-mono/700.css"
+  ],
+  "componentSrcMap": {
+    "Mark": "src/components/Mark.jsx",
+    "MotionToggle": "src/components/MotionToggle.jsx",
+    "Mosaic": "src/components/Mosaic.jsx",
+    "Footer": "src/components/Footer.jsx",
+    "Nav": "src/components/Nav.jsx",
+    "Cursor": "src/components/Cursor.jsx",
+    "HeroScene": "src/components/HeroScene.jsx",
+    "FigCaption": "src/components/figures/FigCaption.jsx",
+    "EnergyLevels": "src/components/figures/EnergyLevels.jsx",
+    "WaveParticle": "src/components/figures/WaveParticle.jsx",
+    "BlochFigure": "src/components/figures/BlochFigure.jsx",
+    "BlochSphere": "src/components/figures/BlochSphere.jsx",
+    "BlochScene": null,
+    "GroundStateScene": null,
+    "Hero": "src/sections/Hero.jsx",
+    "Problem": "src/sections/Problem.jsx",
+    "Proof": "src/sections/Proof.jsx",
+    "Inside": "src/sections/Inside.jsx",
+    "Story": "src/sections/Story.jsx",
+    "FinalCta": "src/sections/FinalCta.jsx"
+  }
+}
