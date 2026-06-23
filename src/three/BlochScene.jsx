@@ -16,6 +16,10 @@ const SAND = '#b7a781'
 const R = 1.6
 const THETA = 0.96 // polar angle of ψ — fixed during free precession
 
+/* Reused across frames — the precession tip is recomputed every frame, and
+   allocating a fresh Vector3 60×/s only feeds the garbage collector. */
+const TIP = new THREE.Vector3()
+
 function circleGeometry(builder, segments = 96) {
   const pts = []
   for (let i = 0; i <= segments; i++) {
@@ -71,7 +75,7 @@ function Sphere({ yawRef, draggingRef }) {
     if (!draggingRef.current) phiRef.current += dt * 0.45
     const phi = phiRef.current
 
-    const p = new THREE.Vector3(
+    const p = TIP.set(
       R * Math.sin(THETA) * Math.cos(phi),
       R * Math.cos(THETA),
       R * Math.sin(THETA) * Math.sin(phi),
