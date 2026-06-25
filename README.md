@@ -44,8 +44,8 @@ notation (ħω, α, β, kets) is exempted from the uppercase transform — case 
 `data-split` (masked line reveals), `data-fade`, `data-stagger`, `data-draw` (scroll-scrubbed
 SVG draw-ins), `data-count` (stat counters), `data-cells` (mosaic). All tweens run inside
 `gsap.matchMedia('(prefers-reduced-motion: no-preference)')` — under reduced motion the page
-renders complete and static. The hero pins and scrubs on desktop only; scrolling feeds
-energy into the particle cloud, which relaxes back to the ground state on release.
+renders complete and static. The hero does not pin or scrub; scrolling feeds energy into
+the particle cloud, which relaxes back to the ground state on release.
 
 **The hero scene** (`src/three/GroundStateScene.jsx`) is physically honest: a wireframe
 harmonic well V(r) = ½kr², a particle ensemble relaxing into the gaussian ground-state
@@ -75,19 +75,23 @@ npm run build    # outputs to dist/
 npm run preview  # serve the production build locally
 ```
 
-The three.js scene is split into its own chunk and loaded after first paint; initial JS is
-~138 kB gzip.
+The three.js scene is code-split into its own chunk by a lazy `import()` (Vite/Rollup splits
+it automatically — there is no `manualChunks` rule) and loaded after first paint; initial JS
+is ~144 kB gzip.
 
 ## Routes
 
 - `/` — the landing page
-- `/apply` — membership application
+- `/story` — the founder / origin narrative (prerendered for SEO/AEO)
+- `/apply` — membership application (prerendered; `index, follow`)
 - `/#signal` — The Signal free-newsletter capture
 - `/activate` — post-acceptance membership activation (plan choice → Stripe Checkout).
   Deliberately unlinked from the page and nav: the URL travels only in acceptance emails,
   per the intent boundary that cold visitors are never pushed to the $300 ask.
 - `/welcome` — Stripe's `success_url`; verifies the session against the backend before
   claiming the membership is active.
+- `/confirm` — The Signal double-opt-in confirmation landing; the magic link points here
+  (`noindex`, and `Disallow`ed in robots.txt).
 
 ## Form intake (environment variables)
 
@@ -99,7 +103,7 @@ Both forms submit JSON via `src/lib/submit.js` to endpoints injected at build ti
 | `VITE_SIGNAL_ENDPOINT` | The Signal subscribe | `{ form: "signal", email, source: "signal", website }` |
 
 `VITE_SIGNAL_ENDPOINT` points at the `gss-subscribe` stack's `ApiUrl` output + `/subscribe`
-(e.g. `https://api.altivum.ai/subscribe`). Subscribers land on a unified, source-tagged
+(the deployed value is `https://api.groundstatesociety.com/subscribe`). Subscribers land on a unified, source-tagged
 list; `source: "signal"` identifies Signal signups. The double-opt-in flow sends a
 confirmation email — the subscriber's free access (the quantum module deliverable of the
 free Signal tier) opens only after they click the confirmation link.
@@ -150,12 +154,19 @@ verification, response allowlist; zero dependencies, Stripe is mocked):
 npm test   # also runs in Amplify preBuild — a red suite blocks the deploy
 ```
 
-Deploy (secrets come from the environment, never from samconfig.toml):
+Deploy. The Stripe keys live in a Secrets Manager secret (a JSON object with
+`STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`); the stack takes only its ARN, so the keys
+are never a Lambda env var (readable via `lambda:GetFunctionConfiguration`) or in
+`samconfig.toml`. The handler fetches and caches them at cold start:
 
 ```bash
+# one-time: create the secret holding the Stripe keys
+aws secretsmanager create-secret --name gss/checkout --region us-east-2 --profile ground-state \
+  --secret-string '{"STRIPE_SECRET_KEY":"sk_...","STRIPE_WEBHOOK_SECRET":"whsec_..."}'
+
 cd backend/checkout
 sam deploy --parameter-overrides \
-  "StripeSecretKey=$STRIPE_SECRET_KEY PriceMonthly=price_... PriceAnnual=price_... StripeWebhookSecret=$STRIPE_WEBHOOK_SECRET" \
+  "CheckoutSecretsArn=$CHECKOUT_SECRETS_ARN PriceMonthly=price_... PriceAnnual=price_..." \
   "AlarmEmail=you@example.com"
 ```
 
@@ -168,9 +179,12 @@ empty disables the alarms. Also enable Stripe Dashboard email notifications for
 failed webhook deliveries — an independent second net.
 
 Then set `VITE_CHECKOUT_ENDPOINT` to the stack's `ApiUrl` output (Amplify console for
-production). When it is unset, `/activate` renders an honest preview state. Before live
-keys: move secrets from Lambda env vars to SSM SecureString or Secrets Manager, drop
-`http://localhost:5173` from the CORS origins, and add throttling on `/checkout`.
+production). When it is unset, `/activate` renders an honest preview state. Done for live
+readiness: secrets are fetched from Secrets Manager at cold start, the deployed CORS
+allowlist is production-only (no `localhost`), and the webhook de-duplicates replayed events
+via a DynamoDB conditional write. Still open before live keys: per-IP / per-email rate
+limiting (only stage-level throttling exists today), and pointing the secret's
+`STRIPE_WEBHOOK_SECRET` at the live-mode signing secret.
 
 ## Deploying to AWS Amplify Hosting (GitHub CI/CD)
 
@@ -205,7 +219,7 @@ src/
   three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
   components/    Nav, Footer, Mark (brand), Mosaic, HeroScene, figures/
   sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05), Story (/story)
-  pages/         Landing, Story, Apply, Activate, Welcome
+  pages/         Landing, Story, Apply, Activate, Welcome, Confirm
 backend/
   checkout/      SAM stack: Stripe Checkout sessions + webhook (template.yaml, src/handler.mjs)
 ```

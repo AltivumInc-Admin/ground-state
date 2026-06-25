@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 /*
@@ -48,4 +48,13 @@ function fontPreload() {
 
 export default defineConfig({
   plugins: [react(), fontPreload()],
+  // Frontend tests run on jsdom. Scoped to *.test.* so the production build is
+  // unaffected; the font-preload plugin is build-only and never runs here.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    css: false,
+    setupFiles: './src/test/setup.js',
+    include: ['src/**/*.test.{js,jsx}'],
+  },
 })

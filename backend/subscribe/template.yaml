@@ -7,14 +7,12 @@ Description: >
   site and the quantum learning module. Served on api.groundstatesociety.com.
 
 Parameters:
-  SessionSecret:
+  SubscribeSecretsArn:
     Type: String
-    NoEcho: true
-    Description: HMAC secret for signing the bearer access token (from Secrets Manager).
-  TokenPepper:
-    Type: String
-    NoEcho: true
-    Description: HMAC pepper for hashing magic-link tokens at rest.
+    Description: >
+      ARN of the Secrets Manager secret holding a JSON object with SESSION_SECRET
+      (bearer-token signing HMAC) and TOKEN_PEPPER (magic-link hash pepper). The
+      handler fetches it at cold start, so neither is a plaintext Lambda env var.
   FromAddress:
     Type: String
     Default: no-reply@groundstatesociety.com
@@ -98,8 +96,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref SubscribersTable
-          SESSION_SECRET: !Ref SessionSecret
-          TOKEN_PEPPER: !Ref TokenPepper
+          SECRETS_ARN: !Ref SubscribeSecretsArn
           FROM_ADDRESS: !Ref FromAddress
           CONFIG_SET: !Ref ConfigSet
           SIGNAL_VERIFY_URL: !Ref SignalVerifyUrl
@@ -115,6 +112,9 @@ Resources:
               Resource:
                 - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/groundstatesociety.com
                 - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref SubscribeSecretsArn
       Events:
         Subscribe:
           Type: HttpApi

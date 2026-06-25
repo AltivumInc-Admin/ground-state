@@ -8,7 +8,10 @@
     "dev": "vite",
     "build": "vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\""
+    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\"",
+    "test:fe": "vitest run",
+    "test:fe:watch": "vitest",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.2.8",
@@ -25,7 +28,15 @@
     "@aws-sdk/client-dynamodb": "^3.1071.0",
     "@aws-sdk/client-sesv2": "^3.1071.0",
     "@aws-sdk/lib-dynamodb": "^3.1071.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^5.0.0",
-    "vite": "^7.0.0"
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.7.0",
+    "jsdom": "^29.1.1",
+    "vite": "^7.0.0",
+    "vitest": "^4.1.9"
   }
 }

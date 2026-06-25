@@ -6,17 +6,14 @@ Description: >
   signature-verified Stripe webhooks.
 
 Parameters:
-  StripeSecretKey:
+  CheckoutSecretsArn:
     Type: String
-    NoEcho: true
-    Description: Stripe secret key (sk_test_... in test mode)
-  StripeWebhookSecret:
-    Type: String
-    NoEcho: true
-    Default: ''
     Description: >
-      Stripe webhook signing secret (whsec_...). Empty until the webhook
-      endpoint is registered; the /webhook route refuses traffic until set.
+      ARN of the Secrets Manager secret holding a JSON object with
+      STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET. The handler fetches it at cold
+      start, so the live Stripe key is never a plaintext Lambda env var
+      (readable via lambda:GetFunctionConfiguration). The webhook stays
+      fail-closed until STRIPE_WEBHOOK_SECRET is present in the secret.
   PriceMonthly:
     Type: String
     Description: Stripe price ID for The Round, monthly ($300/mo)
@@ -47,6 +44,23 @@ Conditions:
   HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
 
 Resources:
+  # Stripe webhook idempotency. Each processed event id is written once with a
+  # TTL (7 days) longer than Stripe's retry window; a replayed delivery fails the
+  # conditional put and is dropped before any side effect (e.g. future fulfilment).
+  ProcessedEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
   CheckoutApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -56,10 +70,12 @@ Resources:
         ThrottlingRateLimit: 10
         ThrottlingBurstLimit: 20
       CorsConfiguration:
+        # Production origins only. Local dev runs against backend/checkout/local.mjs
+        # (no CORS enforcement) — localhost is deliberately NOT a permitted origin
+        # on the deployed payments API.
         AllowOrigins:
           - https://groundstatesociety.com
           - https://www.groundstatesociety.com
-          - http://localhost:5173
         AllowMethods:
           - GET
           - POST
@@ -83,11 +99,21 @@ Resources:
       ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref ReservedConcurrency, !Ref AWS::NoValue]
       Environment:
         Variables:
-          STRIPE_SECRET_KEY: !Ref StripeSecretKey
-          STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
+          SECRETS_ARN: !Ref CheckoutSecretsArn
           PRICE_MONTHLY: !Ref PriceMonthly
           PRICE_ANNUAL: !Ref PriceAnnual
           SITE_URL: !Ref SiteUrl
+          EVENTS_TABLE: !Ref ProcessedEventsTable
+      Policies:
+        - Statement:
+            # Least privilege: read only the one checkout secret, write only the
+            # idempotency table.
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref CheckoutSecretsArn
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource: !GetAtt ProcessedEventsTable.Arn
       Events:
         Checkout:
           Type: HttpApi

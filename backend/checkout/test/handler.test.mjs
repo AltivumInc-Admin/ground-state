@@ -18,7 +18,7 @@ process.env.SITE_URL = 'https://example.test'
 process.env.STRIPE_SECRET_KEY = 'sk_test_dummy'
 delete process.env.STRIPE_WEBHOOK_SECRET
 
-const { handler } = await import('../src/handler.mjs')
+const { handler, ddb } = await import('../src/handler.mjs')
 
 const event = ({
   method = 'POST',
@@ -42,6 +42,7 @@ const sign = (payload, secret = WEBHOOK_SECRET, t = Math.floor(Date.now() / 1000
   `t=${t},v1=${createHmac('sha256', secret).update(`${t}.${payload}`, 'utf8').digest('hex')}`
 
 const COMPLETED_EVENT = JSON.stringify({
+  id: 'evt_test_completed',
   type: 'checkout.session.completed',
   data: {
     object: {
@@ -325,4 +326,43 @@ test('valid signature over an unparseable payload is rejected as invalid_payload
   const res = await handler(webhookEvent(payload, sign(payload)))
   assert.equal(res.statusCode, 400)
   assert.equal(JSON.parse(res.body).error, 'invalid_payload')
+})
+
+/* ----------------------------------------------- /webhook idempotency */
+
+const loggedCompletion = (logs) =>
+  logs.mock.calls.some((c) => String(c.arguments[0]).includes('member_checkout_completed'))
+
+test('a replayed event id is de-duplicated and not reprocessed', async (t) => {
+  process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET
+  process.env.EVENTS_TABLE = 'events-test'
+  t.after(() => {
+    delete process.env.STRIPE_WEBHOOK_SECRET
+    delete process.env.EVENTS_TABLE
+  })
+  // The conditional PutItem fails: this event id was already written.
+  t.mock.method(ddb, 'send', async () => {
+    throw Object.assign(new Error('exists'), { name: 'ConditionalCheckFailedException' })
+  })
+  const logs = t.mock.method(console, 'log')
+  const res = await handler(webhookEvent(COMPLETED_EVENT, sign(COMPLETED_EVENT)))
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(JSON.parse(res.body), { received: true, duplicate: true })
+  assert.equal(loggedCompletion(logs), false, 'duplicate must not write a ledger line')
+})
+
+test('a first-delivery event is claimed and processed', async (t) => {
+  process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET
+  process.env.EVENTS_TABLE = 'events-test'
+  t.after(() => {
+    delete process.env.STRIPE_WEBHOOK_SECRET
+    delete process.env.EVENTS_TABLE
+  })
+  // The conditional PutItem succeeds: first time this id is seen.
+  t.mock.method(ddb, 'send', async () => ({}))
+  const logs = t.mock.method(console, 'log')
+  const res = await handler(webhookEvent(COMPLETED_EVENT, sign(COMPLETED_EVENT)))
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(JSON.parse(res.body), { received: true })
+  assert.equal(loggedCompletion(logs), true, 'first delivery writes the ledger line')
 })

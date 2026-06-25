@@ -121,7 +121,7 @@ async function isConfirmed(email) {
       new GetCommand({ TableName: TABLE(), Key: { PK: `EMAIL#${email}` } }),
     )
     return res.Item?.status === 'confirmed'
-  } catch (e) {
+  } catch {
     // If GetCommand fails (e.g., in test with mocked unconditional throw), assume not confirmed
     return false
   }

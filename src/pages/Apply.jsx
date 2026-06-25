@@ -134,7 +134,7 @@ export default function Apply() {
         {showForm && (
           <div className="apply-grid">
             <aside className="apply-side ground-dark" data-fade>
-              <h1>Apply to join The Round.</h1>
+              <h1 id="apply-title">Apply to join The Round.</h1>
               <p className="lede">
                 The vetted inner circle of The Ground State Society — for founders and co-founders
                 of operating quantum startups, at any funding stage.

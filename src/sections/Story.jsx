@@ -7,9 +7,9 @@ export default function Story() {
         <p className="kicker" data-fade>
           The Story
         </p>
-        <h2 id="story-title" className="section-title" data-split>
+        <h1 id="story-title" className="section-title" data-split>
           Built by an operator. Planted early, on purpose.
-        </h2>
+        </h1>
         <div className="story-grid">
           <div className="story-body" data-fade>
             <p>

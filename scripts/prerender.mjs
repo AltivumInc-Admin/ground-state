@@ -38,6 +38,21 @@ const ROUTES = [
       canonical: `${SITE}/story`,
     },
   },
+  {
+    // /apply is index,follow — prerender it so non-JS crawlers get the real
+    // application page (not the Amplify catch-all's homepage HTML). Needs the
+    // /apply → /apply.html rewrite applied in the Amplify console to take effect;
+    // until then it falls back to client render (data-route gate in main.jsx).
+    path: '/apply',
+    file: 'apply.html',
+    expect: 'apply-title',
+    head: {
+      title: 'Apply to join The Round — The Ground State Society',
+      description:
+        'The application for The Round — the vetted peer network for quantum founders. Reviewed personally.',
+      canonical: `${SITE}/apply`,
+    },
+  },
 ]
 
 const indexPath = new URL('../dist/index.html', import.meta.url)
