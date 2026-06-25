@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Nav from './components/Nav.jsx'
 import Footer from './components/Footer.jsx'
@@ -6,10 +6,16 @@ import Cursor from './components/Cursor.jsx'
 import Landing from './pages/Landing.jsx'
 import StoryPage from './pages/Story.jsx'
 import Apply from './pages/Apply.jsx'
-import Activate from './pages/Activate.jsx'
-import Welcome from './pages/Welcome.jsx'
-import Confirm from './pages/Confirm.jsx'
 import { ScrollTrigger } from './lib/fx.jsx'
+
+/* Landing, Story and Apply are prerendered + hydrated, so they stay in the main
+   bundle — lazy-loading a prerendered route would hydrate through the Suspense
+   fallback and flash the server HTML away. The remaining routes are JS-only
+   (noindex), reached only by a deliberate click or an emailed magic link, so
+   splitting them keeps their code off the landing critical path. */
+const Activate = lazy(() => import('./pages/Activate.jsx'))
+const Welcome = lazy(() => import('./pages/Welcome.jsx'))
+const Confirm = lazy(() => import('./pages/Confirm.jsx'))
 
 /* Scrolls to top on route change, or to the anchor when a hash is present.
    Keyed on location.key so re-clicking the same anchor scrolls again. */
@@ -61,17 +67,19 @@ export default function App() {
       <Cursor />
       <Nav />
       <main id="main" tabIndex={-1}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/story" element={<StoryPage />} />
-          <Route path="/apply" element={<Apply />} />
-          {/* Post-acceptance only — never linked from the page (see intent) */}
-          <Route path="/activate" element={<Activate />} />
-          <Route path="/welcome" element={<Welcome />} />
-          {/* Double-opt-in confirmation landing for The Signal (magic-link target) */}
-          <Route path="/confirm" element={<Confirm />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/story" element={<StoryPage />} />
+            <Route path="/apply" element={<Apply />} />
+            {/* Post-acceptance only — never linked from the page (see intent) */}
+            <Route path="/activate" element={<Activate />} />
+            <Route path="/welcome" element={<Welcome />} />
+            {/* Double-opt-in confirmation landing for The Signal (magic-link target) */}
+            <Route path="/confirm" element={<Confirm />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
       <Footer />
     </>
