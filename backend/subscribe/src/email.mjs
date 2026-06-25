@@ -1,6 +1,10 @@
-import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
-
-export const ses = new SESv2Client({})
+// Transactional sender — Postmark via its HTTPS Email API (no SDK; Node 22 global
+// fetch keeps the function dependency-light). The magic link always goes on the
+// 'outbound' (transactional) Message Stream so a future 'Signal' broadcast stream
+// can never share its reputation. POSTMARK_TOKEN is the Server API Token, fetched
+// from Secrets Manager at cold start (see handler.mjs) — never a plaintext env var.
+const POSTMARK_API = 'https://api.postmarkapp.com/email'
+const STREAM = 'outbound'
 
 // Source-specific confirmation copy. Signal subscribers confirm on the ground-state site and get
 // the free briefing; quantum-intro subscribers confirm on the module and get the learning content.
@@ -34,20 +38,27 @@ export function buildMagicLinkEmail({ link, source }) {
 
 export async function sendMagicLink({ to, link, source }) {
   const { subject, html, text } = buildMagicLinkEmail({ link, source })
-  await ses.send(
-    new SendEmailCommand({
-      FromEmailAddress: process.env.FROM_ADDRESS,
-      Destination: { ToAddresses: [to] },
-      Content: {
-        Simple: {
-          Subject: { Data: subject, Charset: 'UTF-8' },
-          Body: {
-            Html: { Data: html, Charset: 'UTF-8' },
-            Text: { Data: text, Charset: 'UTF-8' },
-          },
-        },
-      },
-      ...(process.env.CONFIG_SET && { ConfigurationSetName: process.env.CONFIG_SET }),
+  const res = await fetch(POSTMARK_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-Postmark-Server-Token': process.env.POSTMARK_TOKEN,
+    },
+    body: JSON.stringify({
+      From: process.env.FROM_ADDRESS,
+      To: to,
+      Subject: subject,
+      HtmlBody: html,
+      TextBody: text,
+      MessageStream: STREAM,
     }),
-  )
+  })
+  // Postmark returns 200 only on accept; anything else (422 inactive-recipient,
+  // 401 bad token, 5xx) is a failure. Surface the detail server-side; the handler
+  // funnels any throw to a generic 502.
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`postmark_send_failed ${res.status}: ${detail}`)
+  }
 }

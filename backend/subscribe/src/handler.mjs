@@ -17,6 +17,9 @@ if (!process.env.SESSION_SECRET && process.env.SECRETS_ARN) {
   const secrets = JSON.parse(SecretString)
   process.env.SESSION_SECRET = secrets.SESSION_SECRET
   process.env.TOKEN_PEPPER = secrets.TOKEN_PEPPER
+  // Postmark Server API Token for the transactional sender (email.mjs). Guarded
+  // so a secret without it yet (mid-migration) doesn't break the secret parse.
+  if (secrets.POSTMARK_TOKEN) process.env.POSTMARK_TOKEN = secrets.POSTMARK_TOKEN
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

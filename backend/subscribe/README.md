@@ -33,9 +33,8 @@ Accepts `{ "token": "..." }` (the raw token from the magic link).
 | Variable | Required | Description |
 |---|---|---|
 | `TABLE_NAME` | yes | DynamoDB table name (injected by CloudFormation). |
-| `SECRETS_ARN` | yes (deployed) | ARN of the Secrets Manager secret (JSON: `SESSION_SECRET` — HMAC for signing the bearer token; `TOKEN_PEPPER` — pepper mixed into magic-link hashes so a leaked table can't be replayed). Fetched at cold start so neither is a Lambda env var. **Locally**, set `SESSION_SECRET` and `TOKEN_PEPPER` directly in `.env.local` instead — those take precedence and no secret is fetched. |
-| `FROM_ADDRESS` | yes | SES-verified sender, e.g. `no-reply@groundstatesociety.com`. Same region as the stack. |
-| `CONFIG_SET` | yes | SES configuration set (`gss-subscribe`). Routes bounce/complaint events to SNS. |
+| `SECRETS_ARN` | yes (deployed) | ARN of the Secrets Manager secret (JSON: `SESSION_SECRET` — HMAC for the bearer token; `TOKEN_PEPPER` — pepper for magic-link hashes; `POSTMARK_TOKEN` — Postmark Server API Token for the sender). Fetched at cold start so none is a Lambda env var. **Locally**, set `SESSION_SECRET`, `TOKEN_PEPPER`, and `POSTMARK_TOKEN` directly in `.env.local` instead — those take precedence and no secret is fetched. |
+| `FROM_ADDRESS` | yes | Postmark-verified sender, e.g. `no-reply@groundstatesociety.com`. |
 | `SIGNAL_VERIFY_URL` | yes | Confirmation landing page for `source=signal` (`https://groundstatesociety.com/confirm`). |
 | `QUANTUM_VERIFY_URL` | yes | Confirmation landing page for `source=quantum-intro` (`https://quantum.altivum.ai/verify`). |
 | `SESSION_TTL_SEC` | no | Bearer token lifetime in seconds (default `2592000` = 30 days). |
@@ -44,14 +43,18 @@ Set secrets in `.env.local` for local development. Never commit them.
 
 ---
 
-## SES setup (account 659220242594, us-east-2)
+## Email (Postmark)
 
-**Done:**
-- Domain identity `groundstatesociety.com` verified; Easy DKIM `SUCCESS`; custom MAIL FROM `mail.groundstatesociety.com` `SUCCESS`; DMARC published (`p=none`).
-- Configuration set `gss-subscribe` with a `BOUNCE`+`COMPLAINT` → SNS event destination (topic `gss-ses-events`).
-- Account-level suppression list on for bounces and complaints.
+The magic-link confirmation is sent via **Postmark's HTTPS Email API** (`email.mjs`, no SDK — Node 22 global `fetch`), on the **`outbound` transactional Message Stream**. The stream is kept separate from any future "Signal" broadcast stream so the newsletter can never share the confirmation email's sender reputation. Chosen over Amazon SES because SES production access kept being **denied at the account/identity level** (`sesv2 get-account` ReviewDetails: `DENIED`, case `178181335200610`); Postmark also has the best independent cold-start inbox placement for this premium-transactional use case.
 
-**Production access:** request submitted 2026-06-18 (Transactional); follow-up answered. Awaiting AWS decision — until granted, SES is in sandbox (200/24h, 1/sec, verified recipients only).
+**Setup:**
+- Verify the sending domain (e.g. `groundstatesociety.com`) in Postmark — add Postmark's DKIM + Return-Path CNAMEs to the GSS Route 53 zone `Z00828413P9V0JNO3MQGW`.
+- Create a Postmark **Server** and put its **Server API Token** into the `gss/subscribe` Secrets Manager secret as `POSTMARK_TOKEN` (the handler hydrates it at cold start; never a plaintext env var).
+- `FROM_ADDRESS` must be an address on a Postmark-verified domain.
+
+**TODO (fast-follow):** a `POST /postmark-webhook` route (Basic-auth verified) for `Bounce` + `SpamComplaint` events that marks addresses suppressed in DynamoDB — replaces the old SES configuration-set → SNS flow. Until then, Postmark's own suppression list already prevents re-sending to bounced/complained addresses.
+
+**Legacy SES (rollback path):** the SES identity (`groundstatesociety.com`, DKIM + custom MAIL FROM) is left in place during cutover; remove the SES wiring only after Postmark inbox placement is verified end-to-end. The old config set `gss-subscribe` → SNS is now unused.
 
 ---
 
@@ -69,8 +72,8 @@ The harness wraps the Lambda handler in a plain HTTP server. CORS is set to the 
 TABLE_NAME=local-dev          # not used unless you wire a real table
 SESSION_SECRET=dev-secret-32-chars-min
 TOKEN_PEPPER=dev-pepper-32-chars-min
+POSTMARK_TOKEN=your-postmark-server-api-token
 FROM_ADDRESS=no-reply@groundstatesociety.com
-CONFIG_SET=gss-subscribe
 SIGNAL_VERIFY_URL=http://localhost:5173/confirm
 QUANTUM_VERIFY_URL=http://localhost:5174/verify
 ```
@@ -88,12 +91,12 @@ From the repo root, `npm test` runs both `backend/checkout` and `backend/subscri
 Prerequisites:
 - AWS CLI for `us-east-2` (profile `ground-state` → account 659220242594).
 - A **regional** ACM certificate for `api.groundstatesociety.com` in `us-east-2` (HttpApi custom domains require a regional cert, not us-east-1). Already ISSUED: `arn:aws:acm:us-east-2:659220242594:certificate/2e5eadf0-0d78-4c5b-8db5-3e6cd8ba0bad`.
-- A Secrets Manager secret holding `{"SESSION_SECRET":"…","TOKEN_PEPPER":"…"}` (each `openssl rand -hex 32`); pass its ARN as `SubscribeSecretsArn`.
+- A Secrets Manager secret holding `{"SESSION_SECRET":"…","TOKEN_PEPPER":"…","POSTMARK_TOKEN":"…"}` (SESSION_SECRET + TOKEN_PEPPER each `openssl rand -hex 32`; POSTMARK_TOKEN from the Postmark Server); pass its ARN as `SubscribeSecretsArn`.
 
 ```bash
-# one-time: create the secret holding the signing secret + pepper
+# one-time: create the secret holding the signing secret, pepper, and Postmark token
 aws secretsmanager create-secret --name gss/subscribe --region us-east-2 --profile ground-state \
-  --secret-string "{\"SESSION_SECRET\":\"$SESSION_SECRET\",\"TOKEN_PEPPER\":\"$TOKEN_PEPPER\"}"
+  --secret-string "{\"SESSION_SECRET\":\"$SESSION_SECRET\",\"TOKEN_PEPPER\":\"$TOKEN_PEPPER\",\"POSTMARK_TOKEN\":\"$POSTMARK_TOKEN\"}"
 
 sam build
 sam deploy --profile ground-state \
@@ -103,7 +106,7 @@ sam deploy --profile ground-state \
     ReservedConcurrency=-1
 ```
 
-`ReservedConcurrency=-1` omits the reserved-concurrency cap — required while the account's total Lambda concurrency quota is still 10 (increase to 1000 requested). Defaults cover `FromAddress`, `ConfigSet`, `SignalVerifyUrl`, `QuantumVerifyUrl`, `ApiDomainName`.
+`ReservedConcurrency=-1` omits the reserved-concurrency cap — required while the account's total Lambda concurrency quota is still 10 (increase to 1000 requested). Defaults cover `FromAddress`, `SignalVerifyUrl`, `QuantumVerifyUrl`, `ApiDomainName`.
 
 After the first deploy, point `api.groundstatesociety.com` at the `RegionalDomainTarget` output (A/ALIAS in the 659-owned `groundstatesociety.com` zone, `Z00828413P9V0JNO3MQGW`):
 
