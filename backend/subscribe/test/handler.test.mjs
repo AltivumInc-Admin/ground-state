@@ -6,8 +6,13 @@ process.env.QUANTUM_VERIFY_URL = 'https://quantum.altivum.ai/verify'
 process.env.TOKEN_PEPPER = 'pepper_test'
 process.env.SESSION_SECRET = 'session_test'
 process.env.SESSION_TTL_SEC = '2592000'
+process.env.POSTMARK_WEBHOOK_SECRET = 'whsecret'
 
 const { makeHandler } = await import('../src/handler.mjs')
+
+const basicAuth = (user, pass) =>
+  `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`
+const WEBHOOK_AUTH = { authorization: basicAuth('postmark', 'whsecret') }
 
 const event = ({ method = 'POST', path = '/subscribe', body, headers = {} } = {}) => ({
   rawPath: path,
@@ -17,11 +22,12 @@ const event = ({ method = 'POST', path = '/subscribe', body, headers = {} } = {}
 })
 
 function fakes() {
-  const calls = { created: [], sent: [], consumed: [], confirmed: [] }
+  const calls = { created: [], sent: [], consumed: [], confirmed: [], suppressed: [] }
   const store = {
     async createPending(a) { calls.created.push(a); return { alreadyConfirmed: false } },
     async consumeToken(h) { calls.consumed.push(h); return { email: 'a@b.co' } },
     async confirm(e) { calls.confirmed.push(e); return true },
+    async suppress(a) { calls.suppressed.push(a) },
   }
   const email = { async sendMagicLink(a) { calls.sent.push(a) } }
   return { handler: makeHandler({ store, email }), calls }
@@ -120,4 +126,50 @@ test('malformed JSON body returns 400 invalid_json', async () => {
   const res = await handler(event({ body: 'not-json' }))
   assert.equal(res.statusCode, 400)
   assert.deepEqual(JSON.parse(res.body), { error: 'invalid_json' })
+})
+
+test('postmark-webhook rejects missing or wrong Basic auth with 401', async () => {
+  const { handler, calls } = fakes()
+  const body = { RecordType: 'SpamComplaint', Email: 'a@b.co' }
+  const noAuth = await handler(event({ path: '/postmark-webhook', body }))
+  assert.equal(noAuth.statusCode, 401)
+  const badAuth = await handler(
+    event({ path: '/postmark-webhook', headers: { authorization: basicAuth('postmark', 'wrong') }, body }),
+  )
+  assert.equal(badAuth.statusCode, 401)
+  assert.equal(calls.suppressed.length, 0)
+})
+
+test('postmark-webhook suppresses on a spam complaint (email normalized)', async () => {
+  const { handler, calls } = fakes()
+  const res = await handler(
+    event({ path: '/postmark-webhook', headers: WEBHOOK_AUTH, body: { RecordType: 'SpamComplaint', Email: 'A@B.co' } }),
+  )
+  assert.equal(res.statusCode, 200)
+  assert.equal(calls.suppressed.length, 1)
+  assert.equal(calls.suppressed[0].email, 'a@b.co')
+  assert.equal(calls.suppressed[0].reason, 'complaint')
+  assert.equal(calls.suppressed[0].recordType, 'SpamComplaint')
+})
+
+test('postmark-webhook suppresses on a hard bounce', async () => {
+  const { handler, calls } = fakes()
+  const res = await handler(
+    event({ path: '/postmark-webhook', headers: WEBHOOK_AUTH, body: { RecordType: 'Bounce', Type: 'HardBounce', Inactive: true, Email: 'x@y.co' } }),
+  )
+  assert.equal(res.statusCode, 200)
+  assert.equal(calls.suppressed[0].reason, 'bounce')
+})
+
+test('postmark-webhook acknowledges but does not suppress transient/other events', async () => {
+  const { handler, calls } = fakes()
+  const soft = await handler(
+    event({ path: '/postmark-webhook', headers: WEBHOOK_AUTH, body: { RecordType: 'Bounce', Type: 'SoftBounce', Inactive: false, Email: 'x@y.co' } }),
+  )
+  assert.equal(soft.statusCode, 200)
+  const delivery = await handler(
+    event({ path: '/postmark-webhook', headers: WEBHOOK_AUTH, body: { RecordType: 'Delivery', Email: 'x@y.co' } }),
+  )
+  assert.equal(delivery.statusCode, 200)
+  assert.equal(calls.suppressed.length, 0)
 })

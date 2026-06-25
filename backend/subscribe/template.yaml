@@ -11,9 +11,11 @@ Parameters:
     Type: String
     Description: >
       ARN of the Secrets Manager secret holding a JSON object with SESSION_SECRET
-      (bearer-token signing HMAC), TOKEN_PEPPER (magic-link hash pepper), and
-      POSTMARK_TOKEN (Postmark Server API Token for the transactional sender). The
-      handler fetches it at cold start, so none is a plaintext Lambda env var.
+      (bearer-token signing HMAC), TOKEN_PEPPER (magic-link hash pepper),
+      POSTMARK_TOKEN (Postmark Server API Token for the transactional sender), and
+      POSTMARK_WEBHOOK_SECRET (HTTP Basic-auth password for the /postmark-webhook
+      route). The handler fetches it at cold start, so none is a plaintext Lambda
+      env var.
   FromAddress:
     Type: String
     Default: no-reply@groundstatesociety.com
@@ -115,6 +117,12 @@ Resources:
         Verify:
           Type: HttpApi
           Properties: { ApiId: !Ref SubscribeApi, Path: /verify, Method: POST }
+        # Postmark posts bounce / spam-complaint events here (server-to-server, so no
+        # CORS); the handler Basic-auths the call and writes a DynamoDB suppression
+        # tombstone. No new IAM — it reuses the dynamodb:UpdateItem grant below.
+        PostmarkWebhook:
+          Type: HttpApi
+          Properties: { ApiId: !Ref SubscribeApi, Path: /postmark-webhook, Method: POST }
 
   SubscribeLogGroup:
     Type: AWS::Logs::LogGroup
