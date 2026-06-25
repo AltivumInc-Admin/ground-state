@@ -74,9 +74,12 @@ test('sendMagicLink POSTs to Postmark with the token, From, and the outbound str
   assert.equal(opts.method, 'POST')
   assert.equal(opts.headers['X-Postmark-Server-Token'], 'pm-test-token')
   const body = JSON.parse(opts.body)
-  assert.equal(body.From, 'no-reply@groundstatesociety.com')
+  assert.equal(body.From, 'The Ground State Society <no-reply@groundstatesociety.com>')
   assert.equal(body.To, 'a@b.co')
   assert.equal(body.MessageStream, 'outbound')
+  // Magic link must not be proxied/tracked: no link rewrite, no open pixel.
+  assert.equal(body.TrackLinks, 'None')
+  assert.equal(body.TrackOpens, false)
   assert.match(body.Subject, /Signal/)
   assert.match(body.HtmlBody, /groundstatesociety\.com\/confirm\?token=XYZ/)
   assert.match(body.TextBody, /groundstatesociety\.com\/confirm\?token=XYZ/)
