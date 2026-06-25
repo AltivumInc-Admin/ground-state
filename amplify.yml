@@ -8,6 +8,10 @@ frontend:
         # Red backend tests block the deploy — the checkout handler's edge
         # cases ride the same repo as the frontend
         - npm test
+        # Frontend gate: the Vitest suite (incl. the Stripe open-redirect guard
+        # on /activate) and ESLint must pass too. Either going red stops publish.
+        - npm run test:fe
+        - npm run lint
     build:
       commands:
         - npm run build

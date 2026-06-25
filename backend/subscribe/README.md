@@ -33,8 +33,7 @@ Accepts `{ "token": "..." }` (the raw token from the magic link).
 | Variable | Required | Description |
 |---|---|---|
 | `TABLE_NAME` | yes | DynamoDB table name (injected by CloudFormation). |
-| `SESSION_SECRET` | yes | HMAC-SHA256 secret for signing the bearer access token. Rotate with a deploy; old tokens expire naturally. |
-| `TOKEN_PEPPER` | yes | HMAC-SHA256 pepper mixed into magic-link token hashes before storage. Prevents token extraction from a leaked table. |
+| `SECRETS_ARN` | yes (deployed) | ARN of the Secrets Manager secret (JSON: `SESSION_SECRET` — HMAC for signing the bearer token; `TOKEN_PEPPER` — pepper mixed into magic-link hashes so a leaked table can't be replayed). Fetched at cold start so neither is a Lambda env var. **Locally**, set `SESSION_SECRET` and `TOKEN_PEPPER` directly in `.env.local` instead — those take precedence and no secret is fetched. |
 | `FROM_ADDRESS` | yes | SES-verified sender, e.g. `no-reply@groundstatesociety.com`. Same region as the stack. |
 | `CONFIG_SET` | yes | SES configuration set (`gss-subscribe`). Routes bounce/complaint events to SNS. |
 | `SIGNAL_VERIFY_URL` | yes | Confirmation landing page for `source=signal` (`https://groundstatesociety.com/confirm`). |
@@ -89,13 +88,17 @@ From the repo root, `npm test` runs both `backend/checkout` and `backend/subscri
 Prerequisites:
 - AWS CLI for `us-east-2` (profile `ground-state` → account 659220242594).
 - A **regional** ACM certificate for `api.groundstatesociety.com` in `us-east-2` (HttpApi custom domains require a regional cert, not us-east-1). Already ISSUED: `arn:aws:acm:us-east-2:659220242594:certificate/2e5eadf0-0d78-4c5b-8db5-3e6cd8ba0bad`.
-- Secrets `SessionSecret` + `TokenPepper` (from Secrets Manager, generated with `openssl rand -hex 32`).
+- A Secrets Manager secret holding `{"SESSION_SECRET":"…","TOKEN_PEPPER":"…"}` (each `openssl rand -hex 32`); pass its ARN as `SubscribeSecretsArn`.
 
 ```bash
+# one-time: create the secret holding the signing secret + pepper
+aws secretsmanager create-secret --name gss/subscribe --region us-east-2 --profile ground-state \
+  --secret-string "{\"SESSION_SECRET\":\"$SESSION_SECRET\",\"TOKEN_PEPPER\":\"$TOKEN_PEPPER\"}"
+
 sam build
 sam deploy --profile ground-state \
   --parameter-overrides \
-    SessionSecret="$SESSION_SECRET" TokenPepper="$TOKEN_PEPPER" \
+    SubscribeSecretsArn="$SUBSCRIBE_SECRETS_ARN" \
     ApiCertArn="$API_CERT_ARN" AlarmEmail="$ALARM_EMAIL" \
     ReservedConcurrency=-1
 ```

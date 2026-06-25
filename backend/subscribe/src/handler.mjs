@@ -2,6 +2,23 @@ import { generateToken, hashToken, signSession } from './crypto.mjs'
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
 
+// SESSION_SECRET and TOKEN_PEPPER come from Secrets Manager at cold start, never
+// stored as Lambda env vars (readable via lambda:GetFunctionConfiguration).
+// crypto.mjs reads them at call-time, so populating process.env before the first
+// invocation suffices. Env vars win, so tests and local dev stay offline.
+if (!process.env.SESSION_SECRET && process.env.SECRETS_ARN) {
+  const { SecretsManagerClient, GetSecretValueCommand } = await import(
+    '@aws-sdk/client-secrets-manager'
+  )
+  const sm = new SecretsManagerClient({})
+  const { SecretString } = await sm.send(
+    new GetSecretValueCommand({ SecretId: process.env.SECRETS_ARN }),
+  )
+  const secrets = JSON.parse(SecretString)
+  process.env.SESSION_SECRET = secrets.SESSION_SECRET
+  process.env.TOKEN_PEPPER = secrets.TOKEN_PEPPER
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SOURCES = new Set(['signal', 'quantum-intro'])
 

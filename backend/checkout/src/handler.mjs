@@ -1,4 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb'
 
 /*
  * Stripe Checkout backend — one Lambda, three routes (HTTP API payload v2):
@@ -22,6 +24,49 @@ const json = (statusCode, body) => ({
   headers: { 'content-type': 'application/json' },
   body: JSON.stringify(body),
 })
+
+// Secrets are fetched from Secrets Manager at cold start, never stored as Lambda
+// env vars (which are readable via lambda:GetFunctionConfiguration). Env vars take
+// precedence, so local.mjs and the test suite stay synchronous and offline — the
+// dynamic import below never runs there.
+if (!process.env.STRIPE_SECRET_KEY && process.env.SECRETS_ARN) {
+  const { SecretsManagerClient, GetSecretValueCommand } = await import(
+    '@aws-sdk/client-secrets-manager'
+  )
+  const sm = new SecretsManagerClient({})
+  const { SecretString } = await sm.send(
+    new GetSecretValueCommand({ SecretId: process.env.SECRETS_ARN }),
+  )
+  const secrets = JSON.parse(SecretString)
+  process.env.STRIPE_SECRET_KEY = secrets.STRIPE_SECRET_KEY
+  // Webhook secret may be absent until the endpoint is registered — webhook()
+  // stays fail-closed (503) while it is.
+  if (secrets.STRIPE_WEBHOOK_SECRET) {
+    process.env.STRIPE_WEBHOOK_SECRET = secrets.STRIPE_WEBHOOK_SECRET
+  }
+}
+
+// Webhook idempotency. Exported so tests can stub `send`. Disabled (claimEvent
+// returns true) when EVENTS_TABLE is unset, as in local dev and the test suite.
+export const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}))
+const EVENT_TTL_SEC = 60 * 60 * 24 * 7 // 7 days > Stripe's max retry window
+
+async function claimEvent(eventId) {
+  if (!process.env.EVENTS_TABLE || typeof eventId !== 'string') return true
+  try {
+    await ddb.send(
+      new PutCommand({
+        TableName: process.env.EVENTS_TABLE,
+        Item: { PK: `EVT#${eventId}`, ttl: Math.floor(Date.now() / 1000) + EVENT_TTL_SEC },
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }),
+    )
+    return true // first delivery — claimed
+  } catch (err) {
+    if (err?.name === 'ConditionalCheckFailedException') return false // already processed
+    throw err
+  }
+}
 
 async function stripeRequest(method, path, params) {
   const res = await fetch(`${STRIPE_API}/${path}`, {
@@ -158,6 +203,12 @@ async function webhook(event) {
     evt = JSON.parse(payload)
   } catch {
     return json(400, { error: 'invalid_payload' })
+  }
+
+  // Idempotency: Stripe delivers at-least-once and retries failures. Drop a
+  // replayed event before any side effect (logging now; fulfilment later).
+  if (!(await claimEvent(evt.id))) {
+    return json(200, { received: true, duplicate: true })
   }
 
   // For now membership activation is manual: these structured logs are the
