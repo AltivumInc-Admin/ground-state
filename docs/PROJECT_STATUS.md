@@ -44,8 +44,8 @@ applications are live. The free Signal tier is the only active conversion path.
 
 - **Secrets live in AWS Secrets Manager, not Lambda env vars.** `gss/checkout`
   (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) and `gss/subscribe`
-  (`SESSION_SECRET`, `TOKEN_PEPPER`) are fetched at cold start (env-preferring, so
-  tests/local stay offline). **Redeploys pass `CheckoutSecretsArn` /
+  (`SESSION_SECRET`, `TOKEN_PEPPER`, `POSTMARK_TOKEN`, `POSTMARK_WEBHOOK_SECRET`) are
+  fetched at cold start (env-preferring, so tests/local stay offline). **Redeploys pass `CheckoutSecretsArn` /
   `SubscribeSecretsArn`** — the old per-secret CFN params are gone from the templates.
   Migrated from the prior env values (not regenerated). Verified: `lambda
   get-function-configuration` shows no secret env vars.
@@ -95,11 +95,22 @@ applications are live. The free Signal tier is the only active conversion path.
   Postmark's default link/open tracking (it rewrites the magic link through a redirect
   domain) **plus** thin content. Fixed in `email.mjs`: `TrackLinks:'None'` + `TrackOpens:false`
   (clean un-proxied link, no pixel), a real From display name, and a rebuilt legitimate
-  template. **Still recommended:** rotate Postmark DKIM 1024→2048-bit; warm the domain;
-  spot-check Outlook placement.
+  template. **Still recommended:** warm the domain; spot-check Outlook placement. (DKIM
+  stays **1024-bit** — Postmark issues 1024-bit keys only, there is no 2048 option — which
+  still meets Gmail/Yahoo's ≥1024-bit requirement; DKIM/Return-Path/DMARC are all verified,
+  so there is no key upgrade to make.)
+- **Suppression — `POST /postmark-webhook` is DEPLOYED + live-verified (2026-06-25).**
+  Same subscribe Lambda/stack; HTTP Basic-auth (`postmark` : `POSTMARK_WEBHOOK_SECRET`
+  in the `gss/subscribe` secret; fails closed if unset). On a Postmark spam complaint or
+  hard bounce it writes a permanent `suppressed` tombstone (no TTL) keyed `EMAIL#<addr>`,
+  and `createPending` now refuses to resurrect a suppressed address — so we never re-email
+  a complainer. Verified against the live endpoint: no/wrong auth → 401, complaint → 200 +
+  a real `status=suppressed` row. **Registered in Postmark** (2026-06-25) on the `outbound`
+  stream's Webhooks — URL `https://api.groundstatesociety.com/postmark-webhook`, Bounce +
+  SpamComplaint enabled, Basic auth `postmark` / `POSTMARK_WEBHOOK_SECRET` (message content
+  off); Postmark's "Send test" returned `200`. Fully active.
 - **Still pending:** **Plan 2** — the `quantum-computing` module side (`/learn` content API +
-  gated notebooks + no-leak CI test); a `POST /postmark-webhook` route for Bounce/SpamComplaint
-  → DynamoDB suppression (Postmark's own suppression list covers this meanwhile).
+  gated notebooks + no-leak CI test).
 - Design: [`docs/superpowers/specs/2026-06-17-quantum-module-email-gate-design.md`](superpowers/specs/2026-06-17-quantum-module-email-gate-design.md);
   Plan 1: [`docs/superpowers/plans/2026-06-17-email-capture-verify-backend.md`](superpowers/plans/2026-06-17-email-capture-verify-backend.md).
 
