@@ -13,7 +13,7 @@ decisions/observations log see [`.altivum/journal.md`](../.altivum/journal.md)._
 |---|---|---|
 | **Payments (Stripe)** | 🟡 TEST mode | Amplify env uses `pk_test_…`, a `buy.stripe.com/test_…` link, and test price IDs. No real charges. |
 | **Apply form (`/apply`)** | 🟡 Preview | Page is now **prerendered + indexable** (own `<h1>`/meta, in `sitemap.xml`, `/apply → /apply.html` rewrite applied). Submission is still preview: `VITE_APPLY_ENDPOINT` is **unset** → renders/validates but does **not** submit or store (see `src/pages/Apply.jsx`). Intentional until intake opens (intent.md: "intake opens at launch"). **At intake-open, also add the apply origin to CSP `connect-src` — see Backend security below.** |
-| **The Signal (`/#signal`)** | 🟢 Wired | `VITE_SIGNAL_ENDPOINT = https://api.groundstatesociety.com/subscribe`; `api.` CNAME → us-east-2 execute-api resolves. **Not** independently e2e-verified — see Quantum email gate below. |
+| **The Signal (`/#signal`)** | 🟢 **LIVE** | Double opt-in is **inbox-verified end-to-end** (2026-06-25): `/subscribe` → Postmark → inbox → magic link → `/verify` → confirmed. `VITE_SIGNAL_ENDPOINT = https://api.groundstatesociety.com/subscribe`. See **Email — The Signal gate** below. |
 | **Checkout** | 🟢 Wired | `VITE_CHECKOUT_ENDPOINT` set (us-east-2); secrets now in Secrets Manager — see Backend security below. |
 
 **Takeaway for a fresh session / new contributor:** do not assume payments or
@@ -76,14 +76,30 @@ applications are live. The free Signal tier is the only active conversion path.
   index feeds ChatGPT Search citations).
 - Strongest remaining AEO lever is off-repo: earned brand mentions / category presence.
 
-## Quantum email gate (the Signal-tier deliverable)
+## Email — The Signal gate (LIVE via Postmark, inbox-verified 2026-06-25)
 
-- Backend (`backend/subscribe/`) is **merged to `main`** (PR #1, `a18aa59`); deployed,
-  with secrets now in Secrets Manager (see Backend security above).
-- **Pending:** (1) confirm **SES production access** (us-east-2, Transactional — the
-  long pole; still sandbox until granted), (2) exercise the real
-  signup → email → token path end-to-end, (3) **Plan 2** — the `quantum-computing`
-  module side (`/learn` content API + gated notebooks + no-leak CI test).
+- Backend `backend/subscribe/` (PR #1) sends the double opt-in confirmation via
+  **Postmark** (HTTPS API, no SDK) on the `outbound` transactional Message Stream.
+  Account approved + **inbox-verified end-to-end** 2026-06-25 (Gmail/Workspace): the
+  rebuilt email lands in the inbox and the magic link round-trips through `/verify`.
+- **Provider = Postmark, NOT SES.** We migrated off SES because production access was
+  DENIED — then it was later **GRANTED** (case `178181335200610` now shows GRANTED,
+  50k/day, us-east-2). **SES is kept as a documented fallback** (identity + DKIM + custom
+  MAIL FROM still in place). Postmark chosen for transactional inbox placement + Message
+  Streams isolation (transactional vs. the future newsletter on a separate stream).
+- **Sender setup:** `groundstatesociety.com` (production From `no-reply@groundstatesociety.com`)
+  and `altivum.ai` are verified in Postmark — DKIM + Return-Path CNAMEs live in Route 53
+  `Z00828413P9V0JNO3MQGW`. `POSTMARK_TOKEN` (Postmark Server API token) lives in the
+  `gss/subscribe` Secrets Manager secret, hydrated at cold start.
+- **Deliverability lesson:** the first send hit spam — a cold sending domain **plus**
+  Postmark's default link/open tracking (it rewrites the magic link through a redirect
+  domain) **plus** thin content. Fixed in `email.mjs`: `TrackLinks:'None'` + `TrackOpens:false`
+  (clean un-proxied link, no pixel), a real From display name, and a rebuilt legitimate
+  template. **Still recommended:** rotate Postmark DKIM 1024→2048-bit; warm the domain;
+  spot-check Outlook placement.
+- **Still pending:** **Plan 2** — the `quantum-computing` module side (`/learn` content API +
+  gated notebooks + no-leak CI test); a `POST /postmark-webhook` route for Bounce/SpamComplaint
+  → DynamoDB suppression (Postmark's own suppression list covers this meanwhile).
 - Design: [`docs/superpowers/specs/2026-06-17-quantum-module-email-gate-design.md`](superpowers/specs/2026-06-17-quantum-module-email-gate-design.md);
   Plan 1: [`docs/superpowers/plans/2026-06-17-email-capture-verify-backend.md`](superpowers/plans/2026-06-17-email-capture-verify-backend.md).
 
