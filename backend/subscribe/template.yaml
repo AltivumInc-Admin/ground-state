@@ -11,16 +11,13 @@ Parameters:
     Type: String
     Description: >
       ARN of the Secrets Manager secret holding a JSON object with SESSION_SECRET
-      (bearer-token signing HMAC) and TOKEN_PEPPER (magic-link hash pepper). The
-      handler fetches it at cold start, so neither is a plaintext Lambda env var.
+      (bearer-token signing HMAC), TOKEN_PEPPER (magic-link hash pepper), and
+      POSTMARK_TOKEN (Postmark Server API Token for the transactional sender). The
+      handler fetches it at cold start, so none is a plaintext Lambda env var.
   FromAddress:
     Type: String
     Default: no-reply@groundstatesociety.com
-    Description: Verified SES sender address.
-  ConfigSet:
-    Type: String
-    Default: gss-subscribe
-    Description: SES configuration set (bounce/complaint publishing).
+    Description: Verified Postmark sender (the From on the magic-link email).
   SignalVerifyUrl:
     Type: String
     Default: https://groundstatesociety.com/confirm
@@ -98,7 +95,6 @@ Resources:
           TABLE_NAME: !Ref SubscribersTable
           SECRETS_ARN: !Ref SubscribeSecretsArn
           FROM_ADDRESS: !Ref FromAddress
-          CONFIG_SET: !Ref ConfigSet
           SIGNAL_VERIFY_URL: !Ref SignalVerifyUrl
           QUANTUM_VERIFY_URL: !Ref QuantumVerifyUrl
           SESSION_TTL_SEC: !Ref SessionTtlSec
@@ -107,11 +103,8 @@ Resources:
             - Effect: Allow
               Action: [dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:DeleteItem, dynamodb:GetItem]
               Resource: !GetAtt SubscribersTable.Arn
-            - Effect: Allow
-              Action: ses:SendEmail
-              Resource:
-                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/groundstatesociety.com
-                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}
+            # Email goes out via Postmark's HTTPS API (no AWS perms needed); the
+            # function only needs DynamoDB + the secret (which carries POSTMARK_TOKEN).
             - Effect: Allow
               Action: secretsmanager:GetSecretValue
               Resource: !Ref SubscribeSecretsArn

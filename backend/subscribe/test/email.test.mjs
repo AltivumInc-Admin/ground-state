@@ -1,13 +1,20 @@
-import { test, mock, beforeEach } from 'node:test'
+import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { SendEmailCommand } from '@aws-sdk/client-sesv2'
 
-process.env.FROM_ADDRESS = 'no-reply@altivum.ai'
-process.env.CONFIG_SET = 'gss-subscribe'
+process.env.FROM_ADDRESS = 'no-reply@groundstatesociety.com'
+process.env.POSTMARK_TOKEN = 'pm-test-token'
 
-const { ses, sendMagicLink, buildMagicLinkEmail } = await import('../src/email.mjs')
+const { sendMagicLink, buildMagicLinkEmail } = await import('../src/email.mjs')
 
-beforeEach(() => mock.restoreAll())
+const realFetch = globalThis.fetch
+const withFetch = async (impl, fn) => {
+  globalThis.fetch = impl
+  try {
+    return await fn()
+  } finally {
+    globalThis.fetch = realFetch
+  }
+}
 
 test('signal copy speaks to The Signal, not the Quantum Intro', () => {
   const { subject, html, text } = buildMagicLinkEmail({
@@ -48,24 +55,41 @@ test('unknown source falls back to Signal copy rather than throwing', () => {
   assert.match(subject, /Signal/)
 })
 
-test('sendMagicLink issues a SES v2 SendEmail with the source subject and config set', async () => {
-  let cmd
-  mock.method(ses, 'send', async (c) => {
-    cmd = c
-    return { MessageId: 'm1' }
-  })
-  await sendMagicLink({
-    to: 'a@b.co',
-    link: 'https://groundstatesociety.com/confirm?token=XYZ',
-    source: 'signal',
-  })
-  assert.ok(cmd instanceof SendEmailCommand)
-  const i = cmd.input
-  assert.equal(i.FromEmailAddress, 'no-reply@altivum.ai')
-  assert.deepEqual(i.Destination.ToAddresses, ['a@b.co'])
-  assert.equal(i.ConfigurationSetName, 'gss-subscribe')
-  assert.match(i.Content.Simple.Subject.Data, /Signal/)
-  assert.match(i.Content.Simple.Body.Html.Data, /groundstatesociety\.com\/confirm\?token=XYZ/)
-  assert.match(i.Content.Simple.Body.Text.Data, /groundstatesociety\.com\/confirm\?token=XYZ/)
-  assert.doesNotMatch(i.Content.Simple.Subject.Data, /[\u{1F300}-\u{1FAFF}]/u) // no emoji
+test('sendMagicLink POSTs to Postmark with the token, From, and the outbound stream', async () => {
+  let url, opts
+  await withFetch(
+    async (u, o) => {
+      url = u
+      opts = o
+      return { ok: true, status: 200, text: async () => '' }
+    },
+    () =>
+      sendMagicLink({
+        to: 'a@b.co',
+        link: 'https://groundstatesociety.com/confirm?token=XYZ',
+        source: 'signal',
+      }),
+  )
+  assert.equal(url, 'https://api.postmarkapp.com/email')
+  assert.equal(opts.method, 'POST')
+  assert.equal(opts.headers['X-Postmark-Server-Token'], 'pm-test-token')
+  const body = JSON.parse(opts.body)
+  assert.equal(body.From, 'no-reply@groundstatesociety.com')
+  assert.equal(body.To, 'a@b.co')
+  assert.equal(body.MessageStream, 'outbound')
+  assert.match(body.Subject, /Signal/)
+  assert.match(body.HtmlBody, /groundstatesociety\.com\/confirm\?token=XYZ/)
+  assert.match(body.TextBody, /groundstatesociety\.com\/confirm\?token=XYZ/)
+  assert.doesNotMatch(body.Subject, /[\u{1F300}-\u{1FAFF}]/u) // no emoji
+})
+
+test('sendMagicLink throws on a non-2xx Postmark response (handler maps it to 502)', async () => {
+  await withFetch(
+    async () => ({ ok: false, status: 422, text: async () => '{"ErrorCode":406,"Message":"Inactive recipient"}' }),
+    () =>
+      assert.rejects(
+        () => sendMagicLink({ to: 'x@y.co', link: 'https://x/confirm?token=T', source: 'signal' }),
+        /postmark_send_failed 422/,
+      ),
+  )
 })
