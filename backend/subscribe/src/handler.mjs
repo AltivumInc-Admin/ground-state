@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { generateToken, hashToken, signSession } from './crypto.mjs'
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
@@ -20,6 +21,9 @@ if (!process.env.SESSION_SECRET && process.env.SECRETS_ARN) {
   // Postmark Server API Token for the transactional sender (email.mjs). Guarded
   // so a secret without it yet (mid-migration) doesn't break the secret parse.
   if (secrets.POSTMARK_TOKEN) process.env.POSTMARK_TOKEN = secrets.POSTMARK_TOKEN
+  // Shared secret for the Postmark webhook's HTTP Basic auth. Same guard.
+  if (secrets.POSTMARK_WEBHOOK_SECRET)
+    process.env.POSTMARK_WEBHOOK_SECRET = secrets.POSTMARK_WEBHOOK_SECRET
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -32,6 +36,41 @@ const json = (statusCode, body) => ({
 })
 
 const clientIp = (event) => event.requestContext?.http?.sourceIp ?? 'unknown'
+
+// --- Postmark webhook (bounce / spam-complaint suppression) ---------------------
+// Postmark does not sign webhooks, so the endpoint is protected with HTTP Basic
+// auth: the webhook URL is configured in Postmark as the user `postmark` with the
+// POSTMARK_WEBHOOK_SECRET as the password. We fail closed if the secret is unset.
+const WEBHOOK_USER = 'postmark'
+
+function webhookAuthorized(event) {
+  const secret = process.env.POSTMARK_WEBHOOK_SECRET
+  if (!secret) return false
+  const got = event.headers?.authorization ?? event.headers?.Authorization ?? ''
+  const expected = `Basic ${Buffer.from(`${WEBHOOK_USER}:${secret}`).toString('base64')}`
+  const a = Buffer.from(got)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
+// Hard, permanent bounce types — the address is undeliverable, never retry it.
+// (Transient/soft bounces, deferrals, etc. are intentionally NOT suppressed.)
+const HARD_BOUNCE = new Set([
+  'HardBounce',
+  'BadEmailAddress',
+  'SpamNotification',
+  'ManuallyDeactivated',
+  'Blocked',
+])
+
+// Returns the suppression reason for a Postmark webhook payload, or null to ignore
+// it (Delivery, Open, Click, SubscriptionChange, soft bounces, …).
+function suppressionReason(p) {
+  if (p?.RecordType === 'SpamComplaint') return 'complaint'
+  if (p?.RecordType === 'Bounce' && (p.Inactive === true || HARD_BOUNCE.has(p.Type)))
+    return 'bounce'
+  return null
+}
 
 export function makeHandler({ store = defaultStore, email = defaultEmail } = {}) {
   async function subscribe(event) {
@@ -102,12 +141,34 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
     return json(200, { ok: true, token: accessToken })
   }
 
+  async function postmarkWebhook(event) {
+    if (!webhookAuthorized(event)) return json(401, { error: 'unauthorized' })
+    let payload
+    try {
+      payload = JSON.parse(event.body || '')
+    } catch {
+      return json(400, { error: 'invalid_json' })
+    }
+    const reason = suppressionReason(payload)
+    const emailAddr =
+      typeof payload?.Email === 'string' ? payload.Email.trim().toLowerCase() : ''
+    if (reason && emailAddr) {
+      await store.suppress({ email: emailAddr, reason, recordType: payload.RecordType })
+      // Log the event but not the address (PII) — the DynamoDB record carries the email.
+      console.log(JSON.stringify({ at: 'suppressed', reason, recordType: payload.RecordType }))
+    }
+    // Always 200 so Postmark marks the event delivered and stops retrying. Everything
+    // we don't act on (deliveries, opens, soft bounces, …) is acknowledged and dropped.
+    return json(200, { ok: true })
+  }
+
   return async function handler(event) {
     const method = event.requestContext?.http?.method
     const path = event.rawPath
     try {
       if (method === 'POST' && path === '/subscribe') return await subscribe(event)
       if (method === 'POST' && path === '/verify') return await verify(event)
+      if (method === 'POST' && path === '/postmark-webhook') return await postmarkWebhook(event)
       return json(404, { error: 'not_found' })
     } catch (err) {
       console.error(JSON.stringify({ at: 'unhandled', route: path, message: err?.message }))

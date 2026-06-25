@@ -35,18 +35,23 @@ export async function createPending({ email, source, tokenHash, consentIp }) {
     )
   } catch (e) {
     if (!isConditional(e)) throw e
-    // Record exists: refresh to pending ONLY if not already confirmed.
+    // Record exists: refresh to pending ONLY if it is neither already confirmed
+    // NOR suppressed. A suppressed address (hard bounce / spam complaint, set by
+    // the Postmark webhook) must never be resurrected to pending — when this guard
+    // blocks, the caller short-circuits exactly as it does for a confirmed address
+    // (no token written, no email sent).
     try {
       await ddb.send(
         new UpdateCommand({
           TableName: TABLE(),
           Key: { PK: `EMAIL#${email}` },
           UpdateExpression: 'SET #s = :pending, consentAt = :now, #ttl = :exp',
-          ConditionExpression: '#s <> :confirmed',
+          ConditionExpression: '#s <> :confirmed AND #s <> :suppressed',
           ExpressionAttributeNames: { '#s': 'status', '#ttl': 'ttl' },
           ExpressionAttributeValues: {
             ':pending': 'pending',
             ':confirmed': 'confirmed',
+            ':suppressed': 'suppressed',
             ':now': now,
             ':exp': now + EMAIL_TTL_SEC,
           },
@@ -125,4 +130,28 @@ async function isConfirmed(email) {
     // If GetCommand fails (e.g., in test with mocked unconditional throw), assume not confirmed
     return false
   }
+}
+
+// Mark an address permanently suppressed after Postmark reports a hard bounce or a
+// spam complaint against it. Unconditional upsert by design: suppression must win
+// over ANY existing status (including 'confirmed'), must persist (no ttl, so it is
+// never swept), and must leave a tombstone even when the pending record had already
+// expired. createPending's guard then prevents the magic-link flow from ever
+// resurrecting a suppressed address.
+export async function suppress({ email, reason, recordType }) {
+  await ddb.send(
+    new UpdateCommand({
+      TableName: TABLE(),
+      Key: { PK: `EMAIL#${email}` },
+      UpdateExpression:
+        'SET #s = :suppressed, suppressedReason = :r, suppressedRecord = :rt, suppressedAt = :now REMOVE #ttl',
+      ExpressionAttributeNames: { '#s': 'status', '#ttl': 'ttl' },
+      ExpressionAttributeValues: {
+        ':suppressed': 'suppressed',
+        ':r': reason,
+        ':rt': recordType,
+        ':now': nowSec(),
+      },
+    }),
+  )
 }
