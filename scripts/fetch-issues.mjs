@@ -6,6 +6,7 @@
  * an empty list so the build still succeeds (mirrors the inert-preview
  * convention used for unset VITE_* endpoints).
  */
+import { pathToFileURL } from 'node:url'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { createClient } from '@sanity/client'
 
@@ -75,7 +76,9 @@ async function main() {
   console.log(`fetch-issues: wrote ${issues.length} issue(s) → src/content/issues.generated.json`)
 }
 
-main().catch((err) => {
-  console.error('fetch-issues: failed', err)
-  process.exit(1)
-})
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  main().catch((err) => {
+    console.error('fetch-issues: failed', err)
+    process.exit(1)
+  })
+}
