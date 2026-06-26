@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom'
 import { allIssues } from '../lib/issues.js'
 import usePageMeta from '../lib/usePageMeta.js'
-
-function formatDate(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-}
+import { formatDate } from '../lib/formatDate.js'
 
 export default function Signal() {
   usePageMeta({
