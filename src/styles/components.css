@@ -1944,3 +1944,229 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============ The Signal — archive + issue ============ */
+
+/* Both pages sit directly under the fixed nav: clear it, then breathe
+   like a section. They reuse .container for the gutter; the issue page
+   narrows its measure below. Colors flow through semantic tokens, so
+   both pages work unchanged on the light and dark grounds. */
+.signal-archive,
+.signal-issue {
+  padding-top: calc(var(--nav-h) + clamp(2.5rem, 5vw, 4.5rem));
+  padding-bottom: var(--space-section);
+  min-height: 100vh;
+}
+
+/* --- Archive index --- */
+
+.signal-archive-head {
+  padding-bottom: clamp(2rem, 3.5vw, 3rem);
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: clamp(1rem, 2vw, 2rem);
+}
+
+.signal-archive-head h1 {
+  font-size: var(--text-h2);
+  margin-bottom: 1.25rem;
+}
+
+.signal-archive-head p {
+  font-size: var(--text-lede);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 52ch;
+}
+
+.signal-archive-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.signal-archive-item {
+  border-bottom: 1px solid var(--line);
+}
+
+/* The whole row is the link; a hover nudge reads as editorial motion */
+.signal-archive-item a {
+  display: block;
+  padding-block: clamp(1.75rem, 3vw, 2.75rem);
+  text-decoration: none;
+  color: inherit;
+  transition: padding-left 0.3s var(--ease-out);
+}
+
+.signal-archive-item a:hover {
+  padding-left: clamp(0.5rem, 1.5vw, 1.25rem);
+}
+
+.signal-archive-item time {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sand);
+  margin-bottom: 0.9rem;
+}
+
+.signal-archive-item h2 {
+  font-size: clamp(1.35rem, 1.1rem + 1.3vw, 2.1rem);
+  font-stretch: 110%;
+  margin-bottom: 0.7rem;
+  transition: color 0.25s var(--ease-out);
+}
+
+.signal-archive-item a:hover h2 {
+  color: var(--accent-display);
+}
+
+.signal-archive-item p {
+  color: var(--ink-soft);
+  max-width: 64ch;
+}
+
+.signal-archive-empty {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
+  color: var(--ink-mute);
+  font-size: var(--text-lede);
+  max-width: 46ch;
+}
+
+/* --- Single issue: a reading column, narrower than the 84rem grid --- */
+
+.signal-issue {
+  max-width: 52rem;
+}
+
+.signal-issue-head {
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.signal-issue-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.signal-issue-kicker a {
+  color: var(--sand);
+  text-decoration: none;
+  transition: color 0.25s var(--ease-out);
+}
+
+.signal-issue-kicker a:hover {
+  color: var(--accent);
+}
+
+.signal-issue-head h1 {
+  font-size: clamp(1.9rem, 1.4rem + 2.4vw, 3.1rem);
+  font-stretch: 112%;
+  margin-bottom: 1.25rem;
+}
+
+.signal-issue-head time {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+
+/* --- Long-form body --- */
+
+.issue-body {
+  font-size: var(--text-base);
+  line-height: 1.75;
+  color: var(--ink);
+}
+
+/* Vertical rhythm from the flow itself; headings override for more air above */
+.issue-body > * + * {
+  margin-top: 1.4em;
+}
+
+.issue-body h2,
+.issue-body h3 {
+  margin-top: 2.4em;
+}
+
+.issue-body h2 {
+  font-size: var(--text-h3);
+  font-stretch: 108%;
+}
+
+.issue-body h3 {
+  font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+  color: var(--ink-soft);
+}
+
+.issue-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s var(--ease-out);
+}
+
+.issue-body a:hover {
+  color: var(--ink);
+}
+
+.issue-body strong {
+  font-weight: 700;
+}
+
+.issue-body blockquote {
+  border-left: 2px solid var(--sand-line);
+  padding-left: clamp(1.25rem, 2.5vw, 2rem);
+  color: var(--ink-soft);
+  font-size: var(--text-lede);
+  line-height: 1.6;
+}
+
+.issue-body ul,
+.issue-body ol {
+  padding-left: 1.4em;
+}
+
+.issue-body li {
+  padding-left: 0.3em;
+}
+
+.issue-body li + li {
+  margin-top: 0.5em;
+}
+
+/* In-body images */
+.issue-figure {
+  margin-block: clamp(2rem, 4vw, 3rem);
+}
+
+.issue-figure img {
+  width: 100%;
+  border: 1px solid var(--line);
+}
+
+.issue-figure figcaption {
+  margin-top: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+  line-height: 1.5;
+}
+
+/* --- Issue footer --- */
+
+.signal-issue-foot {
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+  padding-top: clamp(1.75rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--line);
+}
