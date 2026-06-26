@@ -22,12 +22,13 @@ const event = ({ method = 'POST', path = '/subscribe', body, headers = {} } = {}
 })
 
 function fakes() {
-  const calls = { created: [], sent: [], consumed: [], confirmed: [], suppressed: [] }
+  const calls = { created: [], sent: [], consumed: [], confirmed: [], suppressed: [], unsubscribed: [] }
   const store = {
     async createPending(a) { calls.created.push(a); return { alreadyConfirmed: false } },
     async consumeToken(h) { calls.consumed.push(h); return { email: 'a@b.co' } },
     async confirm(e) { calls.confirmed.push(e); return true },
     async suppress(a) { calls.suppressed.push(a) },
+    async unsubscribe(a) { calls.unsubscribed.push(a) },
   }
   const email = { async sendMagicLink(a) { calls.sent.push(a) } }
   return { handler: makeHandler({ store, email }), calls }
@@ -172,4 +173,32 @@ test('postmark-webhook acknowledges but does not suppress transient/other events
   )
   assert.equal(delivery.statusCode, 200)
   assert.equal(calls.suppressed.length, 0)
+})
+
+test('postmark-webhook: SubscriptionChange with SuppressSending=true unsubscribes the recipient (email normalized)', async () => {
+  const calls = []
+  const handler = makeHandler({ store: { unsubscribe: async (a) => calls.push(a), suppress: async () => {} } })
+  const res = await handler(
+    event({
+      path: '/postmark-webhook',
+      headers: WEBHOOK_AUTH,
+      body: { RecordType: 'SubscriptionChange', SuppressSending: true, Recipient: 'X@Y.com', SuppressionReason: 'ManualSuppression', Origin: 'Recipient' },
+    }),
+  )
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(calls, [{ email: 'x@y.com' }])
+})
+
+test('postmark-webhook: SubscriptionChange reactivation (SuppressSending=false) does nothing', async () => {
+  const calls = []
+  const handler = makeHandler({ store: { unsubscribe: async (a) => calls.push(a), suppress: async () => {} } })
+  const res = await handler(
+    event({
+      path: '/postmark-webhook',
+      headers: WEBHOOK_AUTH,
+      body: { RecordType: 'SubscriptionChange', SuppressSending: false, Recipient: 'x@y.com' },
+    }),
+  )
+  assert.equal(res.statusCode, 200)
+  assert.equal(calls.length, 0)
 })

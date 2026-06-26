@@ -157,6 +157,16 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
       // Log the event but not the address (PII) — the DynamoDB record carries the email.
       console.log(JSON.stringify({ at: 'suppressed', reason, recordType: payload.RecordType }))
     }
+    // Unsubscribe sync (broadcast stream). Postmark fires SubscriptionChange when a
+    // recipient uses the one-click unsubscribe; SuppressSending=true means deactivate.
+    // The email is in `Recipient` (NOT `Email`). Reactivations (false) are ignored.
+    if (payload?.RecordType === 'SubscriptionChange' && payload.SuppressSending === true) {
+      const rcpt = typeof payload.Recipient === 'string' ? payload.Recipient.trim().toLowerCase() : ''
+      if (rcpt) {
+        await store.unsubscribe({ email: rcpt })
+        console.log(JSON.stringify({ at: 'unsubscribed', origin: payload.Origin, reason: payload.SuppressionReason }))
+      }
+    }
     // Always 200 so Postmark marks the event delivered and stops retrying. Everything
     // we don't act on (deliveries, opens, soft bounces, …) is acknowledged and dropped.
     return json(200, { ok: true })

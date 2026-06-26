@@ -9,7 +9,7 @@ import {
 
 process.env.TABLE_NAME = 'Subscribers-test'
 
-const { ddb, createPending, consumeToken, confirm, suppress } = await import('../src/store.mjs')
+const { ddb, createPending, consumeToken, confirm, suppress, unsubscribe } = await import('../src/store.mjs')
 
 class ConditionalCheckFailedException extends Error {
   constructor() { super('conditional'); this.name = 'ConditionalCheckFailedException' }
@@ -111,6 +111,22 @@ test('suppress upserts a suppressed tombstone and clears the ttl', async () => {
   assert.equal(cmd.input.ExpressionAttributeValues[':suppressed'], 'suppressed')
   assert.equal(cmd.input.ExpressionAttributeValues[':r'], 'complaint')
   assert.equal(cmd.input.ExpressionAttributeValues[':rt'], 'SpamComplaint')
+})
+
+test('unsubscribe writes UpdateCommand with status=unsubscribed and guards against suppressed', async () => {
+  let sent
+  mock.method(ddb, 'send', async (cmd) => { sent = cmd; return {} })
+  await unsubscribe({ email: 'a@b.com' })
+  assert.ok(sent instanceof UpdateCommand)
+  assert.equal(sent.input.Key.PK, 'EMAIL#a@b.com')
+  assert.equal(sent.input.ExpressionAttributeValues[':u'], 'unsubscribed')
+  assert.match(sent.input.ConditionExpression, /#s <> :suppressed/)
+  assert.match(sent.input.UpdateExpression, /REMOVE #ttl/)
+})
+
+test('unsubscribe silently swallows ConditionalCheckFailedException (no record or already suppressed)', async () => {
+  mock.method(ddb, 'send', async () => { throw new ConditionalCheckFailedException() })
+  await assert.doesNotReject(() => unsubscribe({ email: 'a@b.com' }))
 })
 
 test('createPending never resurrects a suppressed address', async () => {
