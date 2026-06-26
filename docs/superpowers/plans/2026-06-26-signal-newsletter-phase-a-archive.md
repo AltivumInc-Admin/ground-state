@@ -1038,8 +1038,9 @@ First seed a real issue into the generated file so the build has content without
 ]
 ```
 
-Run: `SANITY_PROJECT_ID= npm run build`
-(The empty `SANITY_PROJECT_ID` makes `fetch-issues.mjs` keep the fixture you just wrote rather than overwriting it — verify by reading its warning line. If your shell preserves an exported value, instead temporarily comment out the `node scripts/fetch-issues.mjs &&` prefix for this one run.)
+Build **without** the `fetch-issues` step so the fixture you just wrote survives into the prerender (running `fetch-issues.mjs` with no `SANITY_PROJECT_ID` would overwrite `issues.generated.json` with `[]`). Run the three build sub-steps directly:
+
+Run: `vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs`
 
 Then verify the static output (no JS executed):
 
