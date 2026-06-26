@@ -28,4 +28,21 @@ describe('IssueBody', () => {
     const { container } = render(<IssueBody value={[]} />)
     expect(container.querySelector('.issue-body')).toBeEmptyDOMElement()
   })
+
+  it('internal link renders without target or rel (FIX 5)', () => {
+    const internalValue = [
+      {
+        _type: 'block',
+        style: 'normal',
+        _key: '3',
+        markDefs: [{ _type: 'link', _key: 'l2', href: '/internal/path' }],
+        children: [{ _type: 'span', _key: 's3', text: 'internal link', marks: ['l2'] }],
+      },
+    ]
+    render(<IssueBody value={internalValue} />)
+    const link = screen.getByRole('link', { name: 'internal link' })
+    expect(link).toHaveAttribute('href', '/internal/path')
+    expect(link).not.toHaveAttribute('target')
+    expect(link).not.toHaveAttribute('rel')
+  })
 })

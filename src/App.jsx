@@ -10,11 +10,11 @@ import Signal from './pages/Signal.jsx'
 import SignalIssue from './pages/SignalIssue.jsx'
 import { ScrollTrigger } from './lib/fx.jsx'
 
-/* Landing, Story and Apply are prerendered + hydrated, so they stay in the main
-   bundle — lazy-loading a prerendered route would hydrate through the Suspense
-   fallback and flash the server HTML away. The remaining routes are JS-only
-   (noindex), reached only by a deliberate click or an emailed magic link, so
-   splitting them keeps their code off the landing critical path. */
+/* Landing, Story, Apply, Signal and SignalIssue are prerendered + hydrated, so
+   they stay in the main bundle — lazy-loading a prerendered route would hydrate
+   through the Suspense fallback and flash the server HTML away. The remaining
+   routes are JS-only (noindex), reached only by a deliberate click or an emailed
+   magic link, so splitting them keeps their code off the landing critical path. */
 const Activate = lazy(() => import('./pages/Activate.jsx'))
 const Welcome = lazy(() => import('./pages/Welcome.jsx'))
 const Confirm = lazy(() => import('./pages/Confirm.jsx'))

@@ -9,13 +9,10 @@ const components = {
   },
   marks: {
     link: ({ children, value }) => {
-      const href = value?.href ?? '#'
-      const external = !href.startsWith('/')
+      const href = value?.href || ''
+      const external = href.startsWith('http')
       return (
-        <a
-          href={href}
-          {...(external ? { rel: 'noopener noreferrer', target: '_blank' } : {})}
-        >
+        <a href={href || undefined} {...(external ? { rel: 'noopener noreferrer', target: '_blank' } : {})}>
           {children}
         </a>
       )

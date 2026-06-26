@@ -15,6 +15,7 @@
 import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
+import { injectHead } from './lib/inject-head.mjs'
 
 const { default: Static } = await import(
   new URL('../dist-ssr/entry-static.js', import.meta.url).href
@@ -75,17 +76,21 @@ ROUTES.push({
 
 // One page per published issue
 for (const issue of issues) {
+  const head = {
+    title: `${issue.seo?.title || issue.title} — The Ground State Society`,
+    description: issue.seo?.description || issue.excerpt || '',
+    canonical: `${SITE}/signal/${issue.slug}`,
+    image: issue.seo?.ogImage ? `${issue.seo.ogImage}?w=1200&h=630&fit=crop&auto=format` : SIGNAL_OG,
+    ogType: 'article',
+  }
+  if (issue.seo?.noIndex) {
+    head.robots = 'noindex, follow'
+  }
   ROUTES.push({
     path: `/signal/${issue.slug}`,
     file: `signal/${issue.slug}.html`,
     expect: 'signal-issue',
-    head: {
-      title: `${issue.seo?.title || issue.title} — The Ground State Society`,
-      description: issue.seo?.description || issue.excerpt || '',
-      canonical: `${SITE}/signal/${issue.slug}`,
-      image: issue.seo?.ogImage ? `${issue.seo.ogImage}?w=1200&h=630&fit=crop&auto=format` : SIGNAL_OG,
-      ogType: 'article',
-    },
+    head,
   })
 }
 
@@ -96,32 +101,8 @@ if (!template.includes(shell)) {
   throw new Error('prerender: #root shell not found in dist/index.html')
 }
 
-// Single-line meta tags in index.html make these targeted swaps reliable.
-function injectHead(html, { title, description, canonical, image, ogType }) {
-  let out = html
-  if (title) {
-    out = out.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
-    out = out.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${title}$2`)
-    out = out.replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${title}$2`)
-  }
-  if (description) {
-    out = out.replace(/(<meta name="description" content=")[^"]*(")/, `$1${description}$2`)
-    out = out.replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${description}$2`)
-    out = out.replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${description}$2`)
-  }
-  if (canonical) {
-    out = out.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${canonical}$2`)
-    out = out.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${canonical}$2`)
-  }
-  if (image) {
-    out = out.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${image}$2`)
-    out = out.replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${image}$2`)
-  }
-  if (ogType) {
-    out = out.replace(/(<meta property="og:type" content=")[^"]*(")/, `$1${ogType}$2`)
-  }
-  return out
-}
+// injectHead is imported from ./lib/inject-head.mjs — see that module for
+// the function-form replacement rationale ($ tokens in funding figures).
 
 for (const route of ROUTES) {
   const { prelude } = await prerender(createElement(Static, { url: route.path }))
@@ -154,22 +135,27 @@ for (const route of ROUTES) {
 // every published issue). The Amplify catch-all excludes .xml, so dist/sitemap.xml
 // is served directly.
 const sitemapEntries = [
-  { loc: `${SITE}/`, priority: '1.0', changefreq: 'monthly' },
-  { loc: `${SITE}/story`, priority: '0.7', changefreq: 'monthly' },
-  { loc: `${SITE}/apply`, priority: '0.8', changefreq: 'monthly' },
-  { loc: `${SITE}/signal`, priority: '0.8', changefreq: 'weekly' },
+  { loc: `${SITE}/`, priority: '1.0', changefreq: 'monthly', lastmod: '2026-06-21' },
+  { loc: `${SITE}/story`, priority: '0.7', changefreq: 'monthly', lastmod: '2026-06-21' },
+  { loc: `${SITE}/apply`, priority: '0.8', changefreq: 'monthly', lastmod: '2026-06-24' },
+  { loc: `${SITE}/signal`, priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
   ...issues
     .filter((i) => !i.seo?.noIndex)
-    .map((i) => ({ loc: `${SITE}/signal/${i.slug}`, priority: '0.6', changefreq: 'monthly' })),
+    .map((i) => ({
+      loc: `${SITE}/signal/${i.slug}`,
+      priority: '0.6',
+      changefreq: 'monthly',
+      lastmod: (i.publishedAt || '').slice(0, 10) || null,
+    })),
 ]
 const sitemap =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   sitemapEntries
-    .map(
-      (e) =>
-        `  <url>\n    <loc>${e.loc}</loc>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`,
-    )
+    .map((e) => {
+      const lastmodLine = e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>\n` : ''
+      return `  <url>\n    <loc>${e.loc}</loc>\n${lastmodLine}    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`
+    })
     .join('\n') +
   '\n</urlset>\n'
 await writeFile(new URL('../dist/sitemap.xml', import.meta.url), sitemap)
