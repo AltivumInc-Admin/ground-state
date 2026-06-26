@@ -6,6 +6,8 @@ import Cursor from './components/Cursor.jsx'
 import Landing from './pages/Landing.jsx'
 import StoryPage from './pages/Story.jsx'
 import Apply from './pages/Apply.jsx'
+import Signal from './pages/Signal.jsx'
+import SignalIssue from './pages/SignalIssue.jsx'
 import { ScrollTrigger } from './lib/fx.jsx'
 
 /* Landing, Story and Apply are prerendered + hydrated, so they stay in the main
@@ -72,6 +74,8 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/story" element={<StoryPage />} />
             <Route path="/apply" element={<Apply />} />
+            <Route path="/signal" element={<Signal />} />
+            <Route path="/signal/:slug" element={<SignalIssue />} />
             {/* Post-acceptance only — never linked from the page (see intent) */}
             <Route path="/activate" element={<Activate />} />
             <Route path="/welcome" element={<Welcome />} />
