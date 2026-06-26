@@ -15,4 +15,10 @@ describe('formatDate', () => {
     expect(result).not.toBe('')
     expect(result).toContain('2026')
   })
+
+  it('formats a midnight-UTC date in UTC (no timezone off-by-one)', () => {
+    // Regression: without timeZone:'UTC' this renders "June 23, 2026"
+    // for any runner behind UTC. Must be deterministic regardless of TZ.
+    expect(formatDate('2026-06-24T00:00:00Z')).toBe('June 24, 2026')
+  })
 })
