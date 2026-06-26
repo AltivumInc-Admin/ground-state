@@ -12,7 +12,7 @@
  * markup matches the current path — making /story safe even before the Amplify
  * rewrite that serves story.html is in place (it falls back to client render).
  */
-import { readFile, writeFile, rm } from 'node:fs/promises'
+import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
 
@@ -55,6 +55,40 @@ const ROUTES = [
   },
 ]
 
+const SIGNAL_OG = `${SITE}/og.png`
+const issues = JSON.parse(
+  await readFile(new URL('../src/content/issues.generated.json', import.meta.url), 'utf8'),
+)
+
+// Archive index
+ROUTES.push({
+  path: '/signal',
+  file: 'signal.html',
+  expect: 'signal-archive',
+  head: {
+    title: 'The Signal — The Ground State Society',
+    description:
+      'The Signal — funding moves, ecosystem intel, and hard-won lessons for the people building the quantum economy. Free to read.',
+    canonical: `${SITE}/signal`,
+  },
+})
+
+// One page per published issue
+for (const issue of issues) {
+  ROUTES.push({
+    path: `/signal/${issue.slug}`,
+    file: `signal/${issue.slug}.html`,
+    expect: 'signal-issue',
+    head: {
+      title: `${issue.seo?.title || issue.title} — The Ground State Society`,
+      description: issue.seo?.description || issue.excerpt || '',
+      canonical: `${SITE}/signal/${issue.slug}`,
+      image: issue.seo?.ogImage ? `${issue.seo.ogImage}?w=1200&h=630&fit=crop&auto=format` : SIGNAL_OG,
+      ogType: 'article',
+    },
+  })
+}
+
 const indexPath = new URL('../dist/index.html', import.meta.url)
 const template = await readFile(indexPath, 'utf8')
 const shell = '<div id="root"></div>'
@@ -63,7 +97,7 @@ if (!template.includes(shell)) {
 }
 
 // Single-line meta tags in index.html make these targeted swaps reliable.
-function injectHead(html, { title, description, canonical }) {
+function injectHead(html, { title, description, canonical, image, ogType }) {
   let out = html
   if (title) {
     out = out.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
@@ -78,6 +112,13 @@ function injectHead(html, { title, description, canonical }) {
   if (canonical) {
     out = out.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${canonical}$2`)
     out = out.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${canonical}$2`)
+  }
+  if (image) {
+    out = out.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${image}$2`)
+    out = out.replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${image}$2`)
+  }
+  if (ogType) {
+    out = out.replace(/(<meta property="og:type" content=")[^"]*(")/, `$1${ogType}$2`)
   }
   return out
 }
@@ -103,8 +144,35 @@ for (const route of ROUTES) {
     }
   }
 
-  await writeFile(new URL(`../dist/${route.file}`, import.meta.url), html)
+  const outUrl = new URL(`../dist/${route.file}`, import.meta.url)
+  await mkdir(new URL('.', outUrl), { recursive: true })
+  await writeFile(outUrl, html)
   console.log(`prerender: ${route.path} → dist/${route.file} (${(markup.length / 1024).toFixed(1)} kB)`)
 }
+
+// Regenerate sitemap.xml from the routes we just prerendered (static routes +
+// every published issue). The Amplify catch-all excludes .xml, so dist/sitemap.xml
+// is served directly.
+const sitemapEntries = [
+  { loc: `${SITE}/`, priority: '1.0', changefreq: 'monthly' },
+  { loc: `${SITE}/story`, priority: '0.7', changefreq: 'monthly' },
+  { loc: `${SITE}/apply`, priority: '0.8', changefreq: 'monthly' },
+  { loc: `${SITE}/signal`, priority: '0.8', changefreq: 'weekly' },
+  ...issues
+    .filter((i) => !i.seo?.noIndex)
+    .map((i) => ({ loc: `${SITE}/signal/${i.slug}`, priority: '0.6', changefreq: 'monthly' })),
+]
+const sitemap =
+  '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  sitemapEntries
+    .map(
+      (e) =>
+        `  <url>\n    <loc>${e.loc}</loc>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`,
+    )
+    .join('\n') +
+  '\n</urlset>\n'
+await writeFile(new URL('../dist/sitemap.xml', import.meta.url), sitemap)
+console.log(`prerender: sitemap.xml → ${sitemapEntries.length} urls`)
 
 await rm(new URL('../dist-ssr/', import.meta.url), { recursive: true, force: true })
