@@ -17,6 +17,7 @@ export default [
       'ds-bundle/**',
       '.design-sync/**',
       'backend/**/.aws-sam/**',
+      'studio/**',
     ],
   },
   js.configs.recommended,

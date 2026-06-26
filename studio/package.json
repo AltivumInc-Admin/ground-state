@@ -1,0 +1,27 @@
+{
+  "name": "ground-state-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sanity Studio for The Ground State Society — The Signal newsletter",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "schema:deploy": "sanity schema deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/icons": "^3.7.4",
+    "@sanity/vision": "^6.2.0",
+    "react": "^19.2.2",
+    "react-dom": "^19.2.2",
+    "sanity": "^6.2.0",
+    "styled-components": "^6.1.15"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.6.2"
+  }
+}
