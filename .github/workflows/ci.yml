@@ -20,8 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Third-party actions pinned to a commit SHA (supply-chain hardening); the
+      # trailing comment tracks the human-readable version.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -29,3 +31,10 @@ jobs:
       - run: npm test
       - run: npm run test:fe
       - run: npm run lint
+      # Compile the real deploy artifact and exercise the prerender / head-injection
+      # guards on PRs — Amplify only builds post-merge, so without this a build-
+      # breaking change passes the gate and fails at deploy. No Sanity creds in CI,
+      # so opt into the empty-issue path explicitly (production sets SANITY_PROJECT_ID).
+      - run: npm run build
+        env:
+          GSS_ALLOW_EMPTY_ISSUES: '1'
