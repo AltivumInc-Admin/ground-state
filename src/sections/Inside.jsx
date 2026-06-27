@@ -75,7 +75,7 @@ export default function Inside() {
         <div className="stack-groups">
           <div data-fade>
             <h3 className="stack-group-title">
-              <span className="label">A</span> The Room
+              <span className="label" aria-hidden="true">A</span> The Room
             </h3>
             <ul className="stack-list" data-stagger>
               {ROOM.map((item, i) => (
@@ -93,7 +93,7 @@ export default function Inside() {
           </div>
           <div data-fade>
             <h3 className="stack-group-title">
-              <span className="label">B</span> The Acceleration
+              <span className="label" aria-hidden="true">B</span> The Acceleration
             </h3>
             <ul className="stack-list" data-stagger>
               {ACCELERATION.map((item, i) => (

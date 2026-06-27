@@ -1,13 +1,10 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Fx from '../lib/fx.jsx'
 import BlochFigure from '../components/figures/BlochFigure.jsx'
 import FigCaption from '../components/figures/FigCaption.jsx'
 import Mosaic from '../components/Mosaic.jsx'
 import MotionToggle from '../components/MotionToggle.jsx'
-import { postJson } from '../lib/submit.js'
-
-const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
+import SignalSubscribe from '../components/SignalSubscribe.jsx'
 
 const STEPS = [
   {
@@ -54,112 +51,6 @@ const FAQS = [
     a: 'A locked-in founding rate that never goes up, a permanent founding badge, and a real hand in shaping the network. Early members are helping build the room they’re paying for — the terms acknowledge that.',
   },
 ]
-
-function SignalForm() {
-  const [email, setEmail] = useState('')
-  const [website, setWebsite] = useState('')
-  // idle | sending | sent | preview | error
-  const [status, setStatus] = useState('idle')
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!email.trim()) return
-    if (!SIGNAL_ENDPOINT) {
-      // Honest preview: the address is not transmitted or stored.
-      setStatus('preview')
-      return
-    }
-    setStatus('sending')
-    try {
-      await postJson(SIGNAL_ENDPOINT, { form: 'signal', email, source: 'signal', website })
-      setStatus('sent')
-    } catch {
-      setStatus('error')
-    }
-  }
-
-  return (
-    <div id="signal" className="signal">
-      <div>
-        <span className="signal-kicker label">The free tier · No application needed</span>
-        <h3>
-          Not ready for the Round? <em>Read The Signal.</em>
-        </h3>
-        <p>
-          The free briefing for quantum builders — funding moves, ecosystem intelligence, and
-          what quantum founders are actually wrestling with. For founders, engineers,
-          researchers, and students alike.
-        </p>
-      </div>
-      <div>
-        {/* Persistent live region — role="status" on a freshly mounted node
-            announces nothing (see Welcome.jsx) */}
-        <div role="status">
-          {status === 'sent' && (
-            <p className="signal-success">
-              <strong>Check your inbox.</strong> Confirm your email and your free access opens right up.
-            </p>
-          )}
-          {status === 'preview' && (
-            <p className="signal-success">
-              <strong>Noted — The Signal launches with the founding cohort.</strong> This preview
-              didn’t store your address; subscription opens at launch.
-            </p>
-          )}
-        </div>
-        {(status === 'idle' || status === 'sending' || status === 'error') && (
-          <form
-            className="signal-form"
-            onSubmit={handleSubmit}
-            aria-label="Subscribe to The Signal newsletter"
-          >
-            {/* Honeypot — real users never fill this; bots do. Hidden from AT + tab order. */}
-            <input
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
-            />
-            <label className="visually-hidden" htmlFor="signal-email">
-              Email address
-            </label>
-            <input
-              id="signal-email"
-              type="email"
-              required
-              placeholder="you@quantumstartup.com"
-              autoComplete="email"
-              maxLength={320}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              aria-busy={status === 'sending'}
-              disabled={status === 'sending'}
-            >
-              {status === 'sending' ? 'Subscribing…' : 'Subscribe free'}
-            </button>
-          </form>
-        )}
-        {status === 'error' && (
-          <p className="form-error" role="alert">
-            That didn’t go through — try again in a moment.
-          </p>
-        )}
-        <p className="signal-note">
-          No spam. No vendor pitches. Unsubscribe anytime.
-          {!SIGNAL_ENDPOINT && ' Preview — subscription opens at launch.'}
-        </p>
-      </div>
-    </div>
-  )
-}
 
 export default function FinalCta() {
   return (
@@ -220,7 +111,12 @@ export default function FinalCta() {
         </div>
 
         <div data-fade>
-          <SignalForm />
+          <SignalSubscribe
+            id="signal"
+            kicker="The free tier · No application needed"
+            heading={<>Not ready for the Round? <em>Read The Signal.</em></>}
+            blurb="The free briefing for quantum builders — funding moves, ecosystem intelligence, and what quantum founders are actually wrestling with. For founders, engineers, researchers, and students alike."
+          />
         </div>
       </div>
     </Fx>

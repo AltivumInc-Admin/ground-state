@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-26T00:00:00Z",
+  "title": "Design System: The Ground State Society",
+  "extensions": {
+    "colorMeta": {
+      "powder": {
+        "role": "primary",
+        "displayName": "Powder",
+        "canonical": "#c1d8e2",
+        "tonalRamp": ["#1c2a31", "#2f444e", "#45606c", "#5d7e8c", "#7b9caa", "#9bbac7", "#c1d8e2", "#e4eff4"]
+      },
+      "accent-slate": {
+        "role": "primary",
+        "displayName": "Accent Slate",
+        "canonical": "#4a6878",
+        "tonalRamp": ["#15232a", "#243843", "#34505e", "#44697a", "#5d8295", "#82a3b3", "#aac6d2", "#d3e3ea"]
+      },
+      "sand": {
+        "role": "secondary",
+        "displayName": "Sand",
+        "canonical": "#b7a781",
+        "tonalRamp": ["#241f15", "#3a3322", "#524731", "#6e6043", "#8c7c5c", "#a4946f", "#b7a781", "#d8cdb0"]
+      },
+      "ghost": {
+        "role": "neutral",
+        "displayName": "Ghost",
+        "canonical": "#f7f7ff",
+        "tonalRamp": ["#2c2c33", "#4a4a52", "#6b6b73", "#909097", "#b6b6bd", "#d6d6dd", "#ececf2", "#f7f7ff"]
+      },
+      "umber": {
+        "role": "neutral",
+        "displayName": "Umber",
+        "canonical": "#432d16",
+        "tonalRamp": ["#1c130a", "#2c1d0e", "#3a2713", "#432d16", "#5e4220", "#7d5b30", "#a07a4a", "#c9a877"]
+      },
+      "panel-black": {
+        "role": "neutral",
+        "displayName": "Panel Black",
+        "canonical": "#08080a",
+        "tonalRamp": ["#050507", "#08080a", "#101014", "#1c1c22", "#2c2c33", "#45454e", "#6b6b73", "#909097"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Wordmark and hero only. Wide heavy Archivo caps (wdth 122%, weight 840)." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles. Wide Archivo caps (wdth 116%, weight 800), ~19ch measure." },
+      "title": { "displayName": "Title", "purpose": "Card/subsection headings and display-set pull statements." },
+      "body": { "displayName": "Body", "purpose": "Running prose. Archivo normal width, measure capped 56-66ch." },
+      "label": { "displayName": "Label / Mono", "purpose": "The IBM Plex Mono metadata layer: nav, kickers, captions, data, form labels, button text." }
+    },
+    "shadows": [
+      { "name": "receipt-offset", "value": "12px 12px 0 rgba(193, 216, 226, 0.55)", "purpose": "Hard un-blurred powder block behind the ROI receipt — a print-shop second-sheet device, not a depth cue." },
+      { "name": "selected-plan-ring", "value": "inset 0 0 0 1px #c1d8e2", "purpose": "Inset powder ring marking the chosen plan card as settled (the ground state of selection). Adds no lift." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The single easing curve for all state transitions and GSAP reveals — exponential ease-out, no bounce." },
+      { "name": "el-breathe", "value": "4.5s ease-in-out infinite (opacity 0.55 -> 1)", "purpose": "Slow breathing of the fig.03 absorption arrow; the only ambient loop, gated behind no-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "wide-nav", "value": "1240px" },
+      { "name": "lg", "value": "1000px" },
+      { "name": "md", "value": "920px" },
+      { "name": "sm", "value": "760px" },
+      { "name": "xs", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (light ground)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The primary action on the ghost reading ground — solid black, flips to powder on hover.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Apply for membership<span class=\"ds-arrow\" aria-hidden=\"true\">&rarr;</span></button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.05rem 1.9rem; border: 1px solid transparent; border-radius: 0; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: background-color 0.25s cubic-bezier(0.22,1,0.36,1), border-color 0.25s cubic-bezier(0.22,1,0.36,1), color 0.25s cubic-bezier(0.22,1,0.36,1), translate 0.15s cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary { background: #08080a; color: #f7f7ff; border-color: #08080a; } .ds-btn-primary:hover { background: #c1d8e2; border-color: #c1d8e2; color: #08080a; } .ds-btn:active { translate: 0 1px; } .ds-arrow { transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); } .ds-btn:hover .ds-arrow { transform: translateX(4px); }"
+    },
+    {
+      "name": "Ghost Button (light ground)",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action — transparent with a strong hairline; inverts to solid ink on hover.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Read the Signal</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.05rem 1.9rem; border: 1px solid rgba(67,45,22,0.38); border-radius: 0; background: transparent; color: #432d16; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: background-color 0.25s cubic-bezier(0.22,1,0.36,1), border-color 0.25s cubic-bezier(0.22,1,0.36,1), color 0.25s cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background: #432d16; border-color: #432d16; color: #f7f7ff; }"
+    },
+    {
+      "name": "Dark-Panel CTA (powder on black)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The primary button as it re-resolves on a .ground-dark panel: powder fill, black label.",
+      "html": "<div class=\"ds-darkwrap\"><button class=\"ds-btn ds-btn-dark\">Subscribe free<span class=\"ds-arrow\" aria-hidden=\"true\">&rarr;</span></button></div>",
+      "css": ".ds-darkwrap { background: #08080a; padding: 2rem; } .ds-btn-dark { display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.05rem 1.9rem; border: 1px solid #c1d8e2; border-radius: 0; background: #c1d8e2; color: #08080a; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: background-color 0.25s cubic-bezier(0.22,1,0.36,1); } .ds-btn-dark:hover { background: #f7f7ff; border-color: #f7f7ff; } .ds-arrow { transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); } .ds-btn-dark:hover .ds-arrow { transform: translateX(4px); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Form field on the ghost ground. Deep cool-grey rest fill, lifts to white on focus, border goes accent-slate. No glow.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Work email</span><input class=\"ds-input\" type=\"email\" placeholder=\"you@company.com\" /></label>",
+      "css": ".ds-field { display: grid; gap: 0.55rem; } .ds-field-label { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(67,45,22,0.82); } .ds-input { width: 100%; background: #ebedf5; border: 1px solid rgba(67,45,22,0.38); border-radius: 0; padding: 0.9rem 1rem; color: #432d16; font-family: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif; font-size: 1rem; transition: border-color 0.2s cubic-bezier(0.22,1,0.36,1), background-color 0.2s cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: rgba(67,45,22,0.68); } .ds-input:focus { outline: none; border-color: #4a6878; background: #ffffff; }"
+    },
+    {
+      "name": "Section Kicker",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The mono eyebrow + trailing rule that opens every section. Sand/accent emphasis on a hairline.",
+      "html": "<p class=\"ds-kicker\">Fig. 02 &middot; The problem <strong>&middot; |ψ⟩</strong></p>",
+      "css": ".ds-kicker { display: flex; align-items: center; gap: 1.25rem; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(67,45,22,0.82); margin: 0; } .ds-kicker strong { color: #4a6878; font-weight: 500; text-transform: none; } .ds-kicker::after { content: ''; flex: 1; height: 1px; background: rgba(67,45,22,0.14); }"
+    },
+    {
+      "name": "Tier Card (featured)",
+      "kind": "card",
+      "refersTo": "card-tier-featured",
+      "description": "A membership tier. Sharp, hairline-bordered, ghost ground; the featured tier carries a black border and lifts -5px on hover. No shadow.",
+      "html": "<article class=\"ds-tier ds-tier-featured\"><span class=\"ds-tier-flag\">The Round</span><h3 class=\"ds-tier-name\">Membership</h3><p class=\"ds-tier-aud\">Funded quantum founders</p><div class=\"ds-tier-price\">$300<small>/ month</small></div><ul class=\"ds-tier-list\"><li>The private network</li><li>Vetted by application</li><li>Founding rate</li></ul></article>",
+      "css": ".ds-tier { display: flex; flex-direction: column; border: 1px solid rgba(67,45,22,0.38); border-radius: 0; background: #f7f7ff; color: #432d16; padding: 1.9rem 1.7rem; transition: translate 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.35s cubic-bezier(0.22,1,0.36,1); } .ds-tier-featured { border-color: #08080a; } .ds-tier:hover { translate: 0 -5px; } .ds-tier-featured:hover { border-color: #c1d8e2; } .ds-tier-flag { display: inline-block; align-self: flex-start; color: #b7a781; border: 1px solid rgba(183,167,129,0.6); padding: 0.25rem 0.55rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.9rem; } .ds-tier-name { font-family: 'Archivo Variable', sans-serif; font-weight: 700; font-stretch: 108%; font-size: 1.45rem; text-transform: uppercase; margin: 0; } .ds-tier-aud { margin: 0.45rem 0 0; color: rgba(67,45,22,0.68); font-size: 0.85rem; } .ds-tier-price { font-family: 'Archivo Variable', sans-serif; font-stretch: 116%; font-weight: 820; font-size: 2.4rem; line-height: 1; text-transform: uppercase; margin: 1.1rem 0; } .ds-tier-price small { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.16em; margin-left: 0.6rem; color: rgba(67,45,22,0.68); } .ds-tier-list { list-style: none; margin: 0; padding: 0; } .ds-tier-list li { padding-block: 0.6rem; border-top: 1px solid rgba(67,45,22,0.14); font-size: 0.92rem; color: rgba(67,45,22,0.82); }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Top-bar link with mono sub-glyph; active state carries an accent-slate underline.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-active\" href=\"#\">Inside <em>|01⟩</em></a><a class=\"ds-nav-link\" href=\"#\">Proof <em>|02⟩</em></a></nav>",
+      "css": ".ds-nav { display: flex; gap: 1.5rem; align-items: center; } .ds-nav-link { display: inline-flex; align-items: baseline; gap: 0.45rem; padding: 0.4rem 0; text-decoration: none; color: rgba(67,45,22,0.82); font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; border-bottom: 1px solid transparent; transition: color 0.2s cubic-bezier(0.22,1,0.36,1), border-color 0.2s cubic-bezier(0.22,1,0.36,1); } .ds-nav-link em { font-style: normal; color: #4a6878; font-size: 0.85em; text-transform: none; } .ds-nav-link:hover { color: #432d16; } .ds-nav-link.ds-active { color: #432d16; border-bottom-color: #4a6878; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ground State",
+    "overview": "The ground state is the lowest-energy, most stable configuration a quantum system can occupy — |0⟩, settled by construction. The interface is built to feel like that state. Energy can be fed in (scroll feeds the hero's particle cloud), but the resting condition is calm: sharp edges, hairline rules, generous silence, nothing vibrating for attention. Where a mass-market page would shout, this one settles. Restraint is not a constraint on the brand; it is the brand, and the audience — funded quantum founders who can read the physics — reads that restraint as confidence and competence. Structurally the system alternates two grounds: ghost editorial sheets (a near-white reading surface for argument and evidence) and black architectural panels (the hero, the Proof data panel, the Final CTA, the footer). Every color flows through semantic tokens that re-resolve per ground, so a single component renders correctly on either without per-component color rules.",
+    "keyCharacteristics": [
+      "Dual-ground architecture: light Ghost sheets and black panels, one token set, AA on both.",
+      "Strict 60 / 20 / 10 / 10 palette discipline — Ghost / Powder / Sand / Umber, plus black.",
+      "Sharp corners everywhere (0px radius); structure drawn with hairlines, not shadows.",
+      "Mono label layer (IBM Plex Mono) against wide architectural Archivo display caps.",
+      "Calm at rest; motion is energy fed in, then relaxation back to the ground state.",
+      "Receipts, not hype: every number is evidence, presented with documentary restraint."
+    ],
+    "rules": [
+      { "name": "The 60/20/10/10 Rule", "body": "The palette is rationed: ~60% Ghost, ~20% Powder, ~10% Sand, ~10% Umber, with black as architectural punctuation. Adding a fifth hue or letting any accent creep past its share breaks the discipline that makes the page read as expensive.", "section": "colors" },
+      { "name": "The Dual-Ground Rule", "body": "Never hand-set a dark-mode color. Wrap a region in .ground-dark and let the tokens re-resolve. A component that hard-codes #08080a or #f7f7ff instead of var(--bg) / var(--ink) will break on the opposite ground.", "section": "colors" },
+      { "name": "The Powder-Is-Not-Text-On-Light Rule", "body": "Raw Powder (#c1d8e2) is a fill and a hairline on the Ghost ground, never text. For accent text on light use Accent Slate (#4a6878) small or Accent Display (#6e8c9e) large. Powder-as-text is reserved for the black panels (13.3:1).", "section": "colors" },
+      { "name": "The Notation-Is-Meaning Rule", "body": "Physics notation (ħω, |0⟩, |ψ₀|², α, β, kets) is exempt from every text-transform: uppercase. Case carries scientific meaning; uppercasing it is a factual error to this audience.", "section": "typography" },
+      { "name": "The Mono-Label Rule", "body": "Anything that is metadata rather than message — eyebrows, nav items, captions, table headers, form labels, data — is set in IBM Plex Mono, uppercase, wide-tracked. Prose and headlines are Archivo. The two never trade jobs.", "section": "typography" },
+      { "name": "The Display-Caps Rule", "body": "Display and headline type is always uppercase Archivo at wdth >= 108% and weight >= 700. Letter-spacing stays slightly positive (>= 0.005em) — the width axis, not negative tracking, supplies the architectural density.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "No drop shadows for elevation, ever. If a surface needs to separate from its neighbour, use a hairline, a ground change, or whitespace. A blurred shadow under a card is forbidden.", "section": "elevation" },
+      { "name": "The Grain Rule", "body": "A single fixed feTurbulence noise layer sits over the whole canvas at 40% opacity, mix-blend-mode soft-light, pointer-transparent. It is the only texture, grounding both surfaces as material. Do not add gradients or glows in its place.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do ration the palette to 60/20/10/10 (Ghost / Powder / Sand / Umber) plus black. Compose new surfaces from these five only.",
+      "Do style through semantic tokens (--bg, --ink, --accent, --line) and wrap dark regions in .ground-dark so they re-resolve. Never hand-set a dark color.",
+      "Do keep corners sharp (0px) and draw structure with 1px hairlines.",
+      "Do set metadata (eyebrows, captions, data, labels) in IBM Plex Mono uppercase, and headlines/body in Archivo. Keep the two layers in their lanes.",
+      "Do leave physics notation in its true case (text-transform: none). Case is meaning.",
+      "Do present every claim as a receipt — sourced, exact, documentary. Use Sand for the source/annotation furniture.",
+      "Do ship a complete, static page under prefers-reduced-motion: reduce; never gate content behind a reveal."
+    ],
+    "donts": [
+      "Don't use mass-market SaaS marketing patterns: no popups, no countdown timers, no fake scarcity, no exclamation points, no emoji.",
+      "Don't push cold visitors toward the $300 ask — route them to the free Signal tier. The page persuades by being right for the reader, not by pressure.",
+      "Don't use gradient text (background-clip: text), glassmorphism as decoration, or blurred drop shadows for elevation. Depth is hairlines and ground shifts.",
+      "Don't put Powder (#c1d8e2) as text on the Ghost ground — use Accent Slate (#4a6878) small or Accent Display (#6e8c9e) large.",
+      "Don't use Sand (#b7a781) as a call-to-action color; it is annotation furniture only.",
+      "Don't ship decorative or inaccurate quantum imagery. The figures and the hero scene are physically honest or they don't ship.",
+      "Don't invent claims — testimonials, member counts, dollar values. Every number traces to the strategy document; honesty about launch state is a feature."
+    ]
+  }
+}
