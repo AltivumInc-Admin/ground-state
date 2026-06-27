@@ -53,10 +53,11 @@ export default function usePageMeta({ title, description, noindex = false } = {}
     // homepage RESETS them — otherwise a subpage's OG/Twitter copy leaks onto
     // the homepage after SPA navigation. The homepage falls back to its own
     // hand-tuned defaults (which differ from the plain meta description).
-    const ogTitle = title ? fullTitle : DEFAULT_TITLE
+    // og/twitter title is always fullTitle: when no title is passed, fullTitle
+    // already falls back to DEFAULT_TITLE, so a separate ogTitle was redundant.
     const ogDesc = description || DEFAULT_OG_DESCRIPTION
-    setPropMeta('og:title', ogTitle)
-    setNameMeta('twitter:title', ogTitle)
+    setPropMeta('og:title', fullTitle)
+    setNameMeta('twitter:title', fullTitle)
     setPropMeta('og:description', ogDesc)
     setNameMeta('twitter:description', ogDesc)
 

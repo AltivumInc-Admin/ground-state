@@ -6,9 +6,19 @@ on:
   push:
     branches: [main]
 
+# Least privilege: this is a test-only job and never writes to the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs so a new push doesn't leave a stale run burning minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
