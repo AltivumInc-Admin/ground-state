@@ -7,11 +7,11 @@ vi.mock('../lib/submit.js', () => ({ postJson: vi.fn(), requestJson: vi.fn() }))
 vi.stubEnv('VITE_SIGNAL_ENDPOINT', '')
 
 const { postJson } = await import('../lib/submit.js')
-const { SignalForm } = await import('./FinalCta.jsx')
+const { default: SignalSubscribe } = await import('./SignalSubscribe.jsx')
 
-describe('SignalForm — preview when the endpoint is unset', () => {
+describe('SignalSubscribe — preview when the endpoint is unset', () => {
   it('shows the honest preview and never transmits the address', async () => {
-    render(<SignalForm />)
+    render(<SignalSubscribe />)
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'founder@quantum.co' },
     })

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { allIssues } from '../lib/issues.js'
 import usePageMeta from '../lib/usePageMeta.js'
 import { formatDate } from '../lib/formatDate.js'
+import SignalSubscribe from '../components/SignalSubscribe.jsx'
 
 export default function Signal() {
   usePageMeta({
@@ -29,8 +30,15 @@ export default function Signal() {
           ))}
         </ul>
       ) : (
-        <p className="signal-archive-empty">The first issue is on its way. Sign up to get it in your inbox.</p>
+        <p className="signal-archive-empty">
+          The first issue is on its way — subscribe below and it lands in your inbox the moment it ships.
+        </p>
       )}
+      <SignalSubscribe
+        kicker="Free · straight to your inbox"
+        heading="Subscribe to The Signal."
+        blurb="Funding moves, ecosystem intel, and hard-won lessons for quantum builders — free, no application needed."
+      />
     </div>
   )
 }

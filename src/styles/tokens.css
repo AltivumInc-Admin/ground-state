@@ -33,6 +33,7 @@
   --line-strong: rgba(67, 45, 22, 0.38);
   --sand-line: rgba(183, 167, 129, 0.6); /* warm hairline accent */
   --sand-band: rgba(183, 167, 129, 0.12);
+  --sand-ink: #716850; /* sand pressed for TEXT on the light ground — raw sand is ~2.2:1 here; this clears AA (~5.2:1) */
   --fig-stroke: rgba(67, 45, 22, 0.5); /* figure line-art */
   --focus-ring: #4a6878;
   --btn-solid: var(--black); /* primary button — the black hint on light */
@@ -88,6 +89,7 @@
   --line-strong: rgba(247, 247, 255, 0.34);
   --sand-line: rgba(183, 167, 129, 0.45);
   --sand-band: rgba(183, 167, 129, 0.1);
+  --sand-ink: var(--sand); /* raw sand is already AA on black (8.4:1) */
   --fig-stroke: rgba(247, 247, 255, 0.55);
   --focus-ring: var(--powder);
   --btn-solid: var(--powder); /* primary on black — powder carries the accent share */

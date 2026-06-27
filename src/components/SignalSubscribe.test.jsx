@@ -3,22 +3,22 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 // Endpoint is read at module-eval, so it is fixed for this whole file (vitest
 // isolates modules per file). A configured endpoint exercises the live submit
-// path; the unset/preview branch lives in FinalCta.signal.preview.test.jsx.
+// path; the unset/preview branch lives in SignalSubscribe.preview.test.jsx.
 vi.mock('../lib/submit.js', () => ({ postJson: vi.fn(), requestJson: vi.fn() }))
 vi.stubEnv('VITE_SIGNAL_ENDPOINT', 'https://api.example.com/subscribe')
 
 const { postJson } = await import('../lib/submit.js')
-const { SignalForm } = await import('./FinalCta.jsx')
+const { default: SignalSubscribe } = await import('./SignalSubscribe.jsx')
 
 const fillEmail = (value) =>
   fireEvent.change(screen.getByLabelText(/email address/i), { target: { value } })
 
 afterEach(() => vi.clearAllMocks())
 
-describe('SignalForm — configured endpoint', () => {
+describe('SignalSubscribe — configured endpoint', () => {
   it('goes idle → sending → sent and transmits the source-tagged payload', async () => {
     postJson.mockResolvedValueOnce(true)
-    render(<SignalForm />)
+    render(<SignalSubscribe />)
     fillEmail('founder@quantum.co')
     fireEvent.click(screen.getByRole('button', { name: /subscribe free/i }))
 
@@ -33,7 +33,7 @@ describe('SignalForm — configured endpoint', () => {
 
   it('surfaces a recoverable error and preserves the entered email on failure', async () => {
     postJson.mockRejectedValueOnce(new Error('Intake endpoint responded 502'))
-    render(<SignalForm />)
+    render(<SignalSubscribe />)
     fillEmail('founder@quantum.co')
     fireEvent.click(screen.getByRole('button', { name: /subscribe free/i }))
 
@@ -45,7 +45,7 @@ describe('SignalForm — configured endpoint', () => {
   it('disables the control while sending and blocks a concurrent second submit', async () => {
     let resolvePost
     postJson.mockImplementationOnce(() => new Promise((resolve) => (resolvePost = resolve)))
-    render(<SignalForm />)
+    render(<SignalSubscribe />)
     fillEmail('founder@quantum.co')
 
     const form = screen.getByLabelText(/subscribe to the signal/i)
@@ -65,7 +65,7 @@ describe('SignalForm — configured endpoint', () => {
   })
 
   it('does not transmit an empty email and keeps the honeypot out of AT + tab order', () => {
-    render(<SignalForm />)
+    render(<SignalSubscribe />)
     const email = screen.getByLabelText(/email address/i)
     expect(email).toBeRequired()
 

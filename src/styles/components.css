@@ -1357,7 +1357,7 @@
 
 .signal-kicker {
   display: block;
-  color: var(--sand);
+  color: var(--sand-ink);
   margin-bottom: 1.1rem;
 }
 
@@ -2010,7 +2010,7 @@ select {
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sand);
+  color: var(--sand-ink);
   margin-bottom: 0.9rem;
 }
 
@@ -2059,7 +2059,7 @@ select {
 }
 
 .signal-issue-kicker a {
-  color: var(--sand);
+  color: var(--sand-ink);
   text-decoration: none;
   transition: color 0.25s var(--ease-out);
 }
@@ -2087,6 +2087,9 @@ select {
   font-size: var(--text-base);
   line-height: 1.75;
   color: var(--ink);
+  /* Cap the long-form measure to a comfortable ~70ch (the title + furniture
+     keep the wider 52rem column; only the running text narrows) */
+  max-width: 38rem;
 }
 
 /* Vertical rhythm from the flow itself; headings override for more air above */

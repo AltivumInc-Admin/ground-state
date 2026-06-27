@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { getIssueBySlug } from '../lib/issues.js'
 import IssueBody from '../components/IssueBody.jsx'
+import SignalSubscribe from '../components/SignalSubscribe.jsx'
 import usePageMeta from '../lib/usePageMeta.js'
 import { formatDate } from '../lib/formatDate.js'
 
@@ -27,6 +28,11 @@ export default function SignalIssue() {
         <time dateTime={issue.publishedAt ?? undefined}>{formatDate(issue.publishedAt)}</time>
       </header>
       <IssueBody value={issue.body} />
+      <SignalSubscribe
+        kicker="Keep getting The Signal"
+        heading="The next issue, in your inbox."
+        blurb="Free — funding moves, ecosystem intel, and hard-won lessons for quantum builders."
+      />
       <footer className="signal-issue-foot">
         <Link to="/signal" className="btn btn-ghost">
           All issues
