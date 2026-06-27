@@ -12,13 +12,15 @@ customHeaders:
       - key: 'Permissions-Policy'
         value: 'camera=(), microphone=(), geolocation=()'
       # Content-Security-Policy (ENFORCING). Shipped Report-Only first and soaked
-      # 2026-06-24 — zero violations across /, /story, /activate (site makes no
-      # third-party requests by design: all JS/CSS/fonts self-hosted). index.html
+      # 2026-06-24 — zero violations across /, /story, /activate. NOTE: that soak
+      # did NOT exercise /signal or /signal/:slug, which embed Sanity-hosted issue
+      # images — img-src therefore allows https://cdn.sanity.io (see IssueBody.jsx /
+      # fetch-issues.mjs). All first-party JS/CSS/fonts remain self-hosted. index.html
       # has no inline executable script (only the application/ld+json data block +
       # the same-origin module bundle), so script-src 'self' needs no hash.
-      # style-src needs 'unsafe-inline' because GSAP/R3F write inline element
-      # styles. connect-src lists the signal API and the checkout execute-api —
-      # ADD THE APPLY ORIGIN HERE when VITE_APPLY_ENDPOINT is set, or /apply
-      # submissions will be blocked.
+      # style-src needs 'unsafe-inline' because GSAP/R3F write inline element styles.
+      # connect-src lists the signal API and the checkout execute-api; check-csp.mjs
+      # (Amplify preBuild) fails the build if a configured VITE_*_ENDPOINT origin
+      # (incl. the apply origin at intake-open) is not listed here.
       - key: 'Content-Security-Policy'
-        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groundstatesociety.com https://*.execute-api.us-east-2.amazonaws.com; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groundstatesociety.com https://*.execute-api.us-east-2.amazonaws.com; img-src 'self' data: https://cdn.sanity.io; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
