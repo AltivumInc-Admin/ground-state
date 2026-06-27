@@ -12,6 +12,10 @@ frontend:
         # on /activate) and ESLint must pass too. Either going red stops publish.
         - npm run test:fe
         - npm run lint
+        # Reconcile the enforcing CSP connect-src with the configured VITE_*
+        # endpoint origins: a missing allowlist entry fails the build here instead
+        # of silently blocking a form submission (e.g. /apply) in production.
+        - node scripts/check-csp.mjs
     build:
       commands:
         - npm run build
