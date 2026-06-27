@@ -105,6 +105,13 @@ for (const issue of issues) {
   })
 }
 
+// A production build should prerender issues; zero is normal only for an
+// empty/preview build. Make the anomaly greppable in the Amplify build log so a
+// content-loss event (e.g. lost Sanity creds) is visible rather than silent.
+if (issues.length === 0) {
+  console.warn('prerender: WARNING — 0 issues prerendered (newsletter archive has no issue pages)')
+}
+
 const indexPath = new URL('../dist/index.html', import.meta.url)
 const template = await readFile(indexPath, 'utf8')
 const shell = '<div id="root"></div>'

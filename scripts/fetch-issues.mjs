@@ -72,7 +72,24 @@ async function main() {
 
   const projectId = process.env.SANITY_PROJECT_ID
   if (!projectId) {
-    console.warn('fetch-issues: SANITY_PROJECT_ID unset — writing empty issue list')
+    // Fail-safe by default. A production build with no SANITY_PROJECT_ID would
+    // write an empty list, prerender zero /signal pages, and collapse the
+    // sitemap — silently delisting the entire newsletter archive on a green
+    // deploy. So a missing project id is a hard error unless the empty-list
+    // path is EXPLICITLY opted into (local/preview builds with no Sanity).
+    // We do not auto-detect "CI"/Amplify env vars here: production sets
+    // SANITY_PROJECT_ID and never this flag, so a credential loss cannot slip
+    // through by accidentally matching a guessed env signal.
+    if (process.env.GSS_ALLOW_EMPTY_ISSUES !== '1') {
+      throw new Error(
+        'fetch-issues: SANITY_PROJECT_ID is unset. A production build requires it — refusing ' +
+          'to write an empty issue list (that would delist the entire newsletter archive). For ' +
+          'an intentional local/preview build with no Sanity, set GSS_ALLOW_EMPTY_ISSUES=1.',
+      )
+    }
+    console.warn(
+      'fetch-issues: SANITY_PROJECT_ID unset + GSS_ALLOW_EMPTY_ISSUES=1 — writing empty issue list (preview build)',
+    )
     await writeFile(OUT, '[]\n')
     return
   }
