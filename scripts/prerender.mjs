@@ -15,7 +15,7 @@
 import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
-import { injectHead } from './lib/inject-head.mjs'
+import { injectHead, escapeHtml } from './lib/inject-head.mjs'
 
 const { default: Static } = await import(
   new URL('../dist-ssr/entry-static.js', import.meta.url).href
@@ -101,8 +101,9 @@ if (!template.includes(shell)) {
   throw new Error('prerender: #root shell not found in dist/index.html')
 }
 
-// injectHead is imported from ./lib/inject-head.mjs — see that module for
-// the function-form replacement rationale ($ tokens in funding figures).
+// injectHead/escapeHtml are imported from ./lib/inject-head.mjs — see that
+// module for the function-form + escaping rationale ($ tokens in funding
+// figures, and injectHead throwing if any requested head field fails to swap).
 
 for (const route of ROUTES) {
   const { prelude } = await prerender(createElement(Static, { url: route.path }))
@@ -112,17 +113,17 @@ for (const route of ROUTES) {
     throw new Error(`prerender: "${route.expect}" missing from ${route.path} markup`)
   }
 
+  // Function-form replace so any $-token in the rendered markup (e.g. the
+  // "$4.1B" funding figures) is inserted verbatim rather than read as a
+  // $-replacement pattern; route.path is escaped for the data-route attribute.
   let html = template.replace(
     shell,
-    `<div id="root" data-prerendered="true" data-route="${route.path}">${markup}</div>`,
+    () => `<div id="root" data-prerendered="true" data-route="${escapeHtml(route.path)}">${markup}</div>`,
   )
+  // injectHead throws if any requested head field fails to swap, so the prior
+  // standalone title canary is no longer needed.
   if (route.head) {
     html = injectHead(html, route.head)
-    // Guard against a head swap silently no-op'ing (e.g. a meta tag was
-    // reformatted across lines and the regex stopped matching).
-    if (!html.includes(`<title>${route.head.title}</title>`)) {
-      throw new Error(`prerender: head injection failed for ${route.path} (title not swapped)`)
-    }
   }
 
   const outUrl = new URL(`../dist/${route.file}`, import.meta.url)
