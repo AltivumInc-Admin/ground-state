@@ -6,6 +6,7 @@ test('buildScanParams filters EMAIL# items with confirmed status', () => {
   const p = buildScanParams('t', { lastKey: undefined })
   assert.equal(p.TableName, 't')
   assert.match(p.FilterExpression, /begins_with\(PK, :p\)/)
+  assert.match(p.FilterExpression, /AND #s = :c/)
   assert.equal(p.ExpressionAttributeValues[':p'], 'EMAIL#')
   assert.equal(p.ExpressionAttributeValues[':c'], 'confirmed')
 })

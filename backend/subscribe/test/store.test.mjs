@@ -121,6 +121,7 @@ test('unsubscribe writes UpdateCommand with status=unsubscribed and guards again
   assert.equal(sent.input.Key.PK, 'EMAIL#a@b.com')
   assert.equal(sent.input.ExpressionAttributeValues[':u'], 'unsubscribed')
   assert.match(sent.input.ConditionExpression, /#s <> :suppressed/)
+  assert.match(sent.input.ConditionExpression, /attribute_exists\(PK\)/)
   assert.match(sent.input.UpdateExpression, /REMOVE #ttl/)
 })
 

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Operator CLI to send a published Signal issue to confirmed subscribers via Postmark Broadcast.",
+  "engines": { "node": ">=20" },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1071.0",
     "@aws-sdk/lib-dynamodb": "^3.1071.0",

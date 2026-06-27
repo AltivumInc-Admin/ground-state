@@ -16,7 +16,7 @@ const issue = {
 }
 
 test('renderIssueEmail produces subject, html, text', () => {
-  const { subject, html, text } = renderIssueEmail({ issue, siteUrl: 'https://groundstatesociety.com' })
+  const { subject, html, text, fromName } = renderIssueEmail({ issue, siteUrl: 'https://groundstatesociety.com' })
   assert.equal(subject, 'Funding Roundup: Q2')
   // Body rendered
   assert.match(html, /The rounds/)
@@ -28,4 +28,8 @@ test('renderIssueEmail produces subject, html, text', () => {
   assert.match(html, /Altivum Inc/)
   assert.match(html, /groundstatesociety\.com\/signal\/funding-roundup-q2/)
   assert.match(text, /\{\{\{ pm:unsubscribe \}\}\}/)
+  // fromName
+  assert.equal(fromName, 'The Ground State Society')
+  // plain-text body contains rendered block content (not just excerpt)
+  assert.match(text, /The rounds/)
 })

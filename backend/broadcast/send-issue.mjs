@@ -15,14 +15,20 @@ import { sendIssue } from './src/postmark.mjs'
 
 function req(name) {
   const v = process.env[name]
-  if (!v) { console.error(`Missing env: ${name}`); process.exit(1) }
+  if (!v) {
+    console.error(`Missing env: ${name}`)
+    process.exit(1)
+  }
   return v
 }
 
 async function main() {
   const slug = process.argv[2]
   const doSend = process.argv.includes('--send')
-  if (!slug || slug.startsWith('--')) { console.error('Usage: node send-issue.mjs <slug> [--send]'); process.exit(1) }
+  if (!slug || slug.startsWith('--')) {
+    console.error('Usage: node send-issue.mjs <slug> [--send]')
+    process.exit(1)
+  }
 
   const siteUrl = process.env.SITE_URL || 'https://groundstatesociety.com'
   const issue = await fetchIssue({
@@ -30,7 +36,10 @@ async function main() {
     projectId: req('SANITY_PROJECT_ID'),
     dataset: process.env.SANITY_DATASET || 'production',
   })
-  if (!issue) { console.error(`No PUBLISHED issue with slug "${slug}"`); process.exit(1) }
+  if (!issue) {
+    console.error(`No PUBLISHED issue with slug "${slug}"`)
+    process.exit(1)
+  }
 
   const { subject, html, text, fromName } = renderIssueEmail({ issue, siteUrl })
   const recipients = await listConfirmedRecipients(req('TABLE_NAME'))
@@ -41,9 +50,18 @@ async function main() {
     sample: recipients.slice(0, 3), unsubscribePlaceholder: hasUnsub, mode: doSend ? 'SEND' : 'DRY-RUN',
   }, null, 2))
 
-  if (!hasUnsub) { console.error('Refusing to send: unsubscribe placeholder missing'); process.exit(1) }
-  if (recipients.length === 0) { console.error('No confirmed recipients.'); process.exit(1) }
-  if (!doSend) { console.log('Dry run — nothing sent. Re-run with --send to send.'); return }
+  if (!hasUnsub) {
+    console.error('Refusing to send: unsubscribe placeholder missing')
+    process.exit(1)
+  }
+  if (recipients.length === 0) {
+    console.error('No confirmed recipients.')
+    process.exit(1)
+  }
+  if (!doSend) {
+    console.log('Dry run — nothing sent. Re-run with --send to send.')
+    return
+  }
 
   const result = await sendIssue({
     recipients, subject, html, text, fromName,
@@ -53,4 +71,7 @@ async function main() {
   if (result.failed.length) console.error(JSON.stringify({ failures: result.failed }, null, 2))
 }
 
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

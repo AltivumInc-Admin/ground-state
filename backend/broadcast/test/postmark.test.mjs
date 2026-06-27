@@ -9,12 +9,16 @@ test('buildBatch creates one broadcast message per recipient', () => {
   assert.equal(msgs[0].From, 'GSS <no-reply@gss.com>')
   assert.equal(msgs[0].MessageStream, 'broadcast')
   assert.equal(msgs[0].Subject, 'S')
+  assert.equal(msgs[0].HtmlBody, 'H')
+  assert.equal(msgs[0].TextBody, 'T')
+  assert.equal(msgs[0].TrackOpens, true)
+  assert.equal(msgs[0].TrackLinks, 'None')
 })
 
 test('sendIssue posts batches and collects per-recipient failures', async () => {
   const calls = []
   const fetchImpl = async (url, opts) => {
-    calls.push({ url, body: JSON.parse(opts.body) })
+    calls.push({ url, body: JSON.parse(opts.body), headers: opts.headers })
     // Postmark /email/batch returns an array of per-message results
     return { ok: true, json: async () => [
       { ErrorCode: 0, Message: 'OK', To: 'a@b.com' },
@@ -26,6 +30,18 @@ test('sendIssue posts batches and collects per-recipient failures', async () => 
     fromName: 'GSS', fromAddress: 'no-reply@gss.com', token: 'tok', fetchImpl,
   })
   assert.equal(calls[0].url, 'https://api.postmarkapp.com/email/batch')
+  assert.equal(calls[0].headers['X-Postmark-Server-Token'], 'tok')
   assert.equal(res.sent, 1)
   assert.deepEqual(res.failed, [{ email: 'c@d.com', code: 406, message: 'Inactive recipient' }])
+})
+
+test('sendIssue rejects when Postmark returns non-ok status', async () => {
+  const fetchImpl = async () => ({ ok: false, status: 422, text: async () => 'bad' })
+  await assert.rejects(
+    () => sendIssue({
+      recipients: ['a@b.com'], subject: 'S', html: 'H', text: 'T',
+      fromName: 'GSS', fromAddress: 'no-reply@gss.com', token: 'tok', fetchImpl,
+    }),
+    /422/,
+  )
 })

@@ -6,7 +6,6 @@ const ISSUE_QUERY = `*[_type == "issue" && status == "published" && slug.current
   title,
   publishedAt,
   excerpt,
-  "seo": { "title": coalesce(seo.title, title), "noIndex": seo.noIndex == true },
   body[]{
     ...,
     _type == "pteImage" => { ..., "url": image.asset->url }
@@ -16,6 +15,22 @@ const ISSUE_QUERY = `*[_type == "issue" && status == "published" && slug.current
 export async function fetchIssue({ slug, projectId, dataset, apiVersion = '2026-06-01' }) {
   const client = createClient({ projectId, dataset, apiVersion, useCdn: false })
   return client.fetch(ISSUE_QUERY, { slug })
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+function blocksToText(blocks) {
+  return (blocks ?? [])
+    .map((b) => {
+      if (b._type === 'pteImage') return b.caption ? `[Image: ${b.caption}]` : '[Image]'
+      if (b._type !== 'block') return ''
+      const t = (b.children ?? []).map((c) => c.text ?? '').join('')
+      return b.listItem ? `- ${t}` : t
+    })
+    .filter((line) => line !== '')
+    .join('\n\n')
 }
 
 // Email-safe serializers. Inline styles only; no class hooks survive in email.
@@ -30,12 +45,12 @@ const components = {
   marks: {
     strong: ({ children }) => `<strong>${children}</strong>`,
     em: ({ children }) => `<em>${children}</em>`,
-    link: ({ children, value }) => `<a href="${value?.href ?? '#'}" style="color:#4a6878;">${children}</a>`,
+    link: ({ children, value }) => `<a href="${escapeHtml(value?.href ?? '#')}" style="color:#4a6878;">${children}</a>`,
   },
   types: {
     pteImage: ({ value }) =>
       value?.url
-        ? `<figure style="margin:22px 0;"><img src="${value.url}" alt="${value.alt ?? ''}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${value.caption}</figcaption>` : ''}</figure>`
+        ? `<figure style="margin:22px 0;"><img src="${value.url}" alt="${escapeHtml(value.alt)}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${escapeHtml(value.caption)}</figcaption>` : ''}</figure>`
         : '',
   },
 }
@@ -54,7 +69,7 @@ export function renderIssueEmail({ issue, siteUrl }) {
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f7f7ff;">
-  <span style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f7f7ff;">${issue.excerpt ?? ''}</span>
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f7f7ff;">${escapeHtml(issue.excerpt)}</span>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f7ff;">
     <tr><td align="center" style="padding:32px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border:1px solid #e6e6ef;border-radius:10px;">
@@ -62,7 +77,7 @@ export function renderIssueEmail({ issue, siteUrl }) {
           <p style="margin:0;font:600 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;text-transform:uppercase;color:#b7a781;">The Signal</p>
         </td></tr>
         <tr><td style="padding:14px 32px 0;">
-          <h1 style="margin:0 0 6px;font:700 24px/1.25 ${FONT};color:#08080a;">${issue.title}</h1>
+          <h1 style="margin:0 0 6px;font:700 24px/1.25 ${FONT};color:#08080a;">${escapeHtml(issue.title)}</h1>
           <p style="margin:0 0 20px;font:400 12px/1.5 ui-monospace,monospace;color:#9a9aa6;">${date}</p>
         </td></tr>
         <tr><td style="padding:0 32px;">${bodyHtml}</td></tr>
@@ -85,7 +100,7 @@ export function renderIssueEmail({ issue, siteUrl }) {
 ${issue.title}
 ${date}
 
-${issue.excerpt ?? ''}
+${blocksToText(issue.body)}
 
 Read on the web: ${webUrl}
 
