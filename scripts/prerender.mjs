@@ -16,6 +16,7 @@ import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
 import { injectHead, escapeHtml } from './lib/inject-head.mjs'
+import { buildSitemapEntries, renderSitemap, issueLastmod } from './lib/sitemap.mjs'
 
 const { default: Static } = await import(
   new URL('../dist-ssr/entry-static.js', import.meta.url).href
@@ -27,7 +28,12 @@ const SITE = 'https://groundstatesociety.com'
 // silently-broken render can't ship. `head` overrides (omitted for "/" which
 // keeps index.html's hand-tuned head) are applied at write time.
 const ROUTES = [
-  { path: '/', file: 'index.html', expect: 'hero-wordmark' },
+  {
+    path: '/',
+    file: 'index.html',
+    expect: 'hero-wordmark',
+    sitemap: { priority: '1.0', changefreq: 'monthly', lastmod: '2026-06-21' },
+  },
   {
     path: '/story',
     file: 'story.html',
@@ -38,6 +44,7 @@ const ROUTES = [
         'Why The Ground State Society exists — the room being built for the people building the quantum economy, operated by Christian Perez, a Green Beret veteran who builds quantum systems on AWS.',
       canonical: `${SITE}/story`,
     },
+    sitemap: { priority: '0.7', changefreq: 'monthly', lastmod: '2026-06-21' },
   },
   {
     // /apply is index,follow — prerender it so non-JS crawlers get the real
@@ -53,6 +60,7 @@ const ROUTES = [
         'The application for The Round — the vetted peer network for quantum founders. Reviewed personally.',
       canonical: `${SITE}/apply`,
     },
+    sitemap: { priority: '0.8', changefreq: 'monthly', lastmod: '2026-06-24' },
   },
 ]
 
@@ -72,6 +80,7 @@ ROUTES.push({
       'The Signal — funding moves, ecosystem intel, and hard-won lessons for the people building the quantum economy. Free to read.',
     canonical: `${SITE}/signal`,
   },
+  sitemap: { priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
 })
 
 // One page per published issue
@@ -91,6 +100,8 @@ for (const issue of issues) {
     file: `signal/${issue.slug}.html`,
     expect: 'signal-issue',
     head,
+    indexable: !issue.seo?.noIndex,
+    sitemap: { priority: '0.6', changefreq: 'monthly', lastmod: issueLastmod(issue.publishedAt) },
   })
 }
 
@@ -132,34 +143,17 @@ for (const route of ROUTES) {
   console.log(`prerender: ${route.path} → dist/${route.file} (${(markup.length / 1024).toFixed(1)} kB)`)
 }
 
-// Regenerate sitemap.xml from the routes we just prerendered (static routes +
-// every published issue). The Amplify catch-all excludes .xml, so dist/sitemap.xml
-// is served directly.
-const sitemapEntries = [
-  { loc: `${SITE}/`, priority: '1.0', changefreq: 'monthly', lastmod: '2026-06-21' },
-  { loc: `${SITE}/story`, priority: '0.7', changefreq: 'monthly', lastmod: '2026-06-21' },
-  { loc: `${SITE}/apply`, priority: '0.8', changefreq: 'monthly', lastmod: '2026-06-24' },
-  { loc: `${SITE}/signal`, priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
-  ...issues
-    .filter((i) => !i.seo?.noIndex)
-    .map((i) => ({
-      loc: `${SITE}/signal/${i.slug}`,
-      priority: '0.6',
-      changefreq: 'monthly',
-      lastmod: (i.publishedAt || '').slice(0, 10) || null,
-    })),
-]
-const sitemap =
-  '<?xml version="1.0" encoding="UTF-8"?>\n' +
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-  sitemapEntries
-    .map((e) => {
-      const lastmodLine = e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>\n` : ''
-      return `  <url>\n    <loc>${e.loc}</loc>\n${lastmodLine}    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`
-    })
-    .join('\n') +
-  '\n</urlset>\n'
-await writeFile(new URL('../dist/sitemap.xml', import.meta.url), sitemap)
+// Regenerate sitemap.xml from the SAME routes we just prerendered — one source
+// of truth, so the sitemap can't desync from what is actually served, and the
+// noIndex exclusion lives only on the route (indexable flag). The Amplify
+// catch-all excludes .xml, so dist/sitemap.xml is served directly.
+const sitemapEntries = buildSitemapEntries(ROUTES, SITE)
+// Write guard, matching the fail-loud pattern of the other prerender steps:
+// the homepage URL must always be present, else generation is broken.
+if (!sitemapEntries.some((e) => e.loc === `${SITE}/`)) {
+  throw new Error('prerender: sitemap is missing the homepage URL — generation is broken')
+}
+await writeFile(new URL('../dist/sitemap.xml', import.meta.url), renderSitemap(sitemapEntries))
 console.log(`prerender: sitemap.xml → ${sitemapEntries.length} urls`)
 
 await rm(new URL('../dist-ssr/', import.meta.url), { recursive: true, force: true })

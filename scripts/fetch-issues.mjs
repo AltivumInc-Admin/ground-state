@@ -33,10 +33,25 @@ const QUERY = `*[_type == "issue" && status == "published" && defined(slug.curre
   }
 }`
 
+// Mirrors the Studio's slug rule (issue.ts). The GROQ fetch bypasses that
+// client-side validation, so re-enforce it here: an invalid slug would land
+// unescaped in the sitemap <loc> AND in the prerender output path
+// (signal/<slug>.html), so a stray slash/dot/& must never reach either.
+const SLUG_RE = /^[a-z0-9-]+$/
+
 export function normalizeIssues(rawDocs) {
   if (!Array.isArray(rawDocs)) return []
   return rawDocs
-    .filter((d) => d && typeof d.slug === 'string' && d.slug.length > 0)
+    .filter((d) => {
+      if (!d || typeof d.slug !== 'string' || d.slug.length === 0) return false
+      if (!SLUG_RE.test(d.slug)) {
+        console.warn(
+          `fetch-issues: skipping issue with invalid slug ${JSON.stringify(d.slug)} (expected ^[a-z0-9-]+$)`,
+        )
+        return false
+      }
+      return true
+    })
     .map((d) => ({
       slug: d.slug,
       title: d.title ?? '',
