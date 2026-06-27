@@ -78,6 +78,38 @@
 > the post-verification ratings, with a few elevated to High where the issue is a
 > live, user-visible break rather than a latent one.
 
+### Execution status — 2026-06-27 (branch `chore/seo-build-ops-hardening`, not yet pushed)
+
+**Shipped on the branch (verified locally — `npm test` 115 ✓, `test:fe` 34 ✓, lint ✓, build ✓):**
+- 21: escape CMS head values; fail-loud on any missed head swap; fail-loud on missing
+  Sanity creds in a production build; validate issue slug; table-driven injectHead.
+- 22: JSON-LD `@graph` validity guard; removed the redundant `ogTitle` ternary.
+- 23: XML-escape + slug validation; pure tested `scripts/lib/sitemap.mjs`; sitemap derived
+  from `ROUTES` (single source); sitemap write guard; deleted stale `public/sitemap.xml`.
+- 24: `img-src https://cdn.sanity.io` + `form-action 'self'`; `check-csp.mjs` connect-src/
+  endpoint reconciliation guard (Amplify preBuild).
+- 25: orphaned scripts tests wired into the gate; `node --test` zero-match guard;
+  CI least-privilege permissions + concurrency + timeout.
+- 26: verify-deploy chunk crawl (verified host-in-lazy-chunk against a real build),
+  header verification, catch-all probe + `data-route` marker, `--max-time`, stderr,
+  network-fail, sitemap probe, tightened cleartext guard, arg-2 scheme validation.
+
+**Deferred (with reason):**
+- 24 — narrow `connect-src` to a custom subdomain (`checkout.groundstatesociety.com`):
+  needs ACM cert (us-east-2) + API Gateway v2 custom domain + Route 53 + a `check-aws-docs`
+  pass + deploy. The `check-csp.mjs` guard already works against the current wildcard.
+- 24 — build-time "no inline executable script" scan: not yet implemented.
+- 25 — run `npm run build` in `ci.yml`; single-source the Node pin; SHA-pin actions
+  (SHAs not verifiable offline).
+- 22 — homepage-head single-source snapshot; stale `og:image:alt/type` on issue pages;
+  JSON-LD price/tier de-dup (runtime-touching refactors, own PRs).
+- 21 — injectHead sequential-pass / per-issue `mkdir` perf; GROQ/SITE de-dup.
+- 26 — bats/extracted-helper tests for the bash script.
+
+**Deploy-gated (item 1 / 24):** the `img-src` change is committed but takes effect only after
+a push to `main` + an Amplify `RELEASE` job (CloudFront edge cache), then a re-soak of a
+`/signal/:slug` page with an inline figure.
+
 ### 21. Prerender + SSR pipeline
 - [ ] **[Security]** Escape CMS-sourced head values before injecting into static HTML — issue titles/descriptions/og:image flow verbatim into `<title>` and `content="..."` attributes; an ordinary editorial `"` or `&` corrupts the og/twitter/meta cards, and `</title><script>` ships into served HTML (CSP blocks execution but not card corruption / meta-refresh / injected forms). Add an `escapeHtml` helper, escape every interpolated value, and compare the post-swap guard against the escaped title. Impact: High. Effort: Low. (`scripts/lib/inject-head.mjs:21-39`, `scripts/prerender.mjs:79-85,123`) — added 2026-06-27
 - [ ] **[Resilience]** Guard every injected head field, not just `<title>` — the post-injection assertion checks only the title, so on any index.html formatting drift the description/canonical/og:image/og:type/robots swaps silently no-op; a `noindex` issue would ship indexable and every issue could inherit the homepage canonical, with a green build. Have `injectHead` report which keys it actually swapped and assert each requested field changed. Impact: High. Effort: Low. (`scripts/prerender.mjs:122-125`, `scripts/lib/inject-head.mjs:32-48`) — added 2026-06-27
