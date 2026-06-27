@@ -31,6 +31,19 @@ Parameters:
       Email for checkout failure alarms. Empty disables the alarms; the SNS
       subscription must be confirmed from the email AWS sends on deploy.
 
+  CheckoutDomainName:
+    Type: String
+    Default: checkout.groundstatesociety.com
+    Description: >
+      Custom domain for the checkout API. A stable host lets the site CSP pin an
+      exact connect-src origin instead of the region-wide execute-api wildcard.
+  CheckoutCertArn:
+    Type: String
+    Default: ''
+    Description: >
+      Regional (us-east-2) ACM cert ARN for CheckoutDomainName. Empty disables the
+      custom domain (the stack keeps serving the raw execute-api endpoint).
+
   ReservedConcurrency:
     Type: Number
     Default: 10
@@ -42,6 +55,7 @@ Parameters:
 Conditions:
   HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
   HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
+  HasCheckoutDomain: !Not [!Equals [!Ref CheckoutCertArn, '']]
 
 Resources:
   # Stripe webhook idempotency. Each processed event id is written once with a
@@ -143,6 +157,26 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${CheckoutFunction}
       RetentionInDays: 365
 
+  # Custom domain for the checkout API (mirrors the subscribe stack's
+  # api.groundstatesociety.com). Conditional: only created when a regional ACM
+  # cert ARN is supplied, so the stack still deploys without one.
+  CheckoutDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: HasCheckoutDomain
+    Properties:
+      DomainName: !Ref CheckoutDomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CheckoutCertArn
+          EndpointType: REGIONAL
+
+  CheckoutApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: HasCheckoutDomain
+    Properties:
+      DomainName: !Ref CheckoutDomain
+      ApiId: !Ref CheckoutApi
+      Stage: $default
+
   # The handler catches everything and returns 502, so the AWS/Lambda Errors
   # metric never fires for Stripe failures — detection has to read the
   # structured error logs. Lambda's text log format prefixes each line with
@@ -208,3 +242,15 @@ Outputs:
   ApiUrl:
     Description: Base URL for the checkout API (set as VITE_CHECKOUT_ENDPOINT)
     Value: !Sub https://${CheckoutApi}.execute-api.${AWS::Region}.amazonaws.com
+  CheckoutDomainUrl:
+    Condition: HasCheckoutDomain
+    Description: Custom-domain base URL for the checkout API (set as VITE_CHECKOUT_ENDPOINT at cutover)
+    Value: !Sub https://${CheckoutDomainName}
+  CheckoutDomainTarget:
+    Condition: HasCheckoutDomain
+    Description: Point checkout.groundstatesociety.com DNS (CNAME or A/ALIAS) at this regional target
+    Value: !GetAtt CheckoutDomain.RegionalDomainName
+  CheckoutDomainHostedZoneId:
+    Condition: HasCheckoutDomain
+    Description: Regional hosted-zone id for an A/ALIAS record to CheckoutDomainTarget
+    Value: !GetAtt CheckoutDomain.RegionalHostedZoneId
