@@ -25,3 +25,14 @@ test('normalizeIssues drops entries without a slug', () => {
   const out = normalizeIssues([{ title: 'No slug', body: [] }])
   assert.equal(out.length, 0)
 })
+
+test('normalizeIssues drops entries with an invalid slug (path/sitemap safety)', () => {
+  const out = normalizeIssues([
+    { slug: '../etc/passwd', title: 'Traversal', body: [] },
+    { slug: 'a&b', title: 'Ampersand', body: [] },
+    { slug: 'Has Spaces', title: 'Spaces', body: [] },
+    { slug: 'valid-slug', title: 'Valid', body: [] },
+  ])
+  assert.equal(out.length, 1)
+  assert.equal(out[0].slug, 'valid-slug')
+})

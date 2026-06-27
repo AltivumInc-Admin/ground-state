@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { injectHead } from './inject-head.mjs'
+import { injectHead, escapeHtml } from './inject-head.mjs'
 
 // Minimal fixture mirroring the single-line meta tags in index.html.
 const FIXTURE = `<!doctype html>
@@ -70,12 +70,15 @@ test('canonical swaps link[rel=canonical] and og:url', () => {
   assert.ok(out.includes(`og:url" content="${canonical}"`))
 })
 
-// --- image swap ---
-test('image swaps og:image and twitter:image', () => {
+// --- image swap (URL & is HTML-escaped to &amp; — valid HTML, decoded on fetch) ---
+test('image swaps og:image and twitter:image with the & in the URL escaped', () => {
   const image = 'https://cdn.sanity.io/images/abc/production/xyz.jpg?w=1200&h=630'
+  const escaped = escapeHtml(image) // ...?w=1200&amp;h=630
   const out = injectHead(FIXTURE, { image })
-  assert.ok(out.includes(`og:image" content="${image}"`))
-  assert.ok(out.includes(`twitter:image" content="${image}"`))
+  assert.ok(out.includes(`og:image" content="${escaped}"`))
+  assert.ok(out.includes(`twitter:image" content="${escaped}"`))
+  // The raw, unescaped & must NOT survive in an attribute value.
+  assert.ok(!out.includes('?w=1200&h=630'), 'raw & should have been escaped to &amp;')
 })
 
 // --- ogType swap ---
@@ -83,4 +86,47 @@ test('ogType swaps og:type', () => {
   const out = injectHead(FIXTURE, { ogType: 'article' })
   assert.ok(out.includes('og:type" content="article"'))
   assert.ok(!out.includes('og:type" content="website"'))
+})
+
+// --- hostile input: a CMS title cannot break out of the <title> element ---
+test('a title containing </title><script> is HTML-escaped, not injected', () => {
+  const title = '</title><script>alert(1)</script>'
+  const out = injectHead(FIXTURE, { title })
+  assert.ok(!out.includes('<script>alert(1)</script>'), 'raw <script> must not appear')
+  assert.ok(!out.includes('</title><script>'), 'title element must not be broken out of')
+  assert.ok(out.includes('&lt;/title&gt;&lt;script&gt;'), 'metacharacters must be encoded')
+})
+
+// --- hostile input: a CMS description cannot break out of a content="..." attr ---
+test('a description with quotes/ampersands/angle brackets is HTML-escaped', () => {
+  const description = 'He said "hi" & pointed <left>'
+  const out = injectHead(FIXTURE, { description })
+  assert.ok(
+    out.includes('content="He said &quot;hi&quot; &amp; pointed &lt;left&gt;"'),
+    `description not escaped.\nGot: ${out.slice(0, 800)}`,
+  )
+  // The naked closing-quote must not appear mid-value and re-open markup.
+  assert.ok(!out.includes('content="He said "hi"'), 'unescaped quote broke out of the attribute')
+})
+
+// --- fail-loud: a requested field whose tag is absent throws (silent SEO no-op guard) ---
+test('injectHead throws when a requested field has no matching tag', () => {
+  const noCanonical = FIXTURE.replace(/<link rel="canonical"[^>]*>/, '')
+  assert.throws(
+    () => injectHead(noCanonical, { canonical: 'https://groundstatesociety.com/signal/x' }),
+    /canonical.*was requested but its target tag was not found/s,
+  )
+})
+
+test('injectHead does not throw when every requested field is present', () => {
+  assert.doesNotThrow(() =>
+    injectHead(FIXTURE, {
+      title: 'T',
+      description: 'D',
+      canonical: 'https://groundstatesociety.com/x',
+      image: 'https://cdn.sanity.io/og.png',
+      ogType: 'article',
+      robots: 'noindex, follow',
+    }),
+  )
 })

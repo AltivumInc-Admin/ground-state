@@ -15,7 +15,8 @@
 import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
-import { injectHead } from './lib/inject-head.mjs'
+import { injectHead, escapeHtml } from './lib/inject-head.mjs'
+import { buildSitemapEntries, renderSitemap, issueLastmod } from './lib/sitemap.mjs'
 
 const { default: Static } = await import(
   new URL('../dist-ssr/entry-static.js', import.meta.url).href
@@ -27,7 +28,12 @@ const SITE = 'https://groundstatesociety.com'
 // silently-broken render can't ship. `head` overrides (omitted for "/" which
 // keeps index.html's hand-tuned head) are applied at write time.
 const ROUTES = [
-  { path: '/', file: 'index.html', expect: 'hero-wordmark' },
+  {
+    path: '/',
+    file: 'index.html',
+    expect: 'hero-wordmark',
+    sitemap: { priority: '1.0', changefreq: 'monthly', lastmod: '2026-06-21' },
+  },
   {
     path: '/story',
     file: 'story.html',
@@ -38,6 +44,7 @@ const ROUTES = [
         'Why The Ground State Society exists — the room being built for the people building the quantum economy, operated by Christian Perez, a Green Beret veteran who builds quantum systems on AWS.',
       canonical: `${SITE}/story`,
     },
+    sitemap: { priority: '0.7', changefreq: 'monthly', lastmod: '2026-06-21' },
   },
   {
     // /apply is index,follow — prerender it so non-JS crawlers get the real
@@ -53,6 +60,7 @@ const ROUTES = [
         'The application for The Round — the vetted peer network for quantum founders. Reviewed personally.',
       canonical: `${SITE}/apply`,
     },
+    sitemap: { priority: '0.8', changefreq: 'monthly', lastmod: '2026-06-24' },
   },
 ]
 
@@ -72,6 +80,7 @@ ROUTES.push({
       'The Signal — funding moves, ecosystem intel, and hard-won lessons for the people building the quantum economy. Free to read.',
     canonical: `${SITE}/signal`,
   },
+  sitemap: { priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
 })
 
 // One page per published issue
@@ -91,7 +100,16 @@ for (const issue of issues) {
     file: `signal/${issue.slug}.html`,
     expect: 'signal-issue',
     head,
+    indexable: !issue.seo?.noIndex,
+    sitemap: { priority: '0.6', changefreq: 'monthly', lastmod: issueLastmod(issue.publishedAt) },
   })
+}
+
+// A production build should prerender issues; zero is normal only for an
+// empty/preview build. Make the anomaly greppable in the Amplify build log so a
+// content-loss event (e.g. lost Sanity creds) is visible rather than silent.
+if (issues.length === 0) {
+  console.warn('prerender: WARNING — 0 issues prerendered (newsletter archive has no issue pages)')
 }
 
 const indexPath = new URL('../dist/index.html', import.meta.url)
@@ -101,8 +119,9 @@ if (!template.includes(shell)) {
   throw new Error('prerender: #root shell not found in dist/index.html')
 }
 
-// injectHead is imported from ./lib/inject-head.mjs — see that module for
-// the function-form replacement rationale ($ tokens in funding figures).
+// injectHead/escapeHtml are imported from ./lib/inject-head.mjs — see that
+// module for the function-form + escaping rationale ($ tokens in funding
+// figures, and injectHead throwing if any requested head field fails to swap).
 
 for (const route of ROUTES) {
   const { prelude } = await prerender(createElement(Static, { url: route.path }))
@@ -112,17 +131,17 @@ for (const route of ROUTES) {
     throw new Error(`prerender: "${route.expect}" missing from ${route.path} markup`)
   }
 
+  // Function-form replace so any $-token in the rendered markup (e.g. the
+  // "$4.1B" funding figures) is inserted verbatim rather than read as a
+  // $-replacement pattern; route.path is escaped for the data-route attribute.
   let html = template.replace(
     shell,
-    `<div id="root" data-prerendered="true" data-route="${route.path}">${markup}</div>`,
+    () => `<div id="root" data-prerendered="true" data-route="${escapeHtml(route.path)}">${markup}</div>`,
   )
+  // injectHead throws if any requested head field fails to swap, so the prior
+  // standalone title canary is no longer needed.
   if (route.head) {
     html = injectHead(html, route.head)
-    // Guard against a head swap silently no-op'ing (e.g. a meta tag was
-    // reformatted across lines and the regex stopped matching).
-    if (!html.includes(`<title>${route.head.title}</title>`)) {
-      throw new Error(`prerender: head injection failed for ${route.path} (title not swapped)`)
-    }
   }
 
   const outUrl = new URL(`../dist/${route.file}`, import.meta.url)
@@ -131,34 +150,17 @@ for (const route of ROUTES) {
   console.log(`prerender: ${route.path} → dist/${route.file} (${(markup.length / 1024).toFixed(1)} kB)`)
 }
 
-// Regenerate sitemap.xml from the routes we just prerendered (static routes +
-// every published issue). The Amplify catch-all excludes .xml, so dist/sitemap.xml
-// is served directly.
-const sitemapEntries = [
-  { loc: `${SITE}/`, priority: '1.0', changefreq: 'monthly', lastmod: '2026-06-21' },
-  { loc: `${SITE}/story`, priority: '0.7', changefreq: 'monthly', lastmod: '2026-06-21' },
-  { loc: `${SITE}/apply`, priority: '0.8', changefreq: 'monthly', lastmod: '2026-06-24' },
-  { loc: `${SITE}/signal`, priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
-  ...issues
-    .filter((i) => !i.seo?.noIndex)
-    .map((i) => ({
-      loc: `${SITE}/signal/${i.slug}`,
-      priority: '0.6',
-      changefreq: 'monthly',
-      lastmod: (i.publishedAt || '').slice(0, 10) || null,
-    })),
-]
-const sitemap =
-  '<?xml version="1.0" encoding="UTF-8"?>\n' +
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-  sitemapEntries
-    .map((e) => {
-      const lastmodLine = e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>\n` : ''
-      return `  <url>\n    <loc>${e.loc}</loc>\n${lastmodLine}    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`
-    })
-    .join('\n') +
-  '\n</urlset>\n'
-await writeFile(new URL('../dist/sitemap.xml', import.meta.url), sitemap)
+// Regenerate sitemap.xml from the SAME routes we just prerendered — one source
+// of truth, so the sitemap can't desync from what is actually served, and the
+// noIndex exclusion lives only on the route (indexable flag). The Amplify
+// catch-all excludes .xml, so dist/sitemap.xml is served directly.
+const sitemapEntries = buildSitemapEntries(ROUTES, SITE)
+// Write guard, matching the fail-loud pattern of the other prerender steps:
+// the homepage URL must always be present, else generation is broken.
+if (!sitemapEntries.some((e) => e.loc === `${SITE}/`)) {
+  throw new Error('prerender: sitemap is missing the homepage URL — generation is broken')
+}
+await writeFile(new URL('../dist/sitemap.xml', import.meta.url), renderSitemap(sitemapEntries))
 console.log(`prerender: sitemap.xml → ${sitemapEntries.length} urls`)
 
 await rm(new URL('../dist-ssr/', import.meta.url), { recursive: true, force: true })

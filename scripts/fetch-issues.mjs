@@ -33,10 +33,25 @@ const QUERY = `*[_type == "issue" && status == "published" && defined(slug.curre
   }
 }`
 
+// Mirrors the Studio's slug rule (issue.ts). The GROQ fetch bypasses that
+// client-side validation, so re-enforce it here: an invalid slug would land
+// unescaped in the sitemap <loc> AND in the prerender output path
+// (signal/<slug>.html), so a stray slash/dot/& must never reach either.
+const SLUG_RE = /^[a-z0-9-]+$/
+
 export function normalizeIssues(rawDocs) {
   if (!Array.isArray(rawDocs)) return []
   return rawDocs
-    .filter((d) => d && typeof d.slug === 'string' && d.slug.length > 0)
+    .filter((d) => {
+      if (!d || typeof d.slug !== 'string' || d.slug.length === 0) return false
+      if (!SLUG_RE.test(d.slug)) {
+        console.warn(
+          `fetch-issues: skipping issue with invalid slug ${JSON.stringify(d.slug)} (expected ^[a-z0-9-]+$)`,
+        )
+        return false
+      }
+      return true
+    })
     .map((d) => ({
       slug: d.slug,
       title: d.title ?? '',
@@ -57,7 +72,24 @@ async function main() {
 
   const projectId = process.env.SANITY_PROJECT_ID
   if (!projectId) {
-    console.warn('fetch-issues: SANITY_PROJECT_ID unset — writing empty issue list')
+    // Fail-safe by default. A production build with no SANITY_PROJECT_ID would
+    // write an empty list, prerender zero /signal pages, and collapse the
+    // sitemap — silently delisting the entire newsletter archive on a green
+    // deploy. So a missing project id is a hard error unless the empty-list
+    // path is EXPLICITLY opted into (local/preview builds with no Sanity).
+    // We do not auto-detect "CI"/Amplify env vars here: production sets
+    // SANITY_PROJECT_ID and never this flag, so a credential loss cannot slip
+    // through by accidentally matching a guessed env signal.
+    if (process.env.GSS_ALLOW_EMPTY_ISSUES !== '1') {
+      throw new Error(
+        'fetch-issues: SANITY_PROJECT_ID is unset. A production build requires it — refusing ' +
+          'to write an empty issue list (that would delist the entire newsletter archive). For ' +
+          'an intentional local/preview build with no Sanity, set GSS_ALLOW_EMPTY_ISSUES=1.',
+      )
+    }
+    console.warn(
+      'fetch-issues: SANITY_PROJECT_ID unset + GSS_ALLOW_EMPTY_ISSUES=1 — writing empty issue list (preview build)',
+    )
     await writeFile(OUT, '[]\n')
     return
   }

@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "node scripts/fetch-issues.mjs && vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\" \"backend/broadcast/test/*.test.mjs\"",
+    "pretest": "node scripts/check-test-globs.mjs",
+    "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\" \"backend/broadcast/test/*.test.mjs\" \"scripts/*.test.mjs\" \"scripts/lib/*.test.mjs\"",
     "test:fe": "vitest run",
     "test:fe:watch": "vitest",
     "lint": "eslint ."
