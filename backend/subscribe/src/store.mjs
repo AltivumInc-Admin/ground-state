@@ -132,6 +132,30 @@ async function isConfirmed(email) {
   }
 }
 
+// Mark an address unsubscribed after Postmark reports a SubscriptionChange
+// (SuppressSending=true) on the broadcast stream. Distinct from `suppress`:
+// an unsubscribe is re-subscribable (createPending's guard only blocks
+// 'confirmed' and 'suppressed'), so a user can opt back in later.
+export async function unsubscribe({ email }) {
+  await ddb.send(
+    new UpdateCommand({
+      TableName: TABLE(),
+      Key: { PK: `EMAIL#${email}` },
+      UpdateExpression: 'SET #s = :u, unsubscribedAt = :now REMOVE #ttl',
+      ConditionExpression: 'attribute_exists(PK) AND #s <> :suppressed',
+      ExpressionAttributeNames: { '#s': 'status', '#ttl': 'ttl' },
+      ExpressionAttributeValues: {
+        ':u': 'unsubscribed',
+        ':suppressed': 'suppressed',
+        ':now': nowSec(),
+      },
+    }),
+  ).catch((e) => {
+    // No record, or already suppressed (bounce/complaint outranks unsubscribe) — both fine.
+    if (e?.name !== 'ConditionalCheckFailedException') throw e
+  })
+}
+
 // Mark an address permanently suppressed after Postmark reports a hard bounce or a
 // spam complaint against it. Unconditional upsert by design: suppression must win
 // over ANY existing status (including 'confirmed'), must persist (no ttl, so it is
