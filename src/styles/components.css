@@ -1994,11 +1994,13 @@ select {
   padding-block: clamp(1.75rem, 3vw, 2.75rem);
   text-decoration: none;
   color: inherit;
-  transition: padding-left 0.3s var(--ease-out);
+  /* transform, not padding-left: the editorial nudge is identical to the eye
+     (the row link is borderless at rest) but stays off the layout path */
+  transition: transform 0.3s var(--ease-out);
 }
 
 .signal-archive-item a:hover {
-  padding-left: clamp(0.5rem, 1.5vw, 1.25rem);
+  transform: translateX(clamp(0.5rem, 1.5vw, 1.25rem));
 }
 
 .signal-archive-item time {

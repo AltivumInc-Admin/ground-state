@@ -55,7 +55,7 @@ const FAQS = [
   },
 ]
 
-function SignalForm() {
+export function SignalForm() {
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
   // idle | sending | sent | preview | error
@@ -63,6 +63,9 @@ function SignalForm() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    // Guard against concurrent submits: the button is disabled while sending,
+    // but a stray Enter or a lagging disabled state must not fire a second POST.
+    if (status === 'sending') return
     if (!email.trim()) return
     if (!SIGNAL_ENDPOINT) {
       // Honest preview: the address is not transmitted or stored.

@@ -19,13 +19,13 @@
 
   /* ---- Light ground (default) ----
      body Umber on Ghost 12.1:1 · small accent #4A6878 5.6:1 ·
-     large accent #6E8C9E 3.3:1 · muted ink ~4.6:1 */
+     large accent #6E8C9E 3.3:1 · muted ink ~5.5:1 */
   --bg: var(--ghost);
   --bg-raised: #ffffff;
   --bg-deep: #ebedf5;
   --ink: var(--umber);
   --ink-soft: rgba(67, 45, 22, 0.82);
-  --ink-mute: rgba(67, 45, 22, 0.68);
+  --ink-mute: rgba(67, 45, 22, 0.74); /* pressed for a comfortable AA margin on micro-labels */
   --accent: #4a6878; /* powder pressed to slate — AA at any size */
   --accent-display: #6e8c9e; /* deep powder — large text & glyphs only */
   --accent-raw: var(--powder); /* fills, never text on light ground */
