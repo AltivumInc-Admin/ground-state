@@ -211,7 +211,9 @@ main:focus {
 .btn-ghost {
   background: transparent;
   color: var(--ink);
-  border-color: var(--line-strong);
+  /* the transparent fill makes the border the control's only boundary — use
+     the >=3:1 control-edge token, not the sub-3:1 hairline (WCAG 1.4.11) */
+  border-color: var(--control-edge);
 }
 
 .btn-ghost:hover {

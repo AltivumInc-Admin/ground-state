@@ -567,8 +567,14 @@
   margin-bottom: 1.4rem;
 }
 
-.story-panel h3 {
+/* h2 for a correct outline (subsection of the page h1), styled to match the
+   prior h3 appearance exactly — global h2 is heavier/tighter than h3. */
+.story-panel h2 {
   font-size: 1.15rem;
+  font-weight: 700;
+  font-stretch: 108%;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   margin-bottom: 0.8rem;
 }
 
@@ -1430,7 +1436,8 @@ select,
 textarea {
   width: 100%;
   background: var(--bg-deep);
-  border: 1px solid var(--line-strong);
+  /* the field's resting boundary must clear WCAG 1.4.11 (3:1) */
+  border: 1px solid var(--control-edge);
   border-radius: var(--radius);
   padding: 0.9rem 1rem;
   transition: border-color 0.2s var(--ease-out), background-color 0.2s var(--ease-out);
