@@ -2,5 +2,8 @@ version = 0.1
 [default.deploy.parameters]
 stack_name = "gss-subscribe"
 region = "us-east-2"
+# Pin the account (GSS, 659) so `sam deploy` can't fall back to the default
+# profile and target the wrong account.
+profile = "ground-state"
 capabilities = "CAPABILITY_IAM"
 resolve_s3 = true

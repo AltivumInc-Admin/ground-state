@@ -1,20 +1,22 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { SITE } from './site.js'
 
-const SITE = 'https://groundstatesociety.com'
-const DEFAULT_TITLE = 'The Ground State Society — The Private Network for Quantum Founders'
-const DEFAULT_DESCRIPTION =
+// Exported so a test can assert they stay in sync with index.html's static head
+// (these intentionally duplicate it; the test is the drift guard).
+export const DEFAULT_TITLE = 'The Ground State Society — The Private Network for Quantum Founders'
+export const DEFAULT_DESCRIPTION =
   'The Ground State Society is the private, members-only network for quantum founders. Curated peer circles, warm capital introductions, and domain-deep acceleration. By application only — the free Signal tier is open to every quantum builder.'
 // The homepage's hand-tuned OG/Twitter description (index.html) is punchier than
 // the plain meta description — keep it distinct so a reset restores the real copy,
 // not the SERP description.
-const DEFAULT_OG_DESCRIPTION =
+export const DEFAULT_OG_DESCRIPTION =
   'The room where the people building the quantum economy share deal flow, hard-won lessons, and warm access to capital, customers, and talent. By application only.'
 // Positive directives let Google use full passages + large image previews in
 // classic SERPs AND in AI Overviews / AI Mode (max-snippet gates how much text
 // can feed an AI answer). Must match index.html's static robots meta so the
 // homepage isn't downgraded on hydration.
-const ROBOTS_INDEX = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+export const ROBOTS_INDEX = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
 
 function setNameMeta(name, content) {
   const el = document.querySelector(`meta[name="${name}"]`)

@@ -6,6 +6,9 @@
 
 User-agent: *
 Allow: /
+# Keep this Disallow list in sync with the noindex routes — the pages that call
+# usePageMeta({ noindex: true }) (Activate, Welcome, Confirm). If a new tokenized/
+# post-acceptance route is added as noindex, add it here too.
 Disallow: /activate
 Disallow: /welcome
 Disallow: /confirm

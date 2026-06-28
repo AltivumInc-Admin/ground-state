@@ -18,7 +18,7 @@
  *
  * @param {string} html  — full HTML string (the dist/index.html template)
  * @param {{ title?: string, description?: string, canonical?: string,
- *            image?: string, ogType?: string, robots?: string }} opts
+ *            image?: string, imageAlt?: string, ogType?: string, robots?: string }} opts
  * @returns {string}
  */
 
@@ -44,6 +44,10 @@ const FIELDS = {
   image: [
     /(<meta property="og:image" content=")[^"]*(")/,
     /(<meta name="twitter:image" content=")[^"]*(")/,
+  ],
+  imageAlt: [
+    /(<meta property="og:image:alt" content=")[^"]*(")/,
+    /(<meta name="twitter:image:alt" content=")[^"]*(")/,
   ],
   ogType: [/(<meta property="og:type" content=")[^"]*(")/],
   robots: [/(<meta name="robots" content=")[^"]*(")/],
