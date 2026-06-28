@@ -77,4 +77,23 @@ describe('Activate — the live payment trigger', () => {
     expect(alert).toHaveTextContent(/nothing was charged/i)
     expect(assign).not.toHaveBeenCalled()
   })
+
+  it('re-enables the button when restored from the bfcache (persisted pageshow)', async () => {
+    // A pending checkout request keeps the page in the 'redirecting' state —
+    // the same state Back-from-Stripe restores from the bfcache.
+    globalThis.fetch = vi.fn(() => new Promise(() => {}))
+    renderActivate()
+    submit()
+
+    const busy = await screen.findByRole('button', { name: /opening secure checkout/i })
+    expect(busy).toBeDisabled()
+
+    const evt = new Event('pageshow')
+    Object.defineProperty(evt, 'persisted', { value: true })
+    window.dispatchEvent(evt)
+
+    expect(
+      await screen.findByRole('button', { name: /continue to secure checkout/i }),
+    ).toBeEnabled()
+  })
 })

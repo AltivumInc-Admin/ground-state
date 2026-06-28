@@ -1963,6 +1963,12 @@ select {
   text-underline-offset: 3px;
 }
 
+/* The active-membership card earns an accent edge the neutral / processing /
+   error states don't carry — the one celebratory state in the flow. */
+.welcome-card {
+  border-top: 3px solid var(--accent);
+}
+
 .welcome-card .kicker,
 .welcome-page .apply-success .kicker {
   margin-bottom: 1.4rem;

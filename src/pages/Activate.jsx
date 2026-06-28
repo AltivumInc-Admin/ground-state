@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Fx from '../lib/fx.jsx'
 import usePageMeta from '../lib/usePageMeta.js'
@@ -33,6 +33,7 @@ export default function Activate() {
   const [plan, setPlan] = useState('monthly')
   // idle | redirecting | error
   const [status, setStatus] = useState('idle')
+  const errorRef = useRef(null)
 
   // Back from Stripe can restore this page from the bfcache mid-'redirecting',
   // which would leave the button disabled forever
@@ -43,6 +44,12 @@ export default function Activate() {
     window.addEventListener('pageshow', onPageShow)
     return () => window.removeEventListener('pageshow', onPageShow)
   }, [])
+
+  // On a failed checkout open, move focus to the recovery message — it appears
+  // above the submit button and is otherwise easy to miss.
+  useEffect(() => {
+    if (status === 'error') errorRef.current?.focus()
+  }, [status])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -67,7 +74,7 @@ export default function Activate() {
         <div className="apply-grid">
           <aside className="apply-side ground-dark" data-fade>
             <p className="kicker">
-              <strong>Δ</strong> Membership activation
+              <strong aria-hidden="true">Δ</strong> Membership activation
             </p>
             <h1>Take your seat in the Round.</h1>
             <p className="lede">
@@ -111,7 +118,7 @@ export default function Activate() {
                 </fieldset>
 
                 {status === 'error' && (
-                  <p className="form-error" role="alert">
+                  <p className="form-error" role="alert" ref={errorRef} tabIndex={-1}>
                     Checkout didn’t open — nothing was charged. Try again, or reply to your
                     acceptance email and we’ll sort it personally.
                   </p>
@@ -138,7 +145,7 @@ export default function Activate() {
                 </p>
               </form>
             ) : (
-              <section className="apply-success ground-dark" aria-live="polite">
+              <section className="apply-success ground-dark">
                 <h2>Activation opens with your acceptance.</h2>
                 <p>
                   This is a preview build — checkout is not yet connected. Accepted founders
