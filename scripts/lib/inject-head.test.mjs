@@ -14,9 +14,11 @@ const FIXTURE = `<!doctype html>
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://example.com/" />
   <meta property="og:image" content="https://example.com/og.png" />
+  <meta property="og:image:alt" content="OLD ALT" />
   <meta name="twitter:title" content="OLD TITLE" />
   <meta name="twitter:description" content="OLD TWITTER DESC" />
   <meta name="twitter:image" content="https://example.com/og.png" />
+  <meta name="twitter:image:alt" content="OLD ALT" />
   <title>OLD TITLE</title>
 </head>
 <body></body>
@@ -81,6 +83,14 @@ test('image swaps og:image and twitter:image with the & in the URL escaped', () 
   assert.ok(!out.includes('?w=1200&h=630'), 'raw & should have been escaped to &amp;')
 })
 
+// --- imageAlt swap (og:image:alt + twitter:image:alt) — for custom issue images ---
+test('imageAlt swaps og:image:alt and twitter:image:alt', () => {
+  const out = injectHead(FIXTURE, { imageAlt: 'An issue figure' })
+  assert.ok(out.includes('og:image:alt" content="An issue figure"'))
+  assert.ok(out.includes('twitter:image:alt" content="An issue figure"'))
+  assert.ok(!out.includes('content="OLD ALT"'), 'stale homepage alt should be replaced')
+})
+
 // --- ogType swap ---
 test('ogType swaps og:type', () => {
   const out = injectHead(FIXTURE, { ogType: 'article' })
@@ -125,6 +135,7 @@ test('injectHead does not throw when every requested field is present', () => {
       description: 'D',
       canonical: 'https://groundstatesociety.com/x',
       image: 'https://cdn.sanity.io/og.png',
+      imageAlt: 'Issue figure',
       ogType: 'article',
       robots: 'noindex, follow',
     }),

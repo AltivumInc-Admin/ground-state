@@ -9,6 +9,10 @@ version = 0.1
 [default.deploy.parameters]
 stack_name = "gss-stripe-checkout"
 region = "us-east-2"
+# Pin the account: this stack lives in the GSS account (659). Without this, a
+# `sam deploy` uses the default AWS profile and can target the wrong account
+# (e.g. the stale pre-migration 205 stack).
+profile = "ground-state"
 resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = false

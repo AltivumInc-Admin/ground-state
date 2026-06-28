@@ -17,12 +17,11 @@ import { createElement } from 'react'
 import { prerender } from 'react-dom/static'
 import { injectHead, escapeHtml } from './lib/inject-head.mjs'
 import { buildSitemapEntries, renderSitemap, issueLastmod } from './lib/sitemap.mjs'
+import { SITE } from '../src/lib/site.js'
 
 const { default: Static } = await import(
   new URL('../dist-ssr/entry-static.js', import.meta.url).href
 )
-
-const SITE = 'https://groundstatesociety.com'
 
 // `expect` is a marker that MUST appear in the rendered markup — a guard so a
 // silently-broken render can't ship. `head` overrides (omitted for "/" which
@@ -91,6 +90,11 @@ for (const issue of issues) {
     canonical: `${SITE}/signal/${issue.slug}`,
     image: issue.seo?.ogImage ? `${issue.seo.ogImage}?w=1200&h=630&fit=crop&auto=format` : SIGNAL_OG,
     ogType: 'article',
+  }
+  // A custom issue image needs its own alt; when we fall back to the default
+  // og.png, index.html's (correct) particle-art alt is left in place.
+  if (issue.seo?.ogImage) {
+    head.imageAlt = issue.seo?.title || issue.title
   }
   if (issue.seo?.noIndex) {
     head.robots = 'noindex, follow'
