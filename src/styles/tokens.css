@@ -95,6 +95,9 @@
   --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
   --text-lede: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
   --text-h3: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
+  /* Mid-display size between h3 and h2 — shared by the subscribe heading, the
+     ROI-receipt intro, and the archive issue title (previously three ad-hoc clamps). */
+  --text-display-sm: clamp(1.4rem, 1.1rem + 1.5vw, 2.1rem);
   --text-h2: clamp(2rem, 1.2rem + 3.1vw, 3.7rem);
   --text-wordmark: clamp(2.2rem, 8vw, 7.8rem);
   --text-stat: clamp(2.8rem, 2rem + 3.4vw, 5.3rem);

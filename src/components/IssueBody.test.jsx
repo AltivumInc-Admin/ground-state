@@ -99,6 +99,16 @@ describe('IssueBody', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
+  it('renders an inline code mark as a <code> element', () => {
+    const codeValue = [
+      { _type: 'block', style: 'normal', _key: '1', markDefs: [], children: [{ _type: 'span', _key: 's', text: 'qubit', marks: ['code'] }] },
+    ]
+    const { container } = render(<IssueBody value={codeValue} />)
+    const code = container.querySelector('code')
+    expect(code).not.toBeNull()
+    expect(code).toHaveTextContent('qubit')
+  })
+
   it('renders bullet-list blocks as list items', () => {
     const listValue = [
       { _type: 'block', style: 'normal', listItem: 'bullet', level: 1, _key: '1', markDefs: [], children: [{ _type: 'span', _key: 'a', text: 'item one', marks: [] }] },

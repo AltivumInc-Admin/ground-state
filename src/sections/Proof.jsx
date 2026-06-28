@@ -1,32 +1,33 @@
 import Fx from '../lib/fx.jsx'
 import Mosaic from '../components/Mosaic.jsx'
 
+// The static fallback display value is `${prefix}${n}${suffix}` — derived from
+// the count parts so there's one source of truth (no separate `value` to drift).
 const STATS = [
   {
-    value: '$4.1B',
     count: { n: '4.1', prefix: '$', suffix: 'B', decimals: '1' },
     label: 'Venture capital into quantum startups in 2025 — up from $2.0B in 2024.',
     source: 'Crunchbase',
   },
   {
-    value: '96%',
     count: { n: '96', prefix: '', suffix: '%', decimals: '0' },
     label: 'Share of global quantum funding concentrated in ~45 dense clusters.',
     source: 'The Quantum Insider',
   },
   {
-    value: '~$20B',
     count: { n: '20', prefix: '~$', suffix: 'B', decimals: '0' },
     label: 'Projected quantum computing market by 2030, from ~$3.5B in 2025.',
     source: 'MarketsandMarkets',
   },
   {
-    value: '~30×',
     count: { n: '30', prefix: '~', suffix: '×', decimals: '0' },
     label: 'Return on the $3,600 annual fee if a single warm intro lands one $100K check.',
     source: 'The ROI math, illustrated',
   },
 ]
+
+// Display value for a stat's static fallback (before the counter animates).
+const statValue = (c) => `${c.prefix}${c.n}${c.suffix}`
 
 const NETWORKS = [
   { name: 'Hampton', price: '~$8,500 / yr', bar: '$3M+ revenue or funding, tech focus' },
@@ -45,10 +46,10 @@ const MATRIX = [
   { attr: 'Warm capital introductions', cells: ['no', 'partial', 'partial'] },
 ]
 
-function MatrixCell({ value }) {
+function MatrixCell({ value, className }) {
   if (value === 'yes')
     return (
-      <td>
+      <td className={className}>
         <span className="mark-yes" aria-hidden="true">
           ✓
         </span>
@@ -57,12 +58,12 @@ function MatrixCell({ value }) {
     )
   if (value === 'partial')
     return (
-      <td>
+      <td className={className}>
         <span className="muted">Partial</span>
       </td>
     )
   return (
-    <td>
+    <td className={className}>
       <span className="mark-no" aria-hidden="true">
         —
       </span>
@@ -90,7 +91,7 @@ export default function Proof() {
 
         <div className="stats" data-stagger>
           {STATS.map((s) => (
-            <div key={s.value} className="stat">
+            <div key={s.label} className="stat">
               <p className="stat-value">
                 <span
                   data-count={s.count.n}
@@ -98,7 +99,7 @@ export default function Proof() {
                   data-suffix={s.count.suffix}
                   data-decimals={s.count.decimals}
                 >
-                  {s.value}
+                  {statValue(s.count)}
                 </span>
               </p>
               <p className="stat-label">
@@ -182,12 +183,7 @@ export default function Proof() {
                       {row.cells.map((cell, i) => (
                         <MatrixCell key={i} value={cell} />
                       ))}
-                      <td className="is-us">
-                        <span className="mark-yes" aria-hidden="true">
-                          ✓
-                        </span>
-                        <span className="visually-hidden">Yes</span>
-                      </td>
+                      <MatrixCell value="yes" className="is-us" />
                     </tr>
                   ))}
                 </tbody>
