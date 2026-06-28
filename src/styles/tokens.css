@@ -7,6 +7,47 @@
    works on both grounds without per-component color rules.
    ============================================================ */
 
+/* ---- Archivo (display + body) ----
+   Self-hosted from @fontsource-variable/archivo so we control font-display.
+   `optional` means the LCP hero wordmark NEVER reflows: the (preloaded) file
+   is used if it wins the ~100ms block, otherwise the metrics-matched fallback
+   renders for that load with no later swap. latin is preloaded (index.html);
+   latin-ext loads on demand. The fontsource import is dropped from main.jsx. */
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('/fonts/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('/fonts/archivo-latin-ext-wdth-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Metrics-matched fallback (x-height-derived: Archivo xHeight 534/1000 vs
+   Arial 1062/2048) so the optional-miss first paint barely differs from
+   Archivo. Validate with a capsize/fontaine pass if first-paint fidelity
+   ever matters; reflow is already impossible under `optional`. */
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial');
+  size-adjust: 103%;
+  ascent-override: 97.1%;
+  descent-override: 24.3%;
+  line-gap-override: 0%;
+}
+
 :root {
   /* ---- The four + black ---- */
   --ghost: #f7f7ff;
@@ -45,8 +86,8 @@
   /* ---- Type ----
      Display: Archivo wide + black (DOSS-style architectural caps).
      Body: Archivo at normal width. Labels/data: IBM Plex Mono. */
-  --font-display: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
-  --font-body: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Archivo Variable', 'Archivo Fallback', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Archivo Variable', 'Archivo Fallback', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
 
   --text-xs: 0.72rem;
