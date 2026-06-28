@@ -190,6 +190,15 @@ main:focus {
   translate: 0 1px;
 }
 
+/* Sending / disabled — the busy state must not read as a live, pressable
+   control. (Kept off pointer-events so the not-allowed cursor still shows;
+   the `disabled` attribute already blocks the click.) */
+.btn:disabled,
+.btn[aria-busy='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Primary — solid black on light ground, solid powder on dark */
 .btn-primary {
   background: var(--btn-solid);

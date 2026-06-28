@@ -17,7 +17,14 @@ export function postJson(endpoint, payload, { timeoutMs = 10000 } = {}) {
     signal: controller.signal,
   })
     .then((res) => {
-      if (!res.ok) throw new Error(`Intake endpoint responded ${res.status}`)
+      // Attach the status so callers can distinguish a 4xx (a genuine, terminal
+      // rejection) from a transient 5xx / network failure. The message still
+      // carries the status, so existing message-matching stays valid.
+      if (!res.ok) {
+        throw Object.assign(new Error(`Intake endpoint responded ${res.status}`), {
+          status: res.status,
+        })
+      }
       return true
     })
     .finally(() => clearTimeout(timer))
@@ -41,7 +48,11 @@ export function requestJson(endpoint, payload, { timeoutMs = 10000 } = {}) {
     signal: controller.signal,
   })
     .then((res) => {
-      if (!res.ok) throw new Error(`Endpoint responded ${res.status}`)
+      if (!res.ok) {
+        throw Object.assign(new Error(`Endpoint responded ${res.status}`), {
+          status: res.status,
+        })
+      }
       return res.json()
     })
     .finally(() => clearTimeout(timer))
