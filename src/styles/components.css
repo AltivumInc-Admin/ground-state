@@ -1958,6 +1958,22 @@ select {
   min-height: 100vh;
 }
 
+/* The row hover nudges right by up to 1.25rem; clip (not hidden, so sticky
+   and scroll-margin still work) keeps that off the document scroll width. */
+.signal-archive {
+  overflow-x: clip;
+}
+
+/* Shown only when a reader was bounced here from a dead /signal/:slug link. */
+.signal-archive-notice {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  padding: 0.9rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  background: var(--bg-deep);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
 /* --- Archive index --- */
 
 .signal-archive-head {
@@ -1999,8 +2015,14 @@ select {
   transition: transform 0.3s var(--ease-out);
 }
 
-.signal-archive-item a:hover {
-  transform: translateX(clamp(0.5rem, 1.5vw, 1.25rem));
+/* The nudge is motion — gate it, and mirror it on keyboard focus so a
+   tabbing user gets the same affordance a mouse user does (the global
+   kill-switch only zeroes transition-duration, not the transform itself). */
+@media (prefers-reduced-motion: no-preference) {
+  .signal-archive-item a:hover,
+  .signal-archive-item a:focus-visible {
+    transform: translateX(clamp(0.5rem, 1.5vw, 1.25rem));
+  }
 }
 
 .signal-archive-item time {
@@ -2021,7 +2043,9 @@ select {
   transition: color 0.25s var(--ease-out);
 }
 
-.signal-archive-item a:hover h2 {
+/* Colour shift is not motion, so it stays on for both hover and keyboard focus. */
+.signal-archive-item a:hover h2,
+.signal-archive-item a:focus-visible h2 {
   color: var(--accent-display);
 }
 
@@ -2041,6 +2065,13 @@ select {
 
 .signal-issue {
   max-width: 52rem;
+}
+
+/* The subscribe widget's 2-col grid only collapses below an 820px VIEWPORT,
+   but inside the 52rem reading column it never gets that wide — so force it
+   single-column here, giving the email input the full column width. */
+.signal-issue .signal {
+  grid-template-columns: 1fr;
 }
 
 .signal-issue-head {

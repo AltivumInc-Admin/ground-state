@@ -16,7 +16,9 @@ export default function SignalIssue() {
     noindex: issue?.seo?.noIndex === true,
   })
 
-  if (!issue) return <Navigate to="/signal" replace />
+  // Tell the archive why the reader landed there, so a stale/shared issue
+  // link gets a "not found" notice instead of a silent bounce.
+  if (!issue) return <Navigate to="/signal" replace state={{ notFound: slug }} />
 
   return (
     <article className="signal-issue container">
