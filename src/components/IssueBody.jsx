@@ -34,6 +34,7 @@ const components = {
     normal: ({ children }) => <p>{children}</p>,
   },
   marks: {
+    code: ({ children }) => <code>{children}</code>,
     link: ({ children, value }) => {
       const link = classifyLink(value?.href)
       if (!link) return <>{children}</>

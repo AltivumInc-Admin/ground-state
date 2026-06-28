@@ -1006,7 +1006,7 @@
 }
 
 .receipt-intro h3 {
-  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.2rem);
+  font-size: var(--text-display-sm);
   margin-bottom: 1.4rem;
 }
 
@@ -1325,7 +1325,8 @@
   transition: color 0.25s var(--ease-out);
 }
 
-.faq-item summary:hover {
+.faq-item summary:hover,
+.faq-item summary:focus-visible {
   color: var(--powder);
 }
 
@@ -1368,7 +1369,7 @@
 }
 
 .signal h3 {
-  font-size: clamp(1.4rem, 1.2rem + 1vw, 2rem);
+  font-size: var(--text-display-sm);
   margin-bottom: 1rem;
 }
 
@@ -2044,7 +2045,7 @@ select {
 }
 
 .signal-archive-item h2 {
-  font-size: clamp(1.35rem, 1.1rem + 1.3vw, 2.1rem);
+  font-size: var(--text-display-sm);
   font-stretch: 110%;
   margin-bottom: 0.7rem;
   transition: color 0.25s var(--ease-out);
@@ -2164,6 +2165,17 @@ select {
 
 .issue-body strong {
   font-weight: 700;
+}
+
+/* Inline code stays on the IBM Plex Mono system the tokens define, rather than
+   the browser-default monospace stack. */
+.issue-body code {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  letter-spacing: 0.02em;
+  background: var(--bg-deep);
+  padding: 0.12em 0.35em;
+  border: 1px solid var(--line);
 }
 
 .issue-body blockquote {
