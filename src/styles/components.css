@@ -2187,6 +2187,11 @@ select {
 
 .issue-figure img {
   width: 100%;
+  /* height:auto lets the forwarded width/height attributes set the intrinsic
+     ratio so the box is reserved before load (no CLS); aspect-ratio is the
+     fallback for issue images that lack dimension metadata. */
+  height: auto;
+  aspect-ratio: auto 16 / 10;
   border: 1px solid var(--line);
 }
 

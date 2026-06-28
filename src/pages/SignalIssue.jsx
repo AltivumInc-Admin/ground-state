@@ -27,7 +27,9 @@ export default function SignalIssue() {
           <Link to="/signal">The Signal</Link>
         </p>
         <h1>{issue.title}</h1>
-        <time dateTime={issue.publishedAt ?? undefined}>{formatDate(issue.publishedAt)}</time>
+        {formatDate(issue.publishedAt) ? (
+          <time dateTime={issue.publishedAt}>{formatDate(issue.publishedAt)}</time>
+        ) : null}
       </header>
       <IssueBody value={issue.body} />
       <SignalSubscribe

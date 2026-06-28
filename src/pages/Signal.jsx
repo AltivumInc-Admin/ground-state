@@ -29,15 +29,18 @@ export default function Signal() {
       ) : null}
       {allIssues.length > 0 ? (
         <ul className="signal-archive-list">
-          {allIssues.map((issue) => (
-            <li key={issue.slug} className="signal-archive-item">
-              <Link to={`/signal/${issue.slug}`}>
-                <time dateTime={issue.publishedAt ?? undefined}>{formatDate(issue.publishedAt)}</time>
-                <h2>{issue.title}</h2>
-                {issue.excerpt ? <p>{issue.excerpt}</p> : null}
-              </Link>
-            </li>
-          ))}
+          {allIssues.map((issue) => {
+            const date = formatDate(issue.publishedAt)
+            return (
+              <li key={issue.slug} className="signal-archive-item">
+                <Link to={`/signal/${issue.slug}`}>
+                  {date ? <time dateTime={issue.publishedAt}>{date}</time> : null}
+                  <h2>{issue.title}</h2>
+                  {issue.excerpt ? <p>{issue.excerpt}</p> : null}
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       ) : (
         <p className="signal-archive-empty">
