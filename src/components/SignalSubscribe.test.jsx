@@ -37,7 +37,9 @@ describe('SignalSubscribe — configured endpoint', () => {
     fillEmail('founder@quantum.co')
     fireEvent.click(screen.getByRole('button', { name: /subscribe free/i }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/go through/i)
+    // the persistent role="alert" region now carries the recoverable message
+    expect(await screen.findByText(/go through/i)).toBeInTheDocument()
+    expect(screen.getByText(/go through/i).closest('[role="alert"]')).not.toBeNull()
     // form still present with the email intact → the user just resubmits
     expect(screen.getByLabelText(/email address/i)).toHaveValue('founder@quantum.co')
   })

@@ -1394,9 +1394,17 @@
 }
 
 .signal-success {
-  border: 1px solid var(--powder);
+  /* --accent (not raw powder) so the box stays legible on the light archive /
+     issue grounds as well as the dark CTA ground. */
+  border: 1px solid var(--accent);
   background: rgba(193, 216, 226, 0.08);
   padding: 1.3rem 1.4rem;
+}
+
+/* Persistent assertive region — only takes vertical space when it carries a
+   message, so the error doesn't butt against the submit button. */
+.signal-alert:not(:empty) {
+  margin-top: 0.9rem;
 }
 
 .signal-note {
