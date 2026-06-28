@@ -53,9 +53,12 @@ describe('requestJson — method selection and parsing', () => {
     expect(JSON.parse(opts.body)).toEqual({ plan: 'annual' })
   })
 
-  it('throws on a non-2xx response', async () => {
+  it('throws on a non-2xx response, attaching the status', async () => {
     globalThis.fetch = vi.fn(async () => fail(500))
-    await expect(requestJson('https://api.example.com', { a: 1 })).rejects.toThrow(/500/)
+    await expect(requestJson('https://api.example.com', { a: 1 })).rejects.toMatchObject({
+      message: expect.stringMatching(/500/),
+      status: 500,
+    })
   })
 })
 
@@ -65,9 +68,12 @@ describe('postJson — success and error mapping', () => {
     await expect(postJson('https://api.example.com', { form: 'signal' })).resolves.toBe(true)
   })
 
-  it('throws on a non-2xx response', async () => {
+  it('throws on a non-2xx response, attaching the status', async () => {
     globalThis.fetch = vi.fn(async () => fail(429))
-    await expect(postJson('https://api.example.com', { a: 1 })).rejects.toThrow(/429/)
+    await expect(postJson('https://api.example.com', { a: 1 })).rejects.toMatchObject({
+      message: expect.stringMatching(/429/),
+      status: 429,
+    })
   })
 })
 

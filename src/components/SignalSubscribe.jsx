@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { postJson } from '../lib/submit.js'
+import { useEffect, useRef, useState } from 'react'
+import useIntakeSubmit from '../lib/useIntakeSubmit.js'
 
 const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
 
@@ -12,32 +12,26 @@ const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
 export default function SignalSubscribe({ id, kicker, heading, blurb }) {
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
-  // idle | sending | sent | preview | error
-  const [status, setStatus] = useState('idle')
+  // idle → sending → sent / preview / error, plus the concurrent-submit and
+  // honest-preview guards, all live in the shared hook.
+  const { status, submit } = useIntakeSubmit(SIGNAL_ENDPOINT)
   const fieldId = `${id || 'signal'}-email`
+  const successRef = useRef(null)
+
+  // Park focus on the confirmation when the form unmounts on success, so focus
+  // isn't dropped to <body> (matches Apply).
+  useEffect(() => {
+    if (status === 'sent' || status === 'preview') successRef.current?.focus()
+  }, [status])
 
   async function handleSubmit(e) {
     e.preventDefault()
-    // Guard against concurrent submits: the button is disabled while sending,
-    // but a stray Enter or a lagging disabled state must not fire a second POST.
-    if (status === 'sending') return
     if (!email.trim()) return
-    if (!SIGNAL_ENDPOINT) {
-      // Honest preview: the address is not transmitted or stored.
-      setStatus('preview')
-      return
-    }
-    setStatus('sending')
-    try {
-      await postJson(SIGNAL_ENDPOINT, { form: 'signal', email, source: 'signal', website })
-      setStatus('sent')
-    } catch {
-      setStatus('error')
-    }
+    await submit({ form: 'signal', email, source: 'signal', website })
   }
 
   return (
-    <div {...(id ? { id } : {})} className="signal">
+    <div id={id} className="signal">
       <div>
         {kicker ? <span className="signal-kicker label">{kicker}</span> : null}
         {heading ? <h3>{heading}</h3> : null}
@@ -48,12 +42,12 @@ export default function SignalSubscribe({ id, kicker, heading, blurb }) {
             announces nothing (see Welcome.jsx) */}
         <div role="status">
           {status === 'sent' && (
-            <p className="signal-success">
+            <p className="signal-success" ref={successRef} tabIndex={-1}>
               <strong>Check your inbox.</strong> Confirm your email and your free access opens right up.
             </p>
           )}
           {status === 'preview' && (
-            <p className="signal-success">
+            <p className="signal-success" ref={successRef} tabIndex={-1}>
               <strong>Noted — The Signal launches with the founding cohort.</strong> This preview
               didn’t store your address; subscription opens at launch.
             </p>
@@ -96,14 +90,24 @@ export default function SignalSubscribe({ id, kicker, heading, blurb }) {
               disabled={status === 'sending'}
             >
               {status === 'sending' ? 'Subscribing…' : 'Subscribe free'}
+              {status !== 'sending' && (
+                <span className="btn-arrow" aria-hidden="true">
+                  →
+                </span>
+              )}
             </button>
           </form>
         )}
-        {status === 'error' && (
-          <p className="form-error" role="alert">
-            That didn’t go through — try again in a moment.
-          </p>
-        )}
+        {/* Persistent assertive region — present before the swap so the error
+            reliably announces (a bare role="alert" mounted only on error is a
+            freshly-mounted live region). */}
+        <div role="alert" className="signal-alert">
+          {status === 'error' && (
+            <p className="form-error">
+              That didn’t go through — nothing was lost. Try again in a moment.
+            </p>
+          )}
+        </div>
         <p className="signal-note">
           No spam. No vendor pitches. Unsubscribe anytime.
           {!SIGNAL_ENDPOINT && ' Preview — subscription opens at launch.'}

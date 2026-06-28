@@ -1394,9 +1394,17 @@
 }
 
 .signal-success {
-  border: 1px solid var(--powder);
+  /* --accent (not raw powder) so the box stays legible on the light archive /
+     issue grounds as well as the dark CTA ground. */
+  border: 1px solid var(--accent);
   background: rgba(193, 216, 226, 0.08);
   padding: 1.3rem 1.4rem;
+}
+
+/* Persistent assertive region — only takes vertical space when it carries a
+   message, so the error doesn't butt against the submit button. */
+.signal-alert:not(:empty) {
+  margin-top: 0.9rem;
 }
 
 .signal-note {
@@ -1505,16 +1513,28 @@ select {
 .was-validated input:invalid,
 .was-validated select:invalid,
 .was-validated textarea:invalid {
-  border-color: var(--error-ink, #a8463f);
+  border-color: var(--error-ink);
+}
+
+/* Per-field validation message (referenced by the control's aria-describedby) */
+.field-error {
+  color: var(--error-ink);
+  font-size: 0.8rem;
 }
 
 .form-error {
-  color: var(--error-ink, #a8463f);
+  color: var(--error-ink);
   font-size: 0.9rem;
 }
 
-.ground-dark .form-error {
-  --error-ink: #f0b3ac;
+.form-required {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0;
 }
 
 .form-note {
@@ -1614,6 +1634,7 @@ select {
   max-width: 46rem;
 }
 
+.apply-success h1,
 .apply-success h2 {
   font-size: clamp(1.6rem, 1.3rem + 1.5vw, 2.4rem);
   margin-bottom: 1.2rem;
@@ -1940,6 +1961,12 @@ select {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* The active-membership card earns an accent edge the neutral / processing /
+   error states don't carry — the one celebratory state in the flow. */
+.welcome-card {
+  border-top: 3px solid var(--accent);
 }
 
 .welcome-card .kicker,
