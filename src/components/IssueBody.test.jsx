@@ -45,4 +45,52 @@ describe('IssueBody', () => {
     expect(link).not.toHaveAttribute('target')
     expect(link).not.toHaveAttribute('rel')
   })
+
+  function linkValue(href) {
+    return [
+      {
+        _type: 'block',
+        style: 'normal',
+        _key: 'b',
+        markDefs: [{ _type: 'link', _key: 'l', href }],
+        children: [{ _type: 'span', _key: 's', text: 'click me', marks: ['l'] }],
+      },
+    ]
+  }
+
+  it('rejects a javascript: href — renders plain text, not an anchor', () => {
+    render(<IssueBody value={linkValue('javascript:alert(1)')} />)
+    expect(screen.getByText('click me')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  it('rejects an empty href — renders plain text, not an inert anchor', () => {
+    render(<IssueBody value={linkValue('')} />)
+    expect(screen.getByText('click me')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  it('rejects a protocol-relative //host href (would miss rel/target)', () => {
+    render(<IssueBody value={linkValue('//evil.com')} />)
+    expect(screen.getByText('click me')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  it('sizes a Sanity image via CDN params and reserves its dimensions', () => {
+    const imageValue = [
+      {
+        _type: 'pteImage',
+        _key: 'i',
+        url: 'https://cdn.sanity.io/images/p/d/abc-1600x1000.png',
+        dimensions: { width: 1600, height: 1000 },
+        alt: 'a figure',
+      },
+    ]
+    render(<IssueBody value={imageValue} />)
+    const img = screen.getByRole('img', { name: 'a figure' })
+    expect(img.getAttribute('src')).toContain('auto=format')
+    expect(img).toHaveAttribute('width', '1600')
+    expect(img).toHaveAttribute('height', '1000')
+    expect(img).toHaveAttribute('srcset')
+  })
 })

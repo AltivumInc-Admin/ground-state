@@ -21,4 +21,9 @@ describe('formatDate', () => {
     // for any runner behind UTC. Must be deterministic regardless of TZ.
     expect(formatDate('2026-06-24T00:00:00Z')).toBe('June 24, 2026')
   })
+
+  it('returns empty string (not "Invalid Date") for an unparseable string', () => {
+    expect(formatDate('not-a-date')).toBe('')
+    expect(formatDate('2026-13-99T00:00:00Z')).toBe('')
+  })
 })
