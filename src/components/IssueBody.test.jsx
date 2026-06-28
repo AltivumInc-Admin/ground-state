@@ -93,4 +93,19 @@ describe('IssueBody', () => {
     expect(img).toHaveAttribute('height', '1000')
     expect(img).toHaveAttribute('srcset')
   })
+
+  it('renders nothing (no crash) for an image block with no resolved url', () => {
+    render(<IssueBody value={[{ _type: 'pteImage', _key: 'i', alt: 'x' }]} />)
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('renders bullet-list blocks as list items', () => {
+    const listValue = [
+      { _type: 'block', style: 'normal', listItem: 'bullet', level: 1, _key: '1', markDefs: [], children: [{ _type: 'span', _key: 'a', text: 'item one', marks: [] }] },
+      { _type: 'block', style: 'normal', listItem: 'bullet', level: 1, _key: '2', markDefs: [], children: [{ _type: 'span', _key: 'b', text: 'item two', marks: [] }] },
+    ]
+    const { container } = render(<IssueBody value={listValue} />)
+    expect(container.querySelectorAll('ul li')).toHaveLength(2)
+    expect(screen.getByText('item one')).toBeInTheDocument()
+  })
 })
