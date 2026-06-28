@@ -56,6 +56,87 @@ const RECEIPT_INCLUDED = [
   'Members-only events + summit',
 ]
 
+const TIERS = [
+  {
+    name: 'The Signal',
+    aud: 'Every quantum builder',
+    price: 'Free',
+    per: 'forever',
+    items: [
+      'The newsletter — funding moves & ecosystem intel',
+      'Public webinars',
+      'Open community channel',
+      'Ecosystem content & member spotlights',
+    ],
+    cta: { to: '/#signal', label: 'Join free', variant: 'btn-ghost' },
+    note: 'The outer ring — open to founders, engineers, researchers, students.',
+    ariaLabel: 'The Signal tier',
+  },
+  {
+    name: 'The Round',
+    aud: 'Operating quantum founders',
+    price: '$300',
+    per: '/ month',
+    featured: true,
+    flag: 'The Product',
+    items: [
+      'Curated, confidential peer circle of 6–10',
+      'Warm intros to quantum-focused capital',
+      'Expert office hours, monthly',
+      'Vetted directory + high-signal private channel',
+      'Members-only events + annual summit',
+      'Operator’s Library + partner perks & credits',
+    ],
+    cta: { to: '/apply', label: 'Apply for membership', variant: 'btn-primary' },
+    note: 'Founding cohort: locked-in rate, permanent founding badge.',
+    ariaLabel: 'The Round tier',
+  },
+  {
+    name: 'Patrons & Partners',
+    aud: 'Sponsors & allies',
+    price: 'Invitation',
+    per: 'only',
+    items: [
+      'For cloud platforms, deep-tech VCs, IP firms',
+      'Credible access & brand association',
+      'Sponsored programming',
+      'Never seats in the core peer circles',
+    ],
+    cta: { to: '/apply', label: 'Enquire', variant: 'btn-ghost' },
+    note: 'Sponsorship subsidizes member value — it never dilutes the room.',
+    ariaLabel: 'Patrons and Partners tier',
+  },
+]
+
+// One group of the "what you get" stack. data-fade on the heading (not a
+// wrapper around the list) so its entrance never compounds with the list's
+// own data-stagger y-offset. startNum continues the numbering across groups.
+function StackGroup({ letter, title, items, startNum }) {
+  return (
+    <div>
+      <h3 className="stack-group-title" data-fade>
+        <span className="label" aria-hidden="true">
+          {letter}
+        </span>{' '}
+        {title}
+      </h3>
+      <ul className="stack-list" data-stagger>
+        {items.map((item, i) => (
+          <li key={item.title} className="stack-item">
+            <span className="stack-num label" aria-hidden="true">
+              {String(startNum + i).padStart(2, '0')}
+            </span>
+            <div>
+              <h4>{item.title}</h4>
+              <p>{item.body}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export default function Inside() {
   return (
     <Fx as="section" id="inside" className="section" aria-labelledby="inside-title">
@@ -73,42 +154,13 @@ export default function Inside() {
         </p>
 
         <div className="stack-groups">
-          <div data-fade>
-            <h3 className="stack-group-title">
-              <span className="label" aria-hidden="true">A</span> The Room
-            </h3>
-            <ul className="stack-list" data-stagger>
-              {ROOM.map((item, i) => (
-                <li key={item.title} className="stack-item">
-                  <span className="stack-num label" aria-hidden="true">
-                    0{i + 1}
-                  </span>
-                  <div>
-                    <h4>{item.title}</h4>
-                    <p>{item.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div data-fade>
-            <h3 className="stack-group-title">
-              <span className="label" aria-hidden="true">B</span> The Acceleration
-            </h3>
-            <ul className="stack-list" data-stagger>
-              {ACCELERATION.map((item, i) => (
-                <li key={item.title} className="stack-item">
-                  <span className="stack-num label" aria-hidden="true">
-                    0{i + 5}
-                  </span>
-                  <div>
-                    <h4>{item.title}</h4>
-                    <p>{item.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <StackGroup letter="A" title="The Room" items={ROOM} startNum={1} />
+          <StackGroup
+            letter="B"
+            title="The Acceleration"
+            items={ACCELERATION}
+            startNum={ROOM.length + 1}
+          />
         </div>
 
         <div className="receipt-row-layout">
@@ -187,82 +239,36 @@ export default function Inside() {
           </figure>
         </div>
         <div className="tiers" data-stagger>
-          <article className="tier" aria-label="The Signal tier">
-            <div className="tier-head">
-              <h3 className="tier-name">The Signal</h3>
-              <p className="tier-aud label">Every quantum builder</p>
-            </div>
-            <p className="tier-price">
-              Free<small>forever</small>
-            </p>
-            <div className="tier-body">
-              <ul>
-                <li>The newsletter — funding moves & ecosystem intel</li>
-                <li>Public webinars</li>
-                <li>Open community channel</li>
-                <li>Ecosystem content & member spotlights</li>
-              </ul>
-            </div>
-            <div className="tier-foot">
-              <Link to="/#signal" className="btn btn-ghost">
-                Join free
-              </Link>
-              <p className="tier-note">
-                The outer ring — open to founders, engineers, researchers, students.
+          {TIERS.map((t) => (
+            <article
+              key={t.name}
+              className={`tier${t.featured ? ' is-featured ground-dark' : ''}`}
+              aria-label={t.ariaLabel}
+            >
+              <div className="tier-head">
+                {t.flag ? <span className="tier-flag label">{t.flag}</span> : null}
+                <h3 className="tier-name">{t.name}</h3>
+                <p className="tier-aud label">{t.aud}</p>
+              </div>
+              <p className="tier-price">
+                {t.price}
+                <small>{t.per}</small>
               </p>
-            </div>
-          </article>
-
-          <article className="tier is-featured ground-dark" aria-label="The Round tier">
-            <div className="tier-head">
-              <span className="tier-flag label">The Product</span>
-              <h3 className="tier-name">The Round</h3>
-              <p className="tier-aud label">Operating quantum founders</p>
-            </div>
-            <p className="tier-price">
-              $300<small>/ month</small>
-            </p>
-            <div className="tier-body">
-              <ul>
-                <li>Curated, confidential peer circle of 6–10</li>
-                <li>Warm intros to quantum-focused capital</li>
-                <li>Expert office hours, monthly</li>
-                <li>Vetted directory + high-signal private channel</li>
-                <li>Members-only events + annual summit</li>
-                <li>Operator’s Library + partner perks & credits</li>
-              </ul>
-            </div>
-            <div className="tier-foot">
-              <Link to="/apply" className="btn btn-primary">
-                Apply for membership
-              </Link>
-              <p className="tier-note">Founding cohort: locked-in rate, permanent founding badge.</p>
-            </div>
-          </article>
-
-          <article className="tier" aria-label="Patrons and Partners tier">
-            <div className="tier-head">
-              <h3 className="tier-name">Patrons & Partners</h3>
-              <p className="tier-aud label">Sponsors & allies</p>
-            </div>
-            <p className="tier-price">
-              Invitation<small>only</small>
-            </p>
-            <div className="tier-body">
-              <ul>
-                <li>For cloud platforms, deep-tech VCs, IP firms</li>
-                <li>Credible access & brand association</li>
-                <li>Sponsored programming</li>
-                <li>Never seats in the core peer circles</li>
-              </ul>
-            </div>
-            <div className="tier-foot">
-              <Link to="/apply" className="btn btn-ghost">
-                Enquire
-              </Link>
-              <p className="tier-note">Sponsorship subsidizes member value — it never dilutes the room.</p>
-            </div>
-          </article>
+              <div className="tier-body">
+                <ul>
+                  {t.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="tier-foot">
+                <Link to={t.cta.to} className={`btn ${t.cta.variant}`}>
+                  {t.cta.label}
+                </Link>
+                <p className="tier-note">{t.note}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </Fx>
