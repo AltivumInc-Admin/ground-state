@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { allIssues } from '../lib/issues.js'
 import usePageMeta from '../lib/usePageMeta.js'
 import { formatDate } from '../lib/formatDate.js'
@@ -11,12 +11,22 @@ export default function Signal() {
       'The Signal — funding moves, ecosystem intel, and hard-won lessons for the people building the quantum economy. Free to read.',
   })
 
+  // SignalIssue redirects a dead /signal/:slug here with the attempted slug,
+  // so we can explain the bounce instead of silently showing the index.
+  const { state } = useLocation()
+  const notFound = state?.notFound
+
   return (
     <div className="signal-archive container">
       <header className="signal-archive-head">
         <h1>The Signal</h1>
         <p>Funding moves, ecosystem intel, and hard-won lessons for quantum builders.</p>
       </header>
+      {notFound ? (
+        <p className="signal-archive-notice" role="status">
+          That issue isn’t available — here’s the full archive.
+        </p>
+      ) : null}
       {allIssues.length > 0 ? (
         <ul className="signal-archive-list">
           {allIssues.map((issue) => (

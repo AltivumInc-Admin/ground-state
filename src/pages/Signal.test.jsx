@@ -21,4 +21,22 @@ describe('Signal archive index', () => {
     expect(link).toHaveAttribute('href', '/signal/first-light')
     expect(screen.getByText('Teaser one.')).toBeInTheDocument()
   })
+
+  it('shows a not-found notice when redirected from a dead issue link', () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/signal', state: { notFound: 'ghost-issue' } }]}>
+        <Signal />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText(/full archive/i)).toBeInTheDocument()
+  })
+
+  it('shows no notice on a normal visit', () => {
+    render(
+      <MemoryRouter>
+        <Signal />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByText(/full archive/i)).not.toBeInTheDocument()
+  })
 })
