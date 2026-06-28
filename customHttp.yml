@@ -19,8 +19,8 @@ customHeaders:
       # has no inline executable script (only the application/ld+json data block +
       # the same-origin module bundle), so script-src 'self' needs no hash.
       # style-src needs 'unsafe-inline' because GSAP/R3F write inline element styles.
-      # connect-src lists the signal API and the checkout execute-api; check-csp.mjs
+      # connect-src lists the signal API and the checkout custom domain; check-csp.mjs
       # (Amplify preBuild) fails the build if a configured VITE_*_ENDPOINT origin
       # (incl. the apply origin at intake-open) is not listed here.
       - key: 'Content-Security-Policy'
-        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groundstatesociety.com https://*.execute-api.us-east-2.amazonaws.com; img-src 'self' data: https://cdn.sanity.io; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groundstatesociety.com https://checkout.groundstatesociety.com; img-src 'self' data: https://cdn.sanity.io; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
