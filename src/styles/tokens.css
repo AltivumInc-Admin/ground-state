@@ -31,6 +31,7 @@
   --accent-raw: var(--powder); /* fills, never text on light ground */
   --line: rgba(67, 45, 22, 0.14); /* hairlines */
   --line-strong: rgba(67, 45, 22, 0.38);
+  --control-edge: rgba(67, 45, 22, 0.55); /* control boundary — ~3.2:1 on ghost, clears WCAG 1.4.11 (3:1) */
   --sand-line: rgba(183, 167, 129, 0.6); /* warm hairline accent */
   --sand-band: rgba(183, 167, 129, 0.12);
   --sand-ink: #716850; /* sand pressed for TEXT on the light ground — raw sand is ~2.2:1 here; this clears AA (~5.2:1) */
@@ -87,6 +88,7 @@
   --accent-raw: var(--powder);
   --line: rgba(247, 247, 255, 0.12);
   --line-strong: rgba(247, 247, 255, 0.34);
+  --control-edge: rgba(247, 247, 255, 0.5); /* control boundary — ~5.1:1 on black, clears WCAG 1.4.11 (3:1) */
   --sand-line: rgba(183, 167, 129, 0.45);
   --sand-band: rgba(183, 167, 129, 0.1);
   --sand-ink: var(--sand); /* raw sand is already AA on black (8.4:1) */

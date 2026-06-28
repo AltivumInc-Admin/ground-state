@@ -40,7 +40,7 @@ export default function Story() {
           <div className="story-aside" data-stagger>
             <aside className="story-panel ground-dark">
               <span className="panel-tag label">Today</span>
-              <h3>What’s real today</h3>
+              <h2>What’s real today</h2>
               <p>
                 A hand-picked founding cohort, curated peer circles, expert sessions arranged
                 personally, and an Operator’s Library written from real quantum-on-AWS
@@ -49,7 +49,7 @@ export default function Story() {
             </aside>
             <aside className="story-panel ground-dark is-accent">
               <span className="panel-tag label">Founding terms</span>
-              <h3>The founding-member deal</h3>
+              <h2>The founding-member deal</h2>
               <p>
                 Early members are helping build the network they’re paying for — so founding
                 members join at a locked-in rate that never goes up, and carry the founding badge

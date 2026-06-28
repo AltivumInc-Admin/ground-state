@@ -19,7 +19,7 @@ export default function StoryPage() {
           </span>
         </Link>
         <Link to="/" className="btn btn-ghost">
-          Back to the page
+          Go to the home page
         </Link>
       </div>
     </div>
