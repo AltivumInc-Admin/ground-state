@@ -3,12 +3,11 @@ import react from '@vitejs/plugin-react'
 
 /*
  * Critical fonts preload in parallel with the JS bundle. Without the hints
- * they are discovered only after CSS parse + layout — the hero wordmark
- * (the LCP element) then paints in a fallback face and reflows on swap.
- * Filenames are hashed, so the hrefs resolve from the build bundle.
+ * they are discovered only after CSS parse + layout. Archivo is self-hosted
+ * (public/fonts) and preloaded by a literal <link> in index.html, so it is no
+ * longer matched here; these are the hashed IBM Plex Mono bundle assets.
  */
 const PRELOAD_FONTS = [
-  /^assets\/archivo-latin-wdth-normal-[^.]+\.woff2$/,
   /^assets\/ibm-plex-mono-latin-400-normal-[^.]+\.woff2$/,
   /^assets\/ibm-plex-mono-latin-500-normal-[^.]+\.woff2$/,
 ]

@@ -8,6 +8,10 @@
     <meta name="author" content="Christian Perez, Altivum Inc." />
     <meta name="theme-color" content="#08080A" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Self-hosted Archivo (font-display:optional) — preload the LCP wordmark's
+         latin subset so it wins the optional block window on a cold load. The
+         IBM Plex Mono preloads are injected at build by vite.config.js. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/archivo-latin-wdth-normal.woff2" />
     <link rel="canonical" href="https://groundstatesociety.com/" />
     <meta property="og:title" content="The Ground State Society — The Private Network for Quantum Founders" />
     <meta property="og:description" content="The room where the people building the quantum economy share deal flow, hard-won lessons, and warm access to capital, customers, and talent. By application only." />
