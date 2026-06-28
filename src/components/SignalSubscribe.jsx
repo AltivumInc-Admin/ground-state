@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { postJson } from '../lib/submit.js'
+import useIntakeSubmit from '../lib/useIntakeSubmit.js'
 
 const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
 
@@ -12,28 +12,15 @@ const SIGNAL_ENDPOINT = import.meta.env.VITE_SIGNAL_ENDPOINT
 export default function SignalSubscribe({ id, kicker, heading, blurb }) {
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
-  // idle | sending | sent | preview | error
-  const [status, setStatus] = useState('idle')
+  // idle → sending → sent / preview / error, plus the concurrent-submit and
+  // honest-preview guards, all live in the shared hook.
+  const { status, submit } = useIntakeSubmit(SIGNAL_ENDPOINT)
   const fieldId = `${id || 'signal'}-email`
 
   async function handleSubmit(e) {
     e.preventDefault()
-    // Guard against concurrent submits: the button is disabled while sending,
-    // but a stray Enter or a lagging disabled state must not fire a second POST.
-    if (status === 'sending') return
     if (!email.trim()) return
-    if (!SIGNAL_ENDPOINT) {
-      // Honest preview: the address is not transmitted or stored.
-      setStatus('preview')
-      return
-    }
-    setStatus('sending')
-    try {
-      await postJson(SIGNAL_ENDPOINT, { form: 'signal', email, source: 'signal', website })
-      setStatus('sent')
-    } catch {
-      setStatus('error')
-    }
+    await submit({ form: 'signal', email, source: 'signal', website })
   }
 
   return (

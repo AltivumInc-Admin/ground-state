@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { postJson } from './submit.js'
 
 /*
@@ -18,6 +18,16 @@ export default function useIntakeSubmit(endpoint) {
   // idle | sending | sent | preview | error
   const [status, setStatus] = useState('idle')
 
+  // Unmount guard: the POST outlives the form if the user navigates away mid-send;
+  // don't setStatus on an unmounted component.
+  const mounted = useRef(true)
+  useEffect(
+    () => () => {
+      mounted.current = false
+    },
+    [],
+  )
+
   async function submit(payload) {
     if (status === 'sending') return status
     if (!endpoint) {
@@ -28,10 +38,10 @@ export default function useIntakeSubmit(endpoint) {
     setStatus('sending')
     try {
       await postJson(endpoint, payload)
-      setStatus('sent')
+      if (mounted.current) setStatus('sent')
       return 'sent'
     } catch {
-      setStatus('error')
+      if (mounted.current) setStatus('error')
       return 'error'
     }
   }

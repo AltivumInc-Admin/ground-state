@@ -1505,16 +1505,28 @@ select {
 .was-validated input:invalid,
 .was-validated select:invalid,
 .was-validated textarea:invalid {
-  border-color: var(--error-ink, #a8463f);
+  border-color: var(--error-ink);
+}
+
+/* Per-field validation message (referenced by the control's aria-describedby) */
+.field-error {
+  color: var(--error-ink);
+  font-size: 0.8rem;
 }
 
 .form-error {
-  color: var(--error-ink, #a8463f);
+  color: var(--error-ink);
   font-size: 0.9rem;
 }
 
-.ground-dark .form-error {
-  --error-ink: #f0b3ac;
+.form-required {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0;
 }
 
 .form-note {
@@ -1614,6 +1626,7 @@ select {
   max-width: 46rem;
 }
 
+.apply-success h1,
 .apply-success h2 {
   font-size: clamp(1.6rem, 1.3rem + 1.5vw, 2.4rem);
   margin-bottom: 1.2rem;
