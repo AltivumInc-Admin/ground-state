@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import HeroScene from '../components/HeroScene.jsx'
 import MotionToggle from '../components/MotionToggle.jsx'
-import { gsap, ScrollTrigger, useGSAP, MOTION_OK } from '../lib/fx.jsx'
+import { gsap, ScrollTrigger, useGSAP, MOTION_OK } from '../lib/gsap-core.js'
 
 export default function Hero() {
   const sectionRef = useRef(null)

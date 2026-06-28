@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
-import { ScrollTrigger } from './lib/fx.jsx'
+import { ScrollTrigger } from './lib/gsap-core.js'
 import { initMagnetic } from './lib/magnetic.js'
 
 /* Archivo is self-hosted with font-display:optional in tokens.css (no
