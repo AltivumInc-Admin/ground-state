@@ -1,4 +1,4 @@
-import { gsap } from './fx.jsx'
+import { gsap } from './gsap-core.js'
 
 /*
  * Magnetic buttons — every .btn leans a few pixels toward the cursor

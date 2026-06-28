@@ -8,7 +8,7 @@ import StoryPage from './pages/Story.jsx'
 import Apply from './pages/Apply.jsx'
 import Signal from './pages/Signal.jsx'
 import SignalIssue from './pages/SignalIssue.jsx'
-import { ScrollTrigger } from './lib/fx.jsx'
+import { ScrollTrigger } from './lib/gsap-core.js'
 
 /* Landing, Story, Apply, Signal and SignalIssue are prerendered + hydrated, so
    they stay in the main bundle — lazy-loading a prerendered route would hydrate

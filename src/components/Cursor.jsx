@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { gsap } from '../lib/fx.jsx'
+import { gsap } from '../lib/gsap-core.js'
 
 /*
  * Cursor companion — a measurement reticle. Four corner ticks ride

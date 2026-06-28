@@ -60,6 +60,11 @@ export default defineConfig({
          */
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined
+          // SplitText + DrawSVGPlugin are dynamically imported (animating
+          // routes only). Excluding them here lets Rollup code-split them into
+          // a runtime async chunk instead of folding them into the eager,
+          // preloaded gsap chunk that every route downloads.
+          if (/node_modules\/gsap\/(dist\/)?(SplitText|DrawSVGPlugin)/.test(id)) return undefined
           if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id))
             return 'react-vendor'
           if (/node_modules\/(gsap|@gsap)\//.test(id)) return 'gsap'

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Mark from './Mark.jsx'
-import { gsap, useGSAP, MOTION_OK } from '../lib/fx.jsx'
+import { gsap, useGSAP, MOTION_OK } from '../lib/gsap-core.js'
 
 const SECTIONS = [
   { num: '01', id: 'network', label: 'Network' },

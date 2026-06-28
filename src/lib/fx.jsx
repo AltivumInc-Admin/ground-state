@@ -1,18 +1,11 @@
 import { useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
-import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
-import { useGSAP } from '@gsap/react'
+import { gsap, useGSAP, MOTION_OK } from './gsap-core.js'
 
-gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin, useGSAP)
-
-export { gsap, ScrollTrigger, SplitText, useGSAP }
-
-/* Every tween in the app runs inside this context. Under
-   prefers-reduced-motion the tweens simply never register, so the
-   page renders complete and static — no hidden states to undo. */
-export const MOTION_OK = '(prefers-reduced-motion: no-preference)'
+/* SplitText + DrawSVGPlugin are heavy choreography plugins used only by the
+   landing and story routes. They are imported dynamically inside the motion
+   path below (not statically here), so Rollup keeps them in a runtime async
+   chunk instead of the eager, preloaded gsap chunk — the routes that never
+   animate (/signal, /apply, /activate, /welcome, /confirm) never fetch them. */
 
 /*
  * Fx — declarative scroll choreography for a section.
@@ -35,22 +28,6 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
         const scope = ref.current
         if (!scope) return
 
-        scope.querySelectorAll('[data-split]').forEach((el) => {
-          SplitText.create(el, {
-            type: 'lines',
-            mask: 'lines',
-            autoSplit: true,
-            onSplit: (split) =>
-              gsap.from(split.lines, {
-                yPercent: 112,
-                duration: 0.85,
-                stagger: 0.09,
-                ease: 'power3.out',
-                scrollTrigger: { trigger: el, start: 'top 85%', once: true },
-              }),
-          })
-        })
-
         scope.querySelectorAll('[data-fade]').forEach((el) => {
           gsap.from(el, {
             autoAlpha: 0,
@@ -70,37 +47,6 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
             ease: 'power3.out',
             scrollTrigger: { trigger: el, start: 'top 85%', once: true },
           })
-        })
-
-        scope.querySelectorAll('[data-draw]').forEach((el) => {
-          const shapes = [...el.querySelectorAll('path, line, circle, ellipse, polyline')]
-          if (!shapes.length) return
-          const scrub = parseFloat(el.dataset.drawScrub)
-          // Stroked shapes draw in; fill-only shapes (the particle dots)
-          // materialize afterwards, one by one — wave first, then its
-          // discrete samples.
-          const drawables = shapes.filter((s) => getComputedStyle(s).stroke !== 'none')
-          const dots = shapes.filter((s) => getComputedStyle(s).stroke === 'none')
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger: el,
-              start: el.dataset.drawStart || 'top 90%',
-              end: el.dataset.drawEnd || 'top 25%',
-              // Higher scrub = more lag behind the scrollbar; a flick
-              // can't rush the draw, it plays out over real seconds.
-              scrub: Number.isFinite(scrub) ? scrub : 1,
-            },
-          })
-          if (drawables.length) {
-            tl.from(drawables, { drawSVG: 0, stagger: 0.04, ease: 'none', duration: 1 })
-          }
-          if (dots.length) {
-            tl.from(
-              dots,
-              { autoAlpha: 0, stagger: 0.07, duration: 0.4, ease: 'none' },
-              drawables.length ? '-=0.25' : 0,
-            )
-          }
         })
 
         scope.querySelectorAll('[data-cells]').forEach((el) => {
@@ -148,6 +94,80 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
             },
           })
         })
+
+        // SplitText + DrawSVGPlugin are loaded here on demand, so routes
+        // without [data-split]/[data-draw] never fetch them. We're already
+        // inside the motion-OK branch, so a gsap.context (not another
+        // matchMedia) collects the async tweens for teardown.
+        const splitEls = scope.querySelectorAll('[data-split]')
+        const drawEls = scope.querySelectorAll('[data-draw]')
+        if (!splitEls.length && !drawEls.length) return
+
+        let cancelled = false
+        let pluginCtx
+        Promise.all([import('gsap/SplitText'), import('gsap/DrawSVGPlugin')]).then(
+          ([{ SplitText }, { DrawSVGPlugin }]) => {
+            // Unmounted (or media flipped) before the import resolved — don't
+            // build tweens into a dead scope.
+            if (cancelled || !ref.current) return
+            gsap.registerPlugin(SplitText, DrawSVGPlugin)
+            pluginCtx = gsap.context(() => {
+              splitEls.forEach((el) => {
+                SplitText.create(el, {
+                  type: 'lines',
+                  mask: 'lines',
+                  autoSplit: true,
+                  onSplit: (split) =>
+                    gsap.from(split.lines, {
+                      yPercent: 112,
+                      duration: 0.85,
+                      stagger: 0.09,
+                      ease: 'power3.out',
+                      scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+                    }),
+                })
+              })
+
+              drawEls.forEach((el) => {
+                const shapes = [...el.querySelectorAll('path, line, circle, ellipse, polyline')]
+                if (!shapes.length) return
+                const scrub = parseFloat(el.dataset.drawScrub)
+                // Stroked shapes draw in; fill-only shapes (the particle dots)
+                // materialize afterwards, one by one — wave first, then its
+                // discrete samples.
+                const drawables = shapes.filter((s) => getComputedStyle(s).stroke !== 'none')
+                const dots = shapes.filter((s) => getComputedStyle(s).stroke === 'none')
+                const tl = gsap.timeline({
+                  scrollTrigger: {
+                    trigger: el,
+                    start: el.dataset.drawStart || 'top 90%',
+                    end: el.dataset.drawEnd || 'top 25%',
+                    // Higher scrub = more lag behind the scrollbar; a flick
+                    // can't rush the draw, it plays out over real seconds.
+                    scrub: Number.isFinite(scrub) ? scrub : 1,
+                  },
+                })
+                if (drawables.length) {
+                  tl.from(drawables, { drawSVG: 0, stagger: 0.04, ease: 'none', duration: 1 })
+                }
+                if (dots.length) {
+                  tl.from(
+                    dots,
+                    { autoAlpha: 0, stagger: 0.07, duration: 0.4, ease: 'none' },
+                    drawables.length ? '-=0.25' : 0,
+                  )
+                }
+              })
+            }, scope)
+          },
+        )
+
+        // matchMedia revert (incl. useGSAP unmount) runs this — tear down the
+        // async tweens, which live outside useGSAP's own auto-context.
+        return () => {
+          cancelled = true
+          pluginCtx?.revert()
+        }
       })
 
       // Pointer tilt — fine pointers only, a few degrees, springs back
