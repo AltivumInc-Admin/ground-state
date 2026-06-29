@@ -2,7 +2,9 @@
 
 The landing page for **The Ground State Society**, the private, members-only network for
 quantum founders ($300/month, vetted by application — funding stage is not the bar). Built
-with React + Vite. Copy is sourced from `quantum_round_premium_strategy.pdf`; the original
+with React + Vite. Copy is sourced from `quantum_round_premium_strategy.pdf` (claims whose
+deliverability is phased follow the PDF's §9 launch-vs-earned ramp, not the §B benefit list —
+see `PRODUCT.md`); the original
 section structure followed the page blueprint in `SPA.jpg`, with The Story since moved to
 its own `/story` page (landing sections 01–05: Hero · Problem · Proof · Inside · CTA).
 

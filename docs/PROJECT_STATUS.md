@@ -135,5 +135,6 @@ no `.nvmrc`/`engines` pin, no enforced bundle-size budget.
 
 - Brand / north-star: `.altivum/intent.md`
 - Decisions & observations journal: `.altivum/journal.md`
-- Copy, claims, prices: `quantum_round_premium_strategy.pdf`
+- Copy, claims, prices: `quantum_round_premium_strategy.pdf` (phased claims follow its §9
+  launch-vs-earned ramp, not the §B benefit list — framing rule in `PRODUCT.md`)
 - Deploy & env setup: `README.md`

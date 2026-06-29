@@ -48,3 +48,14 @@ a room built by someone who actually understands my world."
 - 2026-06-10: quantum_round_premium_strategy.pdf is the single source of
   truth for claims, prices, and framing; the ROI receipt and tiers mirror
   it exactly. Because: initial authoring.
+- 2026-06-29: Capital-intro framing reconciled to the strategy PDF's §9
+  (the launch-vs-earned-over-time ramp) rather than the §B benefit label read
+  alone. Flat present-tense "warm capital introductions" is retired across the
+  page (Inside, the Proof matrix row, and the meta + JSON-LD descriptions) for
+  "curated / quantum-specific capital access," with warm investor intros and the
+  member investor day stated "earned as the network matures" — the same hedge
+  the page already used for "Customer & pilot access." This aligns the page TO
+  the source of truth; it is not a supersession (§9 already mandates the hedge).
+  Framing rule recorded in PRODUCT.md ("Claim framing — launch vs. earned").
+  Because: the 2026-06-28 strategic assessment flagged the capital line as the
+  sharpest promise-vs-deliverable gap, and §9 already requires it.

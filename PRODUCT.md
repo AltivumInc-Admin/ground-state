@@ -77,6 +77,33 @@ into somewhere serious.
    everyone else is welcomed to the free tier. The page persuades by being right for the
    reader, not by pressure.
 
+## Claim framing — launch vs. earned
+
+Claims whose deliverability is phased follow the strategy PDF's **§9** ("The cold-start
+problem: what's real at launch vs. earned over time"), **not** the §B benefit list
+("Resources & acceleration") read in isolation. §B is the mature value stack; §9 governs how
+each promise is *stated before the network has scale*. Where the two could conflict on the
+page, **§9 wins** — presenting an earned-by-scale benefit as a present-tense deliverable is
+exactly the trust burn §9 warns against ("on day one, as a solo founder, you cannot fully
+deliver most of these… Pretending otherwise will burn early trust").
+
+Canonical framing today (founding cohort, pre-scale):
+
+- **Capital access is present-tense; warm intros are earned.** Shared fundraising
+  intelligence (who's writing checks, timing, terms) is real on day one, so the page leads
+  with **curated / quantum-specific capital *access***. Warm investor introductions and the
+  member investor day are stated **"earned as the network matures"** — mirroring §9's ramp
+  (launch = the operator's personal network + 1–2 friendly investors recruited as founding
+  patrons; earned by scale = a repeatable investor day and a roster of participating VCs).
+  This is why the capital line in `Inside.jsx`, the receipt item, the Proof matrix row
+  (`Quantum-specific capital access`), and the meta + JSON-LD descriptions read as *access*,
+  not a flat present-tense *introduction* — the same hedge the page already applies to
+  "Customer & pilot access" (PDF: "over time").
+
+When re-syncing copy from the PDF, **reconcile against §9 first.** Copying the §B labels
+verbatim re-flattens the capital claim and reintroduces the one promise-vs-deliverable gap a
+diligent founder can puncture.
+
 ## Accessibility & Inclusion
 
 - **WCAG AA across both grounds.** The strict 60/20/10/10 palette holds AA on the light

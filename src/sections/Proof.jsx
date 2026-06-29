@@ -43,7 +43,7 @@ const MATRIX = [
   { attr: 'Curated / selective', cells: ['no', 'yes', 'yes'] },
   { attr: 'Confidential', cells: ['no', 'partial', 'yes'] },
   { attr: 'Structured peer accountability', cells: ['no', 'no', 'yes'] },
-  { attr: 'Warm capital introductions', cells: ['no', 'partial', 'partial'] },
+  { attr: 'Quantum-specific capital access', cells: ['no', 'partial', 'no'] },
 ]
 
 function MatrixCell({ value, className }) {
