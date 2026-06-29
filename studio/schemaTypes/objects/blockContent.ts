@@ -2,7 +2,7 @@ import { defineType, defineArrayMember } from 'sanity'
 
 // Styles/decorators/annotations here are limited to what the public renderer
 // (src/components/IssueBody.jsx) actually styles: h2/h3/blockquote/normal,
-// bullet/number lists, strong/em, a `link` annotation with `href`, and images.
+// bullet/number lists, strong/em/code, a `link` annotation with `href`, and images.
 export const blockContent = defineType({
   name: 'blockContent',
   title: 'Body',
@@ -24,6 +24,9 @@ export const blockContent = defineType({
         decorators: [
           { title: 'Strong', value: 'strong' },
           { title: 'Emphasis', value: 'em' },
+          // IssueBody.jsx already serializes the `code` mark to <code>; expose it
+          // to authors so inline code (e.g. ħω, GROQ, CLI flags) can be marked up.
+          { title: 'Code', value: 'code' },
         ],
         annotations: [
           {

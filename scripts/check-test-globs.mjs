@@ -12,6 +12,7 @@ import { readdirSync } from 'node:fs'
 const TEST_DIRS = [
   'backend/checkout/test',
   'backend/subscribe/test',
+  'backend/apply/test',
   'backend/broadcast/test',
   'scripts', // scripts/*.test.mjs (e.g. fetch-issues.test.mjs)
   'scripts/lib', // scripts/lib/*.test.mjs (e.g. inject-head.test.mjs)
