@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 // Endpoint is read at module-eval, so it is fixed for this whole file (vitest
@@ -70,7 +70,10 @@ describe('Apply — submission (configured endpoint)', () => {
     fireEvent.click(submitBtn())
 
     const heading = await screen.findByRole('heading', { name: /application received/i })
-    expect(heading).toHaveFocus()
+    // Focus is parked on the heading by a passive effect that runs after the
+    // success node commits — poll for it rather than asserting in the same tick
+    // findByRole resolves (the synchronous assert raced and flaked in CI).
+    await waitFor(() => expect(heading).toHaveFocus())
     expect(postJson).toHaveBeenCalledWith(
       'https://api.example.com/apply',
       expect.objectContaining({
@@ -91,7 +94,8 @@ describe('Apply — submission (configured endpoint)', () => {
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent(/go through/i)
-    expect(alert).toHaveFocus()
+    // Same passive-effect focus park as the success case — poll, don't race.
+    await waitFor(() => expect(alert).toHaveFocus())
     expect(screen.getByLabelText(/full name/i)).toBeInTheDocument()
   })
 })
