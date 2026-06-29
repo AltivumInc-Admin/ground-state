@@ -1,0 +1,219 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Membership application intake for The Ground State Society — POST /apply
+  validates an application, stores one durable record in DynamoDB, and emails it
+  to the operator (Postmark, ReplyTo the applicant). No tokens or sessions; the
+  only secret is the Postmark Server API Token.
+
+Parameters:
+  ApplySecretsArn:
+    Type: String
+    Description: >
+      ARN of the Secrets Manager secret holding a JSON object with POSTMARK_TOKEN
+      (Postmark Server API Token for the transactional sender). Fetched at cold
+      start, so it is never a plaintext Lambda env var. May reuse the existing
+      gss/subscribe secret (it already carries a valid POSTMARK_TOKEN on the same
+      'outbound' stream) or be a dedicated gss/apply secret.
+  OperatorEmail:
+    Type: String
+    Description: Inbox that receives each application notification (To on the email).
+  FromAddress:
+    Type: String
+    Default: no-reply@groundstatesociety.com
+    Description: Verified Postmark sender (the From on the notification email).
+  AlarmEmail:
+    Type: String
+    Default: ''
+    Description: >
+      Email for apply-intake failure alarms. Empty disables the alarms; the SNS
+      subscription must be confirmed from the email AWS sends on deploy.
+
+  ApplyDomainName:
+    Type: String
+    Default: apply.groundstatesociety.com
+    Description: >
+      Custom domain for the apply API. A stable host lets the site CSP pin an
+      exact connect-src origin instead of the region-wide execute-api wildcard.
+  ApplyCertArn:
+    Type: String
+    Default: ''
+    Description: >
+      Regional (us-east-2) ACM cert ARN for ApplyDomainName. Empty disables the
+      custom domain (the stack keeps serving the raw execute-api endpoint).
+
+  ReservedConcurrency:
+    Type: Number
+    Default: 10
+    Description: >
+      Per-function reserved concurrency (blast-radius cap). Set to -1 to OMIT it
+      entirely — required on accounts whose total Lambda concurrency quota is too
+      low to reserve any (e.g. a brand-new account still capped at 10).
+
+Conditions:
+  HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, '']]
+  HasReservedConcurrency: !Not [!Equals [!Ref ReservedConcurrency, -1]]
+  HasApplyDomain: !Not [!Equals [!Ref ApplyCertArn, '']]
+
+Resources:
+  # One durable record per application — NO TimeToLiveSpecification: applications
+  # are the cold-start funnel and must never be swept. PAY_PER_REQUEST suits the
+  # low, bursty volume of a vetted intake.
+  ApplicationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+
+  ApplyApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10
+        ThrottlingBurstLimit: 20
+      CorsConfiguration:
+        # Production origins only. Local dev runs against backend/apply/local.mjs
+        # (no CORS enforcement) — localhost is deliberately NOT permitted here.
+        AllowOrigins:
+          - https://groundstatesociety.com
+          - https://www.groundstatesociety.com
+        AllowMethods: [POST, OPTIONS]
+        AllowHeaders: [content-type]
+        MaxAge: 600
+
+  ApplyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: handler.handler
+      CodeUri: src/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 15
+      ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref ReservedConcurrency, !Ref AWS::NoValue]
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ApplicationsTable
+          SECRETS_ARN: !Ref ApplySecretsArn
+          FROM_ADDRESS: !Ref FromAddress
+          OPERATOR_EMAIL: !Ref OperatorEmail
+      Policies:
+        - Statement:
+            # Least privilege: write only the applications table, read only the
+            # one secret. Email goes out via Postmark's HTTPS API (no AWS perms).
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource: !GetAtt ApplicationsTable.Arn
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref ApplySecretsArn
+      Events:
+        Apply:
+          Type: HttpApi
+          Properties: { ApiId: !Ref ApplyApi, Path: /apply, Method: POST }
+
+  # Until a member system exists, the application records + these structured logs
+  # ARE the intake ledger (and they contain applicant PII) — own the log group
+  # explicitly so retention is bounded and deliberate, not account-default.
+  ApplyLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ApplyFunction}
+      RetentionInDays: 365
+
+  # Custom domain (mirrors the subscribe/checkout stacks). Conditional: only
+  # created when a regional ACM cert ARN is supplied, so the stack still deploys
+  # on the raw execute-api endpoint without one.
+  ApplyDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: HasApplyDomain
+    Properties:
+      DomainName: !Ref ApplyDomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref ApplyCertArn
+          EndpointType: REGIONAL
+
+  ApplyApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: HasApplyDomain
+    Properties:
+      DomainName: !Ref ApplyDomain
+      ApiId: !Ref ApplyApi
+      Stage: $default
+
+  ApplyFailureMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref ApplyLogGroup
+      FilterPattern: '?"\"at\":\"unhandled\"" ?"\"at\":\"notify_failed\""'
+      MetricTransformations:
+        - MetricNamespace: GSS/Apply
+          MetricName: ApplyFailures
+          MetricValue: '1'
+          DefaultValue: 0
+
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlarmEmail
+    Properties:
+      Subscription:
+        - Endpoint: !Ref AlarmEmail
+          Protocol: email
+
+  # Catches both unhandled errors (store failure -> 502) AND notify_failed (the
+  # application stored but the operator email did not send — an op must read the
+  # table and follow up manually).
+  ApplyFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarmEmail
+    Properties:
+      AlarmDescription: Apply intake logged an unhandled error or a failed operator notification.
+      Namespace: GSS/Apply
+      MetricName: ApplyFailures
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+
+  ApplyCrashAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlarmEmail
+    Properties:
+      AlarmDescription: Apply Lambda crashed or timed out (invocation errors).
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApplyFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+
+Outputs:
+  ApiUrl:
+    Description: Raw execute-api base URL (set as VITE_APPLY_ENDPOINT base + /apply until the custom domain is live)
+    Value: !Sub https://${ApplyApi}.execute-api.${AWS::Region}.amazonaws.com
+  ApplyDomainUrl:
+    Condition: HasApplyDomain
+    Description: Custom-domain base URL for the apply API (set as VITE_APPLY_ENDPOINT base + /apply at cutover)
+    Value: !Sub https://${ApplyDomainName}
+  ApplyDomainTarget:
+    Condition: HasApplyDomain
+    Description: Point apply.groundstatesociety.com DNS (A/ALIAS) at this regional target
+    Value: !GetAtt ApplyDomain.RegionalDomainName
+  ApplyDomainHostedZoneId:
+    Condition: HasApplyDomain
+    Description: Regional hosted-zone id for an A/ALIAS record to ApplyDomainTarget
+    Value: !GetAtt ApplyDomain.RegionalHostedZoneId
