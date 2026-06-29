@@ -25,7 +25,7 @@ const ROOM = [
 const ACCELERATION = [
   {
     title: 'Curated capital access',
-    body: 'Warm introductions to deep-tech and quantum-focused investors, periodic member-only investor days, and shared fundraising intelligence: who is writing checks, timing, terms.',
+    body: 'Shared fundraising intelligence — who is writing checks, timing, terms. Member-only investor days and warm introductions to deep-tech and quantum-focused investors, earned as the network matures.',
   },
   {
     title: 'Expert office hours',
@@ -47,7 +47,7 @@ const ACCELERATION = [
 
 const RECEIPT_INCLUDED = [
   'Curated peer circle (6–10)',
-  'Warm capital introductions',
+  'Curated capital access',
   'Expert office hours',
   'Operator’s Library',
   'Partner cloud credits',
@@ -81,7 +81,7 @@ const TIERS = [
     flag: 'The Product',
     items: [
       'Curated, confidential peer circle of 6–10',
-      'Warm intros to quantum-focused capital',
+      'Curated access to quantum-focused capital',
       'Expert office hours, monthly',
       'Vetted directory + high-signal private channel',
       'Members-only events + annual summit',

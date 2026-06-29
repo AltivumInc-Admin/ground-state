@@ -6,7 +6,7 @@ import { SITE } from './site.js'
 // (these intentionally duplicate it; the test is the drift guard).
 export const DEFAULT_TITLE = 'The Ground State Society — The Private Network for Quantum Founders'
 export const DEFAULT_DESCRIPTION =
-  'The Ground State Society is the private, members-only network for quantum founders. Curated peer circles, warm capital introductions, and domain-deep acceleration. By application only — the free Signal tier is open to every quantum builder.'
+  'The Ground State Society is the private, members-only network for quantum founders. Curated peer circles, capital access, and domain-deep acceleration. By application only — the free Signal tier is open to every quantum builder.'
 // The homepage's hand-tuned OG/Twitter description (index.html) is punchier than
 // the plain meta description — keep it distinct so a reset restores the real copy,
 // not the SERP description.
