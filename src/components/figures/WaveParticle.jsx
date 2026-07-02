@@ -42,8 +42,26 @@ export default function WaveParticle() {
       aria-label="A continuous sine wave that becomes a row of discrete dots sampling the same curve — wave-particle duality"
       preserveAspectRatio="xMidYMid meet"
     >
-      <line x1="0" y1={MID} x2={W} y2={MID} stroke="var(--line)" strokeWidth="1" strokeDasharray="2 6" />
-      <path d={wavePath()} fill="none" stroke="var(--fig-stroke)" strokeWidth="1.4" />
+      {/* Plate stroke language (shared with figs 03/04): guide 1 / line 1.4 /
+          emphasis 1.75, dash '3 5', non-scaling so the weights survive every
+          viewBox scale (this 720-wide figure went sub-pixel on phones). */}
+      <line
+        x1="0"
+        y1={MID}
+        x2={W}
+        y2={MID}
+        stroke="var(--line-strong)"
+        strokeWidth="1"
+        strokeDasharray="3 5"
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d={wavePath()}
+        fill="none"
+        stroke="var(--fig-stroke)"
+        strokeWidth="1.4"
+        vectorEffect="non-scaling-stroke"
+      />
       {DOTS.map((d, i) => (
         <circle
           key={d.x}

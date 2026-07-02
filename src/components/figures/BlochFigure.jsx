@@ -82,12 +82,14 @@ export default function BlochFigure() {
     draggingRef.current = false
   }
 
+  // The accessible name carries no pointer-only affordance — the visible
+  // FigCaption says "Drag to rotate" for those who can drag.
   return (
     <div
       ref={holderRef}
       className="bloch3d"
       role="img"
-      aria-label="Bloch sphere: the state vector precesses between ket zero and ket one. Drag to rotate the view."
+      aria-label="Bloch sphere: the state vector precesses between ket zero and ket one."
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -99,7 +101,9 @@ export default function BlochFigure() {
       </span>
       {near && (
         <SceneBoundary fallback={<BlochSphere />}>
-          <Suspense fallback={null}>
+          {/* While the lazy chunk downloads, the accurate SVG stands in —
+              never a blank cell between the labels. */}
+          <Suspense fallback={<BlochSphere />}>
             <BlochScene
               yawRef={yawRef}
               draggingRef={draggingRef}

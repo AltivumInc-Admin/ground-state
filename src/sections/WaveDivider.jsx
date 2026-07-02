@@ -9,11 +9,11 @@ export default function WaveDivider() {
   return (
     <Fx as="figure" className="fig-divider ground-dark" aria-hidden="false">
       <div className="container">
-        {/* The band is the whole moment — the draw spans nearly the
-            figure's entire transit across the viewport, and the heavy
-            scrub lag means even a fast flick can't rush it: the wave
-            plays out over real seconds, watched, never glimpsed */}
-        <div data-draw data-draw-start="top 96%" data-draw-end="bottom 22%" data-draw-scrub="2.5">
+        {/* The draw completes while the figure is still comfortably in view
+            (end at bottom 70%), with a light scrub so slow scrollers still
+            watch it play out — a fast flick catches the finished wave rather
+            than a fragment easing to completion off-screen. */}
+        <div data-draw data-draw-start="top 96%" data-draw-end="bottom 70%" data-draw-scrub="1">
           <WaveParticle />
         </div>
         <FigCaption num="02">
