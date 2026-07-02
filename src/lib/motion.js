@@ -17,6 +17,16 @@ try {
 
 const subs = new Set()
 
+/* Mirror the store onto <html> so CSS animations can honor the pause too —
+   fig. 03's hν breathe is a CSS keyframe React state can't reach. Guarded:
+   the SSR prerender pass has no document. */
+function syncDom(v) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.toggleAttribute('data-motion-paused', v)
+  }
+}
+syncDom(paused) // reflect the persisted choice at boot
+
 export function setMotionPaused(v) {
   paused = v
   try {
@@ -24,6 +34,7 @@ export function setMotionPaused(v) {
   } catch {
     /* ignore */
   }
+  syncDom(v)
   subs.forEach((fn) => fn())
 }
 

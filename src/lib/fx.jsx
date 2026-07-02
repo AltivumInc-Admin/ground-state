@@ -134,9 +134,13 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
                 const scrub = parseFloat(el.dataset.drawScrub)
                 // Stroked shapes draw in; fill-only shapes (the particle dots)
                 // materialize afterwards, one by one — wave first, then its
-                // discrete samples.
-                const drawables = shapes.filter((s) => getComputedStyle(s).stroke !== 'none')
-                const dots = shapes.filter((s) => getComputedStyle(s).stroke === 'none')
+                // discrete samples. One bucketing pass: getComputedStyle is a
+                // forced style resolution, so resolve each shape once.
+                const drawables = []
+                const dots = []
+                shapes.forEach((s) => {
+                  ;(getComputedStyle(s).stroke !== 'none' ? drawables : dots).push(s)
+                })
                 const tl = gsap.timeline({
                   scrollTrigger: {
                     trigger: el,
