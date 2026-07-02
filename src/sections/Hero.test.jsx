@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 
 // HeroScene mounts an R3F/WebGL Canvas that jsdom can't render — stub it so the
 // test exercises the hero wordmark and CTAs, not the 3D scene.
-vi.mock('../components/HeroScene.jsx', () => ({ default: () => <div data-testid="hero-scene-stub" /> }))
+vi.mock('../components/figures/HeroScene.jsx', () => ({ default: () => <div data-testid="hero-scene-stub" /> }))
 
 const { default: Hero } = await import('./Hero.jsx')
 

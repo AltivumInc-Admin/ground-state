@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import HeroScene from '../components/HeroScene.jsx'
+import HeroScene from '../components/figures/HeroScene.jsx'
 import MotionToggle from '../components/MotionToggle.jsx'
 import { gsap, ScrollTrigger, useGSAP, MOTION_OK } from '../lib/gsap-core.js'
 
@@ -9,6 +9,10 @@ export default function Hero() {
   // 0 = ground state, 1 = excited. The scroll scrub writes here;
   // the particle cloud reads it every frame.
   const energyRef = useRef(0)
+  // When the scene can't run (no WebGL / context lost) the caption and
+  // pause toggle go with it — orphaned affordances over an empty black
+  // cell would describe and operate a figure that isn't there.
+  const [sceneFailed, setSceneFailed] = useState(false)
 
   useGSAP(
     () => {
@@ -83,15 +87,19 @@ export default function Hero() {
           </h1>
 
           <div className="bx bx-scene">
-            <HeroScene energyRef={energyRef} />
-            <p className="scene-ket label" aria-hidden="true">
-              |society⟩ = α|capital⟩ + β|builders⟩
-            </p>
-            <p className="scene-caption label" aria-hidden="true">
-              fig. 01 — relaxation to the ground state. E₀ = ½ħω: even settled, the cloud
-              never freezes. Scroll perturbs it.
-            </p>
-            <MotionToggle />
+            <HeroScene energyRef={energyRef} onFailed={() => setSceneFailed(true)} />
+            {!sceneFailed && (
+              <>
+                <p className="scene-ket label" aria-hidden="true">
+                  |society⟩ = α|capital⟩ + β|builders⟩
+                </p>
+                <p className="scene-caption label" aria-hidden="true">
+                  fig. 01 — relaxation to the ground state. E₀ = ½ħω: even settled, the cloud
+                  never freezes. Scroll perturbs it.
+                </p>
+                <MotionToggle />
+              </>
+            )}
           </div>
 
           <div className="bx bx-side">

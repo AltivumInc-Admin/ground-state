@@ -36,3 +36,13 @@ const get = () => paused
 export function useMotionPaused() {
   return useSyncExternalStore(subscribe, get, () => false)
 }
+
+/* True when the visitor's OS asks for reduced motion. Shared by the scene
+   wrappers (HeroScene, BlochFigure); SSR-safe — the prerender pass has no
+   window, and the static render is the reduced one anyway. */
+export function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}

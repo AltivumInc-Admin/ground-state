@@ -219,7 +219,7 @@ src/
   styles/        tokens.css (palette/type), base.css (reset/primitives), components.css
   lib/           fx.jsx (GSAP system), submit.js (form POST/JSON helpers)
   three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
-  components/    Nav, Footer, Mark (brand), Mosaic, HeroScene, figures/
+  components/    Nav, Footer, Mark (brand), Mosaic, SceneBoundary, figures/ (incl. HeroScene)
   sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05), Story (/story)
   pages/         Landing, Story, Apply, Activate, Welcome, Confirm
 backend/

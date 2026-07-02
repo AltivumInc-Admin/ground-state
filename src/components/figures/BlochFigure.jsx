@@ -1,25 +1,12 @@
-import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import BlochSphere from './BlochSphere.jsx'
-import { useMotionPaused } from '../../lib/motion.js'
+import SceneBoundary from '../SceneBoundary.jsx'
+import { prefersReducedMotion, useMotionPaused } from '../../lib/motion.js'
 
 /* fig. 04 goes live where it can: the 3D precessing Bloch sphere.
    The accurate SVG remains the figure under prefers-reduced-motion,
    without WebGL, or if the scene ever fails. */
 const BlochScene = lazy(() => import('../../three/BlochScene.jsx'))
-
-class FigBoundary extends Component {
-  state = { failed: false }
-  static getDerivedStateFromError() {
-    return { failed: true }
-  }
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children
-  }
-}
-
-function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
 
 function hasWebGL() {
   try {
@@ -39,6 +26,8 @@ export default function BlochFigure() {
   // query and WebGL probe run in an effect, not in render.
   const [reduced, setReduced] = useState(true)
   const [webgl, setWebgl] = useState(false)
+  // A lost WebGL context (DOM event, not a throw) also reverts to the SVG.
+  const [lost, setLost] = useState(false)
   useEffect(() => {
     setReduced(prefersReducedMotion())
     setWebgl(hasWebGL())
@@ -51,7 +40,7 @@ export default function BlochFigure() {
   // Pausing unmounts the holder div, so the observers must re-attach when
   // the scene path returns — a mount-only effect would leave `near` frozen
   // and the figure permanently empty after pause → resume.
-  const showScene = !reduced && !paused && webgl
+  const showScene = !reduced && !paused && webgl && !lost
 
   useEffect(() => {
     const node = holderRef.current
@@ -109,11 +98,16 @@ export default function BlochFigure() {
         |0⟩
       </span>
       {near && (
-        <FigBoundary fallback={<BlochSphere />}>
+        <SceneBoundary fallback={<BlochSphere />}>
           <Suspense fallback={null}>
-            <BlochScene yawRef={yawRef} draggingRef={draggingRef} active={inView} />
+            <BlochScene
+              yawRef={yawRef}
+              draggingRef={draggingRef}
+              active={inView}
+              onContextLost={() => setLost(true)}
+            />
           </Suspense>
-        </FigBoundary>
+        </SceneBoundary>
       )}
       <span className="b3-ket b3-bottom label" aria-hidden="true">
         |1⟩
