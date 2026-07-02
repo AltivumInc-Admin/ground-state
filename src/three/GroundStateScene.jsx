@@ -1,6 +1,8 @@
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { BLACK, GHOST, POWDER, SAND } from '../lib/palette.js'
+import { clampDt, circleGeometry, circlePoints } from './shared.js'
 
 /*
  * The ground state, literally.
@@ -16,11 +18,6 @@ import { Canvas, useFrame } from '@react-three/fiber'
  * Scroll feeds energy back in (the cloud excites and spreads);
  * releasing lets it relax to the ground state again.
  */
-
-const BLACK = '#08080a'
-const GHOST = '#f7f7ff'
-const POWDER = '#c1d8e2'
-const SAND = '#b7a781'
 
 const N = 2400
 const WELL_K = 0.22 // V(r) = WELL_K · r²  (½k folded into the constant)
@@ -118,7 +115,7 @@ function ParticleCloud({ energyRef, reduced }) {
   const map = useMemo(dotTexture, [])
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05)
+    const dt = clampDt(rawDt)
     tRef.current += dt
     const t = tRef.current
     const energy = energyRef?.current ?? 0
@@ -172,22 +169,30 @@ function ParticleCloud({ energyRef, reduced }) {
   )
 }
 
+/* Merge parallel line strips into one segment geometry — each opacity
+   group renders as a single draw call with one material (the rings and
+   rails were ~12 draws / 12 material instances as per-strip <line>s). */
+function segmentsFromStrips(strips) {
+  const pts = []
+  for (const strip of strips) {
+    for (let i = 0; i < strip.length - 1; i++) pts.push(strip[i], strip[i + 1])
+  }
+  return new THREE.BufferGeometry().setFromPoints(pts)
+}
+
 /* Wireframe paraboloid: concentric rings at y = k·r² plus diametric
    parabola sections — the potential well as architectural line art. */
 function Well() {
-  const { rings, rails, e0ring } = useMemo(() => {
-    const ringGeoms = []
+  const { ringSegs, railSegs, e0ring } = useMemo(() => {
+    const ringStrips = []
     for (let r = 0.7; r <= WELL_RIM + 0.01; r += 0.45) {
-      const pts = []
       const y = WELL_K * r * r
-      for (let s = 0; s <= 96; s++) {
-        const a = (s / 96) * Math.PI * 2
-        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r))
-      }
-      ringGeoms.push(new THREE.BufferGeometry().setFromPoints(pts))
+      ringStrips.push(
+        circlePoints((a) => new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r)),
+      )
     }
 
-    const railGeoms = []
+    const railStrips = []
     for (let a = 0; a < 4; a++) {
       const ang = (a / 4) * Math.PI
       const pts = []
@@ -197,33 +202,26 @@ function Well() {
           new THREE.Vector3(Math.cos(ang) * x, WELL_K * x * x, Math.sin(ang) * x),
         )
       }
-      railGeoms.push(new THREE.BufferGeometry().setFromPoints(pts))
+      railStrips.push(pts)
     }
 
-    const e0pts = []
-    for (let s = 0; s <= 96; s++) {
-      const a = (s / 96) * Math.PI * 2
-      e0pts.push(new THREE.Vector3(Math.cos(a) * R0, E0_Y, Math.sin(a) * R0))
-    }
     return {
-      rings: ringGeoms,
-      rails: railGeoms,
-      e0ring: new THREE.BufferGeometry().setFromPoints(e0pts),
+      ringSegs: segmentsFromStrips(ringStrips),
+      railSegs: segmentsFromStrips(railStrips),
+      e0ring: circleGeometry(
+        (a) => new THREE.Vector3(Math.cos(a) * R0, E0_Y, Math.sin(a) * R0),
+      ),
     }
   }, [])
 
   return (
     <group>
-      {rings.map((g, i) => (
-        <line key={`ring-${i}`} geometry={g}>
-          <lineBasicMaterial color={GHOST} transparent opacity={0.17} />
-        </line>
-      ))}
-      {rails.map((g, i) => (
-        <line key={`rail-${i}`} geometry={g}>
-          <lineBasicMaterial color={GHOST} transparent opacity={0.26} />
-        </line>
-      ))}
+      <lineSegments geometry={ringSegs}>
+        <lineBasicMaterial color={GHOST} transparent opacity={0.17} />
+      </lineSegments>
+      <lineSegments geometry={railSegs}>
+        <lineBasicMaterial color={GHOST} transparent opacity={0.26} />
+      </lineSegments>
       {/* E₀ = ½ħω — the zero-point energy level */}
       <line geometry={e0ring}>
         <lineBasicMaterial color={POWDER} transparent opacity={0.7} />
@@ -243,13 +241,32 @@ function Rig({ reduced }) {
   return null
 }
 
-export default function GroundStateScene({ energyRef, reduced = false, active = true }) {
+export default function GroundStateScene({
+  energyRef,
+  reduced = false,
+  active = true,
+  onContextLost,
+}) {
   return (
     <Canvas
-      frameloop={reduced ? 'demand' : active ? 'always' : 'never'}
+      /* 'demand' (not 'never') when inactive: the pre-ramp and off-screen
+         states still paint a static frame instead of a blank cell. */
+      frameloop={reduced || !active ? 'demand' : 'always'}
       dpr={[1, 1.75]}
       camera={{ position: [0, 2.7, 7.4], fov: 42, near: 0.1, far: 30 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
+      onCreated={({ gl }) => {
+        // A lost context is a DOM event, not a throw — the error boundary
+        // can't see it, and the canvas would freeze on its last frame.
+        gl.domElement.addEventListener(
+          'webglcontextlost',
+          (e) => {
+            e.preventDefault()
+            onContextLost?.()
+          },
+          { once: true },
+        )
+      }}
     >
       <color attach="background" args={[BLACK]} />
       <fog attach="fog" args={[BLACK, 7.5, 14]} />

@@ -1,6 +1,8 @@
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { GHOST, POWDER, SAND } from '../lib/palette.js'
+import { clampDt, circleGeometry } from './shared.js'
 
 /*
  * fig. 04, live — a Bloch sphere with the state vector held in
@@ -8,25 +10,19 @@ import { Canvas, useFrame } from '@react-three/fiber'
  * axis at constant polar angle (free evolution under H ∝ σz: θ fixed,
  * φ advancing). Drag rotates the view about the vertical axis only,
  * so the poles — and their HTML labels — stay put.
+ *
+ * Reduced motion never reaches this file: BlochFigure (the wrapper) owns
+ * that path and renders the accurate BlochSphere SVG instead of mounting
+ * the scene — unlike the hero, which has no SVG twin and goes static
+ * internally via its `reduced` prop.
  */
 
-const GHOST = '#f7f7ff'
-const POWDER = '#c1d8e2'
-const SAND = '#b7a781'
 const R = 1.6
 const THETA = 0.96 // polar angle of ψ — fixed during free precession
 
 /* Reused across frames — the precession tip is recomputed every frame, and
    allocating a fresh Vector3 60×/s only feeds the garbage collector. */
 const TIP = new THREE.Vector3()
-
-function circleGeometry(builder, segments = 96) {
-  const pts = []
-  for (let i = 0; i <= segments; i++) {
-    pts.push(builder((i / segments) * Math.PI * 2))
-  }
-  return new THREE.BufferGeometry().setFromPoints(pts)
-}
 
 function Sphere({ yawRef, draggingRef }) {
   const groupRef = useRef(null)
@@ -70,7 +66,7 @@ function Sphere({ yawRef, draggingRef }) {
   }, [])
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05)
+    const dt = clampDt(rawDt)
     // Free precession; pauses while the visitor holds the sphere
     if (!draggingRef.current) phiRef.current += dt * 0.45
     const phi = phiRef.current
@@ -133,13 +129,25 @@ function Sphere({ yawRef, draggingRef }) {
   )
 }
 
-export default function BlochScene({ yawRef, draggingRef, active = true }) {
+export default function BlochScene({ yawRef, draggingRef, active = true, onContextLost }) {
   return (
     <Canvas
       frameloop={active ? 'always' : 'never'}
       dpr={[1, 1.75]}
       camera={{ position: [0, 0.4, 5.1], fov: 40, near: 0.1, far: 20 }}
       gl={{ antialias: true, alpha: true }}
+      onCreated={({ gl }) => {
+        // A lost context is a DOM event, not a throw — without this the
+        // sphere freezes on its last frame; the wrapper swaps in the SVG.
+        gl.domElement.addEventListener(
+          'webglcontextlost',
+          (e) => {
+            e.preventDefault()
+            onContextLost?.()
+          },
+          { once: true },
+        )
+      }}
     >
       <Sphere yawRef={yawRef} draggingRef={draggingRef} />
     </Canvas>
