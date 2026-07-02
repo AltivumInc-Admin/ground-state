@@ -1,3 +1,5 @@
+import ArrowMarker from './ArrowMarker.jsx'
+
 /*
  * fig. 03 — quantized membership.
  * Particle-in-a-box energy levels (E_n ∝ n²) mapped to the three tiers.
@@ -18,6 +20,8 @@ export default function EnergyLevels() {
       aria-label="Energy-level diagram: three discrete levels labeled The Signal, The Round, and Patrons and Partners, with an excitation arrow from the ground state to The Round labeled h-nu, apply"
       preserveAspectRatio="xMidYMid meet"
     >
+      {/* Plate stroke language (shared with figs 02/04): line 1.4 on
+          --fig-stroke, emphasis 1.75 on accent, non-scaling weights. */}
       {LEVELS.map((l) => (
         <g key={l.n}>
           <line
@@ -25,8 +29,9 @@ export default function EnergyLevels() {
             y1={l.y}
             x2="130"
             y2={l.y}
-            stroke={l.n === 2 ? 'var(--accent-display)' : 'var(--ink-soft)'}
-            strokeWidth={l.n === 2 ? 2 : 1.4}
+            stroke={l.n === 2 ? 'var(--accent-display)' : 'var(--fig-stroke)'}
+            strokeWidth={l.n === 2 ? 1.75 : 1.4}
+            vectorEffect="non-scaling-stroke"
           />
           <text x="138" y={l.y - 2} className="el-name">
             {l.label}
@@ -41,9 +46,7 @@ export default function EnergyLevels() {
       ))}
       {/* hν excitation: ground state -> The Round */}
       <defs>
-        <marker id="el-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--accent-display)" />
-        </marker>
+        <ArrowMarker id="el-arrow" />
       </defs>
       <g className="el-excite">
         <line
@@ -54,6 +57,7 @@ export default function EnergyLevels() {
           stroke="var(--accent-display)"
           strokeWidth="1.4"
           markerEnd="url(#el-arrow)"
+          vectorEffect="non-scaling-stroke"
         />
         <text x="80" y="112" className="el-hv">
           hν — apply
