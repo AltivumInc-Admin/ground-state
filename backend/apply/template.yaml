@@ -12,9 +12,11 @@ Parameters:
     Description: >
       ARN of the Secrets Manager secret holding a JSON object with POSTMARK_TOKEN
       (Postmark Server API Token for the transactional sender). Fetched at cold
-      start, so it is never a plaintext Lambda env var. May reuse the existing
-      gss/subscribe secret (it already carries a valid POSTMARK_TOKEN on the same
-      'outbound' stream) or be a dedicated gss/apply secret.
+      start, so it is never a plaintext Lambda env var. Must be the DEDICATED
+      gss/apply secret (least privilege): this grant is the function's only
+      secret read, and pointing it at the shared gss/subscribe secret would
+      expose subscribe's session-signing key and token pepper to this
+      public-facing function.
   OperatorEmail:
     Type: String
     Description: Inbox that receives each application notification (To on the email).

@@ -61,12 +61,27 @@ test('valid application is stored (email normalized) and the operator is notifie
   assert.equal(calls.notified[0].application.email, 'ada@qubit.co')
 })
 
-test('honeypot filled returns 200 but stores/notifies nothing', async () => {
+test('honeypot filled returns 200 but stores/notifies nothing — and leaves a PII-free trace', async (t) => {
   const { handler, calls } = fakes()
+  const logSpy = t.mock.method(console, 'log', () => {})
   const res = await handler(event({ body: { ...VALID, website: 'spam' } }))
   assert.equal(res.statusCode, 200)
+  assert.deepEqual(JSON.parse(res.body), { ok: true }) // bot-opaque
   assert.equal(calls.stored.length, 0)
   assert.equal(calls.notified.length, 0)
+  const line = JSON.parse(logSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'honeypot_drop')
+  assert.equal(line.ip, '9.9.9.9')
+  assert.equal(line.email, undefined) // no PII in the trace
+  assert.equal(line.name, undefined)
+})
+
+test('a body past 16 kB is rejected 413 before parsing, nothing stored', async () => {
+  const { handler, calls } = fakes()
+  const res = await handler(event({ body: `{"pad":"${'x'.repeat(17000)}"}` }))
+  assert.equal(res.statusCode, 413)
+  assert.equal(JSON.parse(res.body).error, 'payload_too_large')
+  assert.equal(calls.stored.length, 0)
 })
 
 test('invalid email returns 400 invalid_email and stores nothing', async () => {
@@ -142,4 +157,7 @@ test('a notification timeout still returns 200 with the application stored (stor
   assert.equal(calls.stored.length, 1)
   const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
   assert.equal(line.at, 'notify_failed')
+  // Correlated: the log carries the stored record's id so the operator can
+  // follow up on the exact application when this alarm fires.
+  assert.equal(line.id, 'app-id')
 })

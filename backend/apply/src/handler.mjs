@@ -1,5 +1,6 @@
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
+import { APPLICATION_FIELDS } from './fields.mjs'
 
 // POSTMARK_TOKEN comes from Secrets Manager at cold start, never stored as a
 // Lambda env var (readable via lambda:GetFunctionConfiguration). Env wins, so
@@ -19,18 +20,12 @@ if (!process.env.POSTMARK_TOKEN && process.env.SECRETS_ARN) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// Length caps mirror the /apply form's maxLength attributes (src/pages/Apply.jsx).
-// Validation is length-bounded, not value-allowlisted, so the backend doesn't
-// couple to the frontend's select option copy.
-const CAPS = {
-  name: 200,
-  company: 200,
-  role: 200,
-  applicantType: 100,
-  stage: 100,
-  modality: 100,
-  want: 2000,
-}
+// The field set (keys, caps, labels) lives in fields.mjs — one source of truth
+// shared with store.mjs and email.mjs, so a form change can't silently drop data.
+const EMAIL_CAP = APPLICATION_FIELDS.find((f) => f.email).cap
+const CAPS = Object.fromEntries(
+  APPLICATION_FIELDS.filter((f) => !f.email).map((f) => [f.key, f.cap]),
+)
 const REQUIRED = Object.keys(CAPS) // every field except email is length-bounded here
 
 const json = (statusCode, body) => ({
@@ -44,7 +39,7 @@ const clientIp = (event) => event.requestContext?.http?.sourceIp ?? 'unknown'
 // Returns { clean } on success or { error } with a 400 error code.
 function validate(body) {
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
-  if (!email || email.length > 320 || !EMAIL_RE.test(email)) return { error: 'invalid_email' }
+  if (!email || email.length > EMAIL_CAP || !EMAIL_RE.test(email)) return { error: 'invalid_email' }
 
   const clean = { email }
   for (const f of REQUIRED) {
@@ -57,14 +52,24 @@ function validate(body) {
 
 export function makeHandler({ store = defaultStore, email = defaultEmail } = {}) {
   async function apply(event) {
+    // The eight capped fields total ~3.5 kB; anything past 16 kB is not an
+    // application. Rejecting before JSON.parse keeps API Gateway's 10 MB
+    // ceiling away from the parser.
+    if ((event.body?.length ?? 0) > 16384) {
+      return json(413, { error: 'payload_too_large' })
+    }
     let body
     try {
       body = JSON.parse(event.body || '')
     } catch {
       return json(400, { error: 'invalid_json' })
     }
-    // Honeypot: a filled `website` field is a bot. Look successful, do nothing.
+    // Honeypot: a filled `website` field is a bot. Look successful, do nothing —
+    // but leave an investigable, PII-free trace (console.log, not error: a
+    // deliberate drop is not an alarm, yet a false positive silently destroys
+    // an application without it).
     if (typeof body?.website === 'string' && body.website.trim() !== '') {
+      console.log(JSON.stringify({ at: 'honeypot_drop', ip: clientIp(event) }))
       return json(200, { ok: true })
     }
 
@@ -77,11 +82,13 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
     // funnel. If the operator notification then fails, log it but still return
     // 200: the application is captured, and a 5xx would only make the founder
     // resubmit and create a duplicate.
-    await store.putApplication(application)
+    const { id } = await store.putApplication(application)
     try {
       await email.notifyOperator({ application })
     } catch (err) {
-      console.error(JSON.stringify({ at: 'notify_failed', message: err?.message }))
+      // Correlated: the id points the operator at the exact stored record to
+      // follow up on manually when this alarm fires.
+      console.error(JSON.stringify({ at: 'notify_failed', id, message: err?.message }))
     }
     return json(200, { ok: true })
   }
