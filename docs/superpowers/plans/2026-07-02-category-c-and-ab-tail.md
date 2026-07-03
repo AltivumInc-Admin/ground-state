@@ -1,5 +1,10 @@
 # Category C refinements + A/B tail — implementation plans (2026-07-02)
 
+> **EXECUTED 2026-07-02/03 — all plans shipped, deployed, and verified live.**
+> Plan 1 → PR #40 · Plan 2 → PR #43 (supersedes the auto-closed #41) · Plan 3 → PR #42 ·
+> Plan 4 → dispositions final (both items stay deferred; flip triggers below).
+> Kept for the record — the step lists below are history, not pending work.
+
 Source: `/optimize-features` Category C audit (features 7–8, 8-lens fan-out, 25 raw →
 21 verified items, persisted in `docs/feature-optimization.md`) plus the three open/deferred
 tail items from Categories A/B. Four plans; execute in order. No new features anywhere —
