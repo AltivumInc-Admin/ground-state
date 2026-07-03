@@ -642,12 +642,6 @@
   max-width: 52ch;
 }
 
-.fig-ket {
-  margin-left: auto;
-  color: var(--accent);
-  white-space: nowrap;
-}
-
 .qfig {
   padding: clamp(1.4rem, 2.5vw, 2rem);
 }
@@ -1861,9 +1855,11 @@ select {
   bottom: 0.2rem;
 }
 
-/* fig. 03 — the hv absorption arrow breathes, slowly */
+/* fig. 03 — the hv absorption arrow breathes, slowly. Gated on BOTH the OS
+   reduced-motion setting and the site's Pause-motion control (mirrored to
+   the data-motion-paused attribute by src/lib/motion.js). */
 @media (prefers-reduced-motion: no-preference) {
-  .el-excite {
+  :root:not([data-motion-paused]) .el-excite {
     animation: el-breathe 4.5s ease-in-out infinite;
   }
 
