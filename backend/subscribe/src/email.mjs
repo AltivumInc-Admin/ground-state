@@ -121,10 +121,17 @@ export async function sendMagicLink({ to, link, source }) {
     }),
   })
   // Postmark returns 200 only on accept; anything else (422 inactive-recipient,
-  // 401 bad token, 5xx) is a failure. Surface the detail server-side; the handler
-  // funnels any throw to a generic 502.
+  // 401 bad token, 5xx) is a failure. Surface ONLY the status + Postmark's
+  // numeric ErrorCode — the raw body can embed the recipient address (PII),
+  // and this throw lands in the at:"unhandled" log retained for 365 days.
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(`postmark_send_failed ${res.status}: ${detail}`)
+    let code = ''
+    try {
+      const body = JSON.parse(await res.text())
+      if (typeof body?.ErrorCode === 'number') code = ` code=${body.ErrorCode}`
+    } catch {
+      /* non-JSON body — drop it entirely rather than risk leaking it */
+    }
+    throw new Error(`postmark_send_failed ${res.status}${code}`)
   }
 }

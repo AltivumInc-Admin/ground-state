@@ -88,6 +88,55 @@ test('honeypot filled returns 200 but stores/sends nothing', async () => {
   assert.equal(calls.sent.length, 0)
 })
 
+test('RFC5322 angle-addr and display-name forms are rejected, not stored under a mismatched key', async () => {
+  // These pass the simple EMAIL_RE but Postmark would deliver to the inner
+  // addr-spec — the stored/suppression key must never diverge from delivery.
+  const { handler, calls } = fakes()
+  for (const email of ['it-support<victim@x.com>', '"alert"<v@x.co>', 'a@b.co,c@d.co']) {
+    const res = await handler(event({ body: { email, source: 'signal' } }))
+    assert.equal(res.statusCode, 400, email)
+    assert.equal(JSON.parse(res.body).error, 'invalid_email')
+  }
+  assert.equal(calls.created.length, 0)
+})
+
+test('a store failure surfaces as 502 with the alarmed unhandled log shape', async (t) => {
+  // Pins the log contract the SubscribeFailureMetricFilter's first term matches.
+  const store = {
+    async createPending() { throw new Error('dynamodb unavailable') },
+  }
+  const email = { async sendMagicLink() {} }
+  const handler = makeHandler({ store, email })
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(event({ body: { email: 'a@b.co', source: 'signal' } }))
+  assert.equal(res.statusCode, 502)
+  assert.deepEqual(JSON.parse(res.body), { error: 'upstream_error' })
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'unhandled')
+  assert.equal(line.route, '/subscribe')
+})
+
+test('postmark-webhook fails closed AND loud when the secret is unset: 503, alarmed, distinct from 401', async (t) => {
+  // Misconfiguration (ours) must page the operator and make Postmark retry;
+  // bad credentials (scanners) stay a quiet 401 — see the 401 test below.
+  const saved = process.env.POSTMARK_WEBHOOK_SECRET
+  delete process.env.POSTMARK_WEBHOOK_SECRET
+  try {
+    const { handler } = fakes()
+    const errSpy = t.mock.method(console, 'error', () => {})
+    const res = await handler(
+      event({ path: '/postmark-webhook', headers: WEBHOOK_AUTH, body: { RecordType: 'SpamComplaint', Email: 'a@b.co' } }),
+    )
+    assert.equal(res.statusCode, 503)
+    assert.deepEqual(JSON.parse(res.body), { error: 'webhook_not_configured' })
+    const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+    assert.equal(line.at, 'webhook_rejected')
+    assert.equal(line.reason, 'not_configured')
+  } finally {
+    process.env.POSTMARK_WEBHOOK_SECRET = saved
+  }
+})
+
 test('invalid email returns 400', async () => {
   const { handler } = fakes()
   const res = await handler(event({ body: { email: 'nope', source: 'signal' } }))

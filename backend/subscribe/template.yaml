@@ -149,7 +149,11 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref SubscribeLogGroup
-      FilterPattern: '?"\"at\":\"unhandled\""'
+      # One term per error-level log site (fleet convention): the catch-all,
+      # the consumed-token-but-unconfirmed anomaly, and the fail-closed
+      # webhook-misconfiguration signal (webhook_rejected logs only for
+      # not_configured — never for scanner-triggerable bad credentials).
+      FilterPattern: '?"\"at\":\"unhandled\"" ?"\"at\":\"verify_consumed_unconfirmed\"" ?"\"at\":\"webhook_rejected\""'
       MetricTransformations:
         - MetricNamespace: GSS/Subscribe
           MetricName: SubscribeFailures

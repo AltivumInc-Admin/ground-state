@@ -1,5 +1,4 @@
-import { timingSafeEqual } from 'node:crypto'
-import { generateToken, hashToken, signSession } from './crypto.mjs'
+import { generateToken, hashToken, safeEqualHex, signSession } from './crypto.mjs'
 import * as defaultStore from './store.mjs'
 import * as defaultEmail from './email.mjs'
 
@@ -27,6 +26,12 @@ if (!process.env.SESSION_SECRET && process.env.SECRETS_ARN) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// EMAIL_RE is deliberately simple, but it admits RFC5322 structure characters —
+// `IT-Support<victim@x.com>` passes it. Postmark parses such forms as an
+// addr-spec + display name, so the address we store (and key suppression on)
+// would differ from the address actually delivered to. Reject the structure
+// characters outright; bare addresses never contain them.
+const EMAIL_STRUCTURE_RE = /[<>"(),;:]/
 const SOURCES = new Set(['signal', 'quantum-intro'])
 
 const json = (statusCode, body) => ({
@@ -43,14 +48,10 @@ const clientIp = (event) => event.requestContext?.http?.sourceIp ?? 'unknown'
 // POSTMARK_WEBHOOK_SECRET as the password. We fail closed if the secret is unset.
 const WEBHOOK_USER = 'postmark'
 
-function webhookAuthorized(event) {
-  const secret = process.env.POSTMARK_WEBHOOK_SECRET
-  if (!secret) return false
+function webhookAuthorized(event, secret) {
   const got = event.headers?.authorization ?? event.headers?.Authorization ?? ''
   const expected = `Basic ${Buffer.from(`${WEBHOOK_USER}:${secret}`).toString('base64')}`
-  const a = Buffer.from(got)
-  const b = Buffer.from(expected)
-  return a.length === b.length && timingSafeEqual(a, b)
+  return safeEqualHex(got, expected)
 }
 
 // Hard, permanent bounce types — the address is undeliverable, never retry it.
@@ -85,7 +86,12 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
       return json(200, { ok: true })
     }
     const emailAddr = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
-    if (!emailAddr || emailAddr.length > 320 || !EMAIL_RE.test(emailAddr)) {
+    if (
+      !emailAddr ||
+      emailAddr.length > 320 ||
+      !EMAIL_RE.test(emailAddr) ||
+      EMAIL_STRUCTURE_RE.test(emailAddr)
+    ) {
       return json(400, { error: 'invalid_email' })
     }
     const source = body?.source
@@ -142,7 +148,18 @@ export function makeHandler({ store = defaultStore, email = defaultEmail } = {})
   }
 
   async function postmarkWebhook(event) {
-    if (!webhookAuthorized(event)) return json(401, { error: 'unauthorized' })
+    const secret = process.env.POSTMARK_WEBHOOK_SECRET
+    if (!secret) {
+      // Fail closed AND loud: a missing secret is OUR misconfiguration, not a
+      // bad credential. 503 makes Postmark retry until it's fixed, and the
+      // structured log is a SubscribeFailureMetricFilter term — the alarm
+      // fires instead of suppression events silently vanishing. (Bad
+      // credentials below stay a quiet 401: internet scanners must not be
+      // able to page the operator.)
+      console.error(JSON.stringify({ at: 'webhook_rejected', reason: 'not_configured' }))
+      return json(503, { error: 'webhook_not_configured' })
+    }
+    if (!webhookAuthorized(event, secret)) return json(401, { error: 'unauthorized' })
     let payload
     try {
       payload = JSON.parse(event.body || '')

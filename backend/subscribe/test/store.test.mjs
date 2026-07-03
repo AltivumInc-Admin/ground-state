@@ -99,6 +99,16 @@ test('confirm returns true when the record is already confirmed', async () => {
   assert.equal(await confirm('a@b.co'), true)
 })
 
+test('an infra failure in the confirm re-check propagates (502-alarmed), never false-negatives to invalid_token', async () => {
+  let call = 0
+  mock.method(ddb, 'send', async () => {
+    call += 1
+    if (call === 1) throw new ConditionalCheckFailedException() // UpdateCommand fails
+    throw new Error('dynamodb unavailable') // GetCommand infra error
+  })
+  await assert.rejects(() => confirm('a@b.co'), /dynamodb unavailable/)
+})
+
 test('suppress upserts a suppressed tombstone and clears the ttl', async () => {
   let cmd
   mock.method(ddb, 'send', async (c) => { cmd = c; return {} })
