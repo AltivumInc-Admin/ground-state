@@ -72,3 +72,11 @@ test('notifyOperator throws on a non-2xx Postmark response (handler logs notify_
     () => assert.rejects(() => notifyOperator({ application: APP }), /postmark_send_failed 422/),
   )
 })
+
+test('double quotes are escaped (parity with broadcast escapeHtml — attribute contexts)', () => {
+  const { html } = buildApplicationEmail({
+    application: { ...APP, company: 'Qubit "airquotes" Co' },
+  })
+  assert.match(html, /Qubit &quot;airquotes&quot; Co/)
+  assert.doesNotMatch(html, /Qubit "airquotes" Co/)
+})

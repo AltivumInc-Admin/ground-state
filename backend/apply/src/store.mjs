@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb'
+import { APPLICATION_FIELDS } from './fields.mjs'
 
 // One durable record per application — unlike the subscribe table's pending
 // records there is NO ttl: the application IS the cold-start funnel, it must
@@ -26,14 +27,9 @@ export async function putApplication(app) {
         status: 'new',
         createdAt,
         receivedAt: new Date(createdAt * 1000).toISOString(),
-        name: app.name,
-        email: app.email,
-        company: app.company,
-        role: app.role,
-        applicantType: app.applicantType,
-        stage: app.stage,
-        modality: app.modality,
-        want: app.want,
+        // Every field in the shared table is persisted — one source of truth
+        // (fields.mjs); the drift test pins this.
+        ...Object.fromEntries(APPLICATION_FIELDS.map((f) => [f.key, app[f.key]])),
         consentIp: app.consentIp,
       },
       // New id every call, so this never clobbers — guard anyway.

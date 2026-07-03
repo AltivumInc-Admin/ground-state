@@ -6,29 +6,25 @@
 // to a vetting conversation directly from the notification. POSTMARK_TOKEN is
 // fetched from Secrets Manager at cold start (see handler.mjs) — never a
 // plaintext env var.
+import { APPLICATION_FIELDS } from './fields.mjs'
+
 const POSTMARK_API = 'https://api.postmarkapp.com/email'
 const STREAM = 'outbound'
 const FROM_NAME = 'The Ground State Society'
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 
-// Plain, human-readable labels for each field in the notification.
-const FIELDS = [
-  ['name', 'Name'],
-  ['email', 'Email'],
-  ['company', 'Company'],
-  ['role', 'Role'],
-  ['applicantType', 'Applying as'],
-  ['stage', 'Funding stage'],
-  ['modality', 'Modality'],
-  ['want', 'What they want from the room'],
-]
+// Label rows come from the shared field table (fields.mjs) — one source of truth.
+const FIELDS = APPLICATION_FIELDS.map((f) => [f.key, f.label])
 
+// Matches broadcast's escapeHtml exactly (incl. `"` for attribute contexts) —
+// the two escapers had drifted, which is precisely how escaping bugs ship.
 const esc = (s) =>
   String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 
 export function buildApplicationEmail({ application }) {
   const subject = `New application — ${application.company} (${application.name})`
