@@ -121,15 +121,13 @@ export async function confirm(email) {
 }
 
 async function isConfirmed(email) {
-  try {
-    const res = await ddb.send(
-      new GetCommand({ TableName: TABLE(), Key: { PK: `EMAIL#${email}` } }),
-    )
-    return res.Item?.status === 'confirmed'
-  } catch {
-    // If GetCommand fails (e.g., in test with mocked unconditional throw), assume not confirmed
-    return false
-  }
+  // No catch: a Get failure here is an infra error, and it must propagate to
+  // the handler's 502 (alarmed) — swallowing it turned DynamoDB outages into
+  // `400 invalid_token`, blaming the user for our failure.
+  const res = await ddb.send(
+    new GetCommand({ TableName: TABLE(), Key: { PK: `EMAIL#${email}` } }),
+  )
+  return res.Item?.status === 'confirmed'
 }
 
 // Mark an address unsubscribed after Postmark reports a SubscriptionChange

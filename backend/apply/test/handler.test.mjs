@@ -122,3 +122,24 @@ test('a failed persist returns 502 (unhandled) and does not 200', async () => {
   assert.deepEqual(JSON.parse(res.body), { error: 'upstream_error' })
   assert.equal(calls.notified.length, 0) // never reached notify
 })
+
+test('a notification timeout still returns 200 with the application stored (store-first)', async (t) => {
+  // The bounded Postmark fetch rejects with a TimeoutError — the applicant must
+  // still get the success (the record is the source of truth), and the failure
+  // must land in the notify_failed log the ApplyFailureMetricFilter matches.
+  const { handler, calls } = fakes({
+    email: {
+      async notifyOperator() {
+        throw Object.assign(new Error('The operation was aborted due to timeout'), {
+          name: 'TimeoutError',
+        })
+      },
+    },
+  })
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(event({ body: VALID }))
+  assert.equal(res.statusCode, 200)
+  assert.equal(calls.stored.length, 1)
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'notify_failed')
+})

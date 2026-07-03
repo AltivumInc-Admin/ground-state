@@ -170,6 +170,19 @@ test('a network failure surfaces as 502 upstream_error, never a stack trace', as
   assert.equal(JSON.parse(res.body).error, 'upstream_error')
 })
 
+test('a hung Stripe aborts at the fetch timeout and surfaces as the same 502', async (t) => {
+  // AbortSignal.timeout rejects with a TimeoutError — it must ride the existing
+  // error plumbing, not escape as a Lambda-killing hang.
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw Object.assign(new Error('The operation was aborted due to timeout'), {
+      name: 'TimeoutError',
+    })
+  })
+  const res = await handler(event({ body: { plan: 'monthly' } }))
+  assert.equal(res.statusCode, 502)
+  assert.equal(JSON.parse(res.body).error, 'upstream_error')
+})
+
 /* -------------------------------------------------------------- /session */
 
 for (const id of ['', 'abc', 'cs_test_short', `cs_live_${'A'.repeat(251)}`, 'cs_test_<script>']) {

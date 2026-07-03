@@ -92,7 +92,44 @@ test('sendMagicLink throws on a non-2xx Postmark response (handler maps it to 50
     () =>
       assert.rejects(
         () => sendMagicLink({ to: 'x@y.co', link: 'https://x/confirm?token=T', source: 'signal' }),
-        /postmark_send_failed 422/,
+        /postmark_send_failed 422 code=406/,
       ),
+  )
+})
+
+test('a failed send never leaks the recipient address into the thrown message (365-day logs)', async () => {
+  // Postmark's 422 body embeds the address (e.g. "Found inactive addresses: x@y.co").
+  // Only the status + numeric ErrorCode may survive into the throw.
+  await withFetch(
+    async () => ({
+      ok: false,
+      status: 422,
+      text: async () => '{"ErrorCode":406,"Message":"Found inactive addresses: x@y.co."}',
+    }),
+    async () => {
+      await assert.rejects(
+        () => sendMagicLink({ to: 'x@y.co', link: 'https://x/confirm?token=T', source: 'signal' }),
+        (err) => {
+          assert.equal(err.message, 'postmark_send_failed 422 code=406')
+          assert.doesNotMatch(err.message, /x@y\.co/)
+          return true
+        },
+      )
+    },
+  )
+})
+
+test('a non-JSON Postmark error body is dropped entirely, never embedded', async () => {
+  await withFetch(
+    async () => ({ ok: false, status: 503, text: async () => '<html>gateway error for x@y.co</html>' }),
+    async () => {
+      await assert.rejects(
+        () => sendMagicLink({ to: 'x@y.co', link: 'https://x/confirm?token=T', source: 'signal' }),
+        (err) => {
+          assert.equal(err.message, 'postmark_send_failed 503')
+          return true
+        },
+      )
+    },
   )
 })

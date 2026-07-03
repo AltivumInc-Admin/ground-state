@@ -32,6 +32,10 @@ export async function sendIssue({ recipients, subject, html, text, fromName, fro
         'X-Postmark-Server-Token': token,
       },
       body: JSON.stringify(messages),
+      // Generous for a 500-message batch, but bounded — a hung Postmark fails
+      // through the existing postmark_batch_failed path instead of hanging the
+      // operator's send-day terminal indefinitely.
+      signal: AbortSignal.timeout(30000),
     })
     if (!res.ok) {
       const detail = await res.text().catch(() => '')
