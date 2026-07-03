@@ -18,9 +18,15 @@ export default function Signal() {
 
   return (
     <div className="signal-archive container">
+      {/* House section scaffolding (kicker + section-title + lede), same as
+          every other page head. Deliberately motion-free — this is a reading
+          surface, so no data-split/data-fade on the header. */}
       <header className="signal-archive-head">
-        <h1>The Signal</h1>
-        <p>Funding moves, ecosystem intel, and hard-won lessons for quantum builders.</p>
+        <p className="kicker">Free to read</p>
+        <h1 className="section-title">The Signal</h1>
+        <p className="lede">
+          Funding moves, ecosystem intel, and hard-won lessons for quantum builders.
+        </p>
       </header>
       {notFound ? (
         <p className="signal-archive-notice" role="status">

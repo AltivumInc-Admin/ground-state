@@ -23,7 +23,9 @@ export default function SignalIssue() {
   return (
     <article className="signal-issue container">
       <header className="signal-issue-head">
-        <p className="signal-issue-kicker">
+        {/* The house kicker (mono row + hairline) composed with the page's
+            own class, which keeps only the back-link colors. */}
+        <p className="kicker signal-issue-kicker">
           <Link to="/signal">The Signal</Link>
         </p>
         <h1>{issue.title}</h1>
