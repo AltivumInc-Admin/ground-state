@@ -56,6 +56,30 @@ test('quantum-intro subscribe links to the module verify page', async () => {
   assert.equal(calls.sent[0].source, 'quantum-intro')
 })
 
+test('an email-send timeout surfaces as 502 with the alarmed unhandled log shape', async (t) => {
+  // Pins two contracts at once: a hung/failed Postmark send resolves through the
+  // catch-all (not a Lambda kill), and the log line it emits is the exact
+  // single-line JSON the SubscribeFailureMetricFilter matches.
+  const store = {
+    async createPending() { return { alreadyConfirmed: false } },
+  }
+  const email = {
+    async sendMagicLink() {
+      throw Object.assign(new Error('The operation was aborted due to timeout'), {
+        name: 'TimeoutError',
+      })
+    },
+  }
+  const handler = makeHandler({ store, email })
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(event({ body: { email: 'a@b.co', source: 'signal' } }))
+  assert.equal(res.statusCode, 502)
+  assert.deepEqual(JSON.parse(res.body), { error: 'upstream_error' })
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'unhandled')
+  assert.equal(line.route, '/subscribe')
+})
+
 test('honeypot filled returns 200 but stores/sends nothing', async () => {
   const { handler, calls } = fakes()
   const res = await handler(event({ body: { email: 'a@b.co', source: 'signal', website: 'spam' } }))

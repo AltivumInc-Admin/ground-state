@@ -72,6 +72,10 @@ export async function notifyOperator({ application }) {
       Accept: 'application/json',
       'X-Postmark-Server-Token': process.env.POSTMARK_TOKEN,
     },
+    // Bounded tighter than the user-facing senders: the application is already
+    // stored (store-first), so a hung Postmark must not hold the applicant's
+    // response hostage toward the 15s Lambda kill.
+    signal: AbortSignal.timeout(5000),
     body: JSON.stringify({
       From: `${FROM_NAME} <${process.env.FROM_ADDRESS}>`,
       To: process.env.OPERATOR_EMAIL,

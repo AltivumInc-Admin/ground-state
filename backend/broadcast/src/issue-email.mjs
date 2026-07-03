@@ -13,7 +13,9 @@ const ISSUE_QUERY = `*[_type == "issue" && status == "published" && slug.current
 }`
 
 export async function fetchIssue({ slug, projectId, dataset, apiVersion = '2026-06-01' }) {
-  const client = createClient({ projectId, dataset, apiVersion, useCdn: false })
+  // timeout (ms) is @sanity/client's request timeout — bounded so a hung
+  // Sanity API fails loudly instead of hanging the CLI indefinitely.
+  const client = createClient({ projectId, dataset, apiVersion, useCdn: false, timeout: 15000 })
   return client.fetch(ISSUE_QUERY, { slug })
 }
 

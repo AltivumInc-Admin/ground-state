@@ -102,6 +102,10 @@ export async function sendMagicLink({ to, link, source }) {
       Accept: 'application/json',
       'X-Postmark-Server-Token': process.env.POSTMARK_TOKEN,
     },
+    // Bounded: a hung Postmark must fail inside the handler's 502 path (alarmed
+    // via the at:"unhandled" log), not ride to the 15s Lambda kill. The pending
+    // row/token already written are refreshed by design when the user retries.
+    signal: AbortSignal.timeout(8000),
     body: JSON.stringify({
       From: `${FROM_NAME} <${process.env.FROM_ADDRESS}>`,
       To: to,

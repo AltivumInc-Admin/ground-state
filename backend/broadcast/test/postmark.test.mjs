@@ -45,3 +45,18 @@ test('sendIssue rejects when Postmark returns non-ok status', async () => {
     /422/,
   )
 })
+
+test('sendIssue rejects when the bounded fetch times out (no infinite hang)', async () => {
+  const fetchImpl = async () => {
+    throw Object.assign(new Error('The operation was aborted due to timeout'), {
+      name: 'TimeoutError',
+    })
+  }
+  await assert.rejects(
+    () => sendIssue({
+      recipients: ['a@b.com'], subject: 'S', html: 'H', text: 'T',
+      fromName: 'GSS', fromAddress: 'no-reply@gss.com', token: 'tok', fetchImpl,
+    }),
+    { name: 'TimeoutError' },
+  )
+})

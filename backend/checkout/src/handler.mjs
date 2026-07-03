@@ -76,6 +76,10 @@ async function stripeRequest(method, path, params) {
       ...(params && { 'content-type': 'application/x-www-form-urlencoded' }),
     },
     ...(params && { body: new URLSearchParams(params) }),
+    // Bounded: a hung Stripe must fail inside the designed 502 path (with its
+    // alarmed stripe_error log), not ride to the 15s Lambda kill pinning one of
+    // the 10 reserved-concurrency slots the webhook route shares.
+    signal: AbortSignal.timeout(8000),
   })
   const data = await res.json()
   if (!res.ok) {
