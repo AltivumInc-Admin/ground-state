@@ -12,7 +12,9 @@ export const pteImage = defineType({
       name: 'alt',
       title: 'Alternative text',
       type: 'string',
-      validation: (r) => r.required().warning('Alt text is important for accessibility and SEO'),
+      // Hard error, not a dismissible warning: screen readers and
+      // image-blocking email clients render nothing else.
+      validation: (r) => r.required().error('Alt text is required — screen readers and image-blocking email clients depend on it'),
     }),
     defineField({ name: 'caption', type: 'string' }),
   ],

@@ -21,7 +21,14 @@ export const issue = defineType({
     }),
     defineField({
       name: 'status',
+      title: 'Visibility (site + email)',
       type: 'string',
+      description:
+        'Gates the website build and the email send ONLY — both also require the ' +
+        'document to be published with Sanity’s Publish button. Draft here hides a ' +
+        'natively-published issue from everything. It does NOT make it private: the ' +
+        'dataset is public, so anything published with the button is world-readable ' +
+        'regardless of this setting.',
       options: {
         list: [
           { title: 'Draft', value: 'draft' },
@@ -36,6 +43,10 @@ export const issue = defineType({
       name: 'publishedAt',
       title: 'Published at',
       type: 'datetime',
+      description:
+        'The public issue date: shown on the issue page and in the email header, ' +
+        'and orders the archive. Pre-filled when the draft was created — update it ' +
+        'before publishing if drafting spanned days.',
       validation: (r) => r.required(),
       initialValue: () => new Date().toISOString(),
     }),

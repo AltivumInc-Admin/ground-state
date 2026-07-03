@@ -38,7 +38,10 @@ export const blockContent = defineType({
                 name: 'href',
                 type: 'url',
                 title: 'URL',
-                validation: (r) => r.uri({ scheme: ['http', 'https', 'mailto'] }),
+                // required(): Sanity skips rules on undefined values, so without it
+                // an empty link popover publishes cleanly and ships a dead link in
+                // the (irrevocable) email. tel: matches the web renderer's allowlist.
+                validation: (r) => r.required().uri({ scheme: ['http', 'https', 'mailto', 'tel'] }),
               },
             ],
           },
