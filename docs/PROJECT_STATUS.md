@@ -1,6 +1,6 @@
 # Project Status — The Ground State Society
 
-_Last updated: 2026-06-25. Living snapshot of launch-readiness and open threads.
+_Last updated: 2026-07-03. Living snapshot of launch-readiness and open threads.
 For the brand north-star see [`.altivum/intent.md`](../.altivum/intent.md); for the
 decisions/observations log see [`.altivum/journal.md`](../.altivum/journal.md)._
 
@@ -12,7 +12,7 @@ decisions/observations log see [`.altivum/journal.md`](../.altivum/journal.md)._
 | Surface | State | Detail |
 |---|---|---|
 | **Payments (Stripe)** | 🟡 TEST mode | Amplify env uses `pk_test_…`, a `buy.stripe.com/test_…` link, and test price IDs. No real charges. |
-| **Apply form (`/apply`)** | 🟡 Preview | Page is now **prerendered + indexable** (own `<h1>`/meta, in `sitemap.xml`, `/apply → /apply.html` rewrite applied). Submission is still preview: `VITE_APPLY_ENDPOINT` is **unset** → renders/validates but does **not** submit or store (see `src/pages/Apply.jsx`). Intentional until intake opens (intent.md: "intake opens at launch"). **At intake-open, also add the apply origin to CSP `connect-src` — see Backend security below.** |
+| **Apply form (`/apply`)** | 🟡 Preview (backend deployed) | Page is **prerendered + indexable**; submission is still preview: `VITE_APPLY_ENDPOINT` is **unset** → renders/validates but does **not** submit or store. The **`gss-apply` intake backend is deployed** at `apply.groundstatesociety.com` (#38/#39: validation → DynamoDB → Postmark operator notification) and its origin is **already in the CSP `connect-src`** (#39, safe pre-cutover). **The only intake-open step left is setting `VITE_APPLY_ENDPOINT` in Amplify** (intent.md: "intake opens at launch"). |
 | **The Signal (`/#signal`)** | 🟢 **LIVE** | Double opt-in is **inbox-verified end-to-end** (2026-06-25): `/subscribe` → Postmark → inbox → magic link → `/verify` → confirmed. `VITE_SIGNAL_ENDPOINT = https://api.groundstatesociety.com/subscribe`. See **Email — The Signal gate** below. |
 | **Checkout** | 🟢 Wired | `VITE_CHECKOUT_ENDPOINT` set (us-east-2); secrets now in Secrets Manager — see Backend security below. |
 
@@ -33,7 +33,8 @@ applications are live. The free Signal tier is the only active conversion path.
   (console **Hosting → Rewrites and redirects**, or `aws amplify update-app
   --custom-rules`). Source-of-truth = [`infra/amplify-rewrites.json`](../infra/amplify-rewrites.json);
   it must be **applied**, it is not auto-pulled from the repo. **Live rules:**
-  `/story → /story.html`, `/apply → /apply.html`, SPA catch-all → `/index.html`
+  `/story → /story.html`, `/apply → /apply.html`, `/signal → /signal.html`,
+  `/signal/<slug> → /signal/<slug>.html`, SPA catch-all → `/index.html`
   (the catch-all regex excludes static extensions incl. `xml`, so the sitemap serves statically).
 - **Cache caveat:** Amplify's CloudFront caches with `s-maxage=31536000` (1 yr) and
   ignores query strings in the cache key. After a rewrite-rule or `customHttp.yml` change,
@@ -52,25 +53,28 @@ applications are live. The free Signal tier is the only active conversion path.
 - **Checkout CORS is production-only** (`localhost:5173` dropped). **Stripe webhook is
   idempotent** — DynamoDB `ProcessedEventsTable`, conditional write keyed by `evt.id`
   (7-day TTL); replays return `{received,duplicate}` before any side effect.
-- **Content-Security-Policy is ENFORCING** (`customHttp.yml`), flipped from Report-Only
-  after a clean live soak (zero violations across `/`, `/story`, `/activate`). Policy:
-  self-only `default/script/font/img-src`, `style-src 'unsafe-inline'` (GSAP/R3F inline
-  styles), `connect-src` = self + `api.groundstatesociety.com` + the checkout
-  `*.execute-api.us-east-2.amazonaws.com`.
-  - ⚠️ **When `VITE_APPLY_ENDPOINT` is set at intake-open, ADD its origin to
-    `connect-src` in `customHttp.yml` and redeploy** — otherwise the enforcing CSP
-    silently blocks `/apply` form submissions.
+- **Content-Security-Policy is ENFORCING** (`customHttp.yml`). Current policy (post
+  #21/#24/#39): self-only `default/script/font-src`, `style-src 'unsafe-inline'`
+  (GSAP/R3F inline styles), `img-src` = self + `data:` + `cdn.sanity.io` (Signal issue
+  images), `form-action 'self'`, `connect-src` = self + `api.groundstatesociety.com` +
+  `checkout.groundstatesociety.com` (custom domain — the region-wide `*.execute-api`
+  wildcard is gone) + `apply.groundstatesociety.com` (added at #39, ahead of intake-open).
+  - The CSP↔endpoint sync is **guarded in CI**: `scripts/check-csp.mjs` (preBuild) fails
+    the build if a configured `VITE_*_ENDPOINT` origin is missing from `connect-src`.
 - **Still open before live keys:** per-IP / per-email rate limiting (only stage-level
   throttling today), and pointing `STRIPE_WEBHOOK_SECRET` at the live-mode signing secret.
 
 ## SEO / AEO (shipped 2026-06-21; `/apply` added 2026-06-25)
 
 - JSON-LD `@graph` (Organization + founder Person + WebSite + OfferCatalog tiers),
-  prerendered `/story` **and `/apply`**, completed Twitter card + AI-aware robots meta,
-  footer operator byline, `public/sitemap.xml` (`/`, `/story`, `/apply`), `robots.txt`
-  `Sitemap:` directive. `/story` carries a single `<h1>`.
-- Rewrite rules applied: `/story → /story.html`, `/apply → /apply.html`, and `xml`/static
-  passthrough (via the catch-all regex's extension exclusions).
+  prerendered `/story`, `/apply`, **`/signal` + published issues**, completed Twitter
+  card + AI-aware robots meta, footer operator byline. The **sitemap is generated at
+  build** from the prerendered routes (`/`, `/story`, `/apply`, `/signal`, non-noindex
+  issues) — `public/sitemap.xml` is no longer committed (#18). `robots.txt` carries the
+  `Sitemap:` directive.
+- Rewrite rules applied: `/story`, `/apply`, `/signal`, `/signal/<slug>` → their
+  prerendered `.html`, and `xml`/static passthrough (via the catch-all regex's
+  extension exclusions).
 - **Open action (owner):** submit `https://groundstatesociety.com/sitemap.xml` in
   **Google Search Console** (domain verified) and **Bing Webmaster Tools** (Bing's
   index feeds ChatGPT Search citations).
@@ -124,10 +128,21 @@ geometries/CanvasTexture are not disposed (GPU leak on `BlochFigure` pause/resum
 `/confirm` are JS-only `noindex` (robots-disallowed, low risk); no `site.webmanifest`,
 no `.nvmrc`/`engines` pin, no enforced bundle-size budget.
 
+## Refinement record
+
+- The `/optimize-features` waves are **shipped, deployed, and verified live**:
+  Categories **A** (#26–#34), **B** (#35), **G** (#18–#25), and **C** (#40/#43/#42,
+  2026-07-02/03 — hero-scene infra + physics-figure batch + Signal house scaffolding).
+  The living findings record (incl. every deliberate deferral and its flip trigger)
+  is [`docs/feature-optimization.md`](feature-optimization.md); categories **D/E/F**
+  and the apply backend (#27) have not been audited yet.
+
 ## Housekeeping
 
-- Stale remote branches (squash-merged into `main`, safe to delete):
-  `chore/design-sync-inputs`, `feat/quantum-email-gate`.
+- Stale remote branches (merged or superseded into `main`, safe to delete —
+  audit-verified 2026-07-03 that none carries unique work):
+  `chore/category-a-checkoff`, `feat/quantum-email-gate`,
+  `claude/codebase-optimization-review-rg67k7`.
 - DNS lives in the 659 account (Route 53 zone `Z00828413P9V0JNO3MQGW`); the 205→659
   migration is in progress (backends/SES still moving).
 

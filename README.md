@@ -53,8 +53,10 @@ the particle cloud, which relaxes back to the ground state on release.
 harmonic well V(r) = ½kr², a particle ensemble relaxing into the gaussian ground-state
 density |ψ₀|², a powder ring marking E₀ = ½ħω at the classical turning radius — and
 zero-point breathing that never stops (Δx·Δp ≥ ħ/2). Deterministic seed, DPR clamped at
-1.75, render loop suspended when the hero leaves the viewport, static settled frame under
-reduced motion, and a quiet error boundary if WebGL is unavailable.
+1.75, frameloop dropped to on-demand when the hero leaves the viewport, the particle sim
+ramping only after an idle frame past the wordmark entrance, static settled frame under
+reduced motion, and quiet failure paths (error boundary + WebGL context-loss fallback,
+which also retire the caption and pause control so nothing describes an absent scene).
 
 ## Install
 
@@ -86,6 +88,8 @@ is ~144 kB gzip.
 - `/` — the landing page
 - `/story` — the founder / origin narrative (prerendered for SEO/AEO)
 - `/apply` — membership application (prerendered; `index, follow`)
+- `/signal` — The Signal public web archive (prerendered), `/signal/:slug` — issue reader
+  (each published issue prerendered with its own head)
 - `/#signal` — The Signal free-newsletter capture
 - `/activate` — post-acceptance membership activation (plan choice → Stripe Checkout).
   Deliberately unlinked from the page and nav: the URL travels only in acceptance emails,
@@ -217,11 +221,18 @@ Setup:
 ```
 src/
   styles/        tokens.css (palette/type), base.css (reset/primitives), components.css
-  lib/           fx.jsx (GSAP system), submit.js (form POST/JSON helpers)
-  three/         GroundStateScene.jsx (R3F particle well, lazy chunk)
-  components/    Nav, Footer, Mark (brand), Mosaic, SceneBoundary, figures/ (incl. HeroScene)
-  sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05), Story (/story)
-  pages/         Landing, Story, Apply, Activate, Welcome, Confirm
+  lib/           fx.jsx (GSAP system), gsap-core.js, motion.js (pause store), palette.js,
+                 submit.js, useIntakeSubmit.js, usePageMeta.js, issues.js, site.js
+  three/         GroundStateScene.jsx + BlochScene.jsx (R3F scenes, lazy chunks), shared.js
+  components/    Nav, Footer, Mark (brand), Mosaic, MotionToggle, SceneBoundary,
+                 SignalSubscribe, IssueBody, figures/ (HeroScene, BlochFigure, BlochSphere,
+                 WaveParticle, EnergyLevels, FigCaption, ArrowMarker)
+  sections/      Hero (01), Problem (02), Proof (03), Inside (04), FinalCta (05),
+                 WaveDivider, Story (/story)
+  pages/         Landing, Story, Apply, Signal, SignalIssue, Activate, Welcome, Confirm
 backend/
-  checkout/      SAM stack: Stripe Checkout sessions + webhook (template.yaml, src/handler.mjs)
+  checkout/      SAM stack: Stripe Checkout sessions + webhook
+  subscribe/     SAM stack: double opt-in subscribe/verify + Postmark suppression webhook
+  apply/         SAM stack: application intake -> DynamoDB + operator notification
+  broadcast/     operator CLI: send a published issue to confirmed Signal subscribers
 ```
