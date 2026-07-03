@@ -23,12 +23,46 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+// Sanity assets accept transform params — request a sized, auto-formatted
+// image instead of the full-resolution original. Mirrors the web renderer's
+// convention (src/components/IssueBody.jsx sizedSanityUrl); the packages are
+// independent by design, so keep the two in sync by hand.
+function sizedSanityUrl(url, width) {
+  if (typeof url !== 'string' || !url.includes('cdn.sanity.io') || url.includes('?')) return url
+  return `${url}?w=${width}&auto=format&fit=max&q=75`
+}
+
+// Email-context link classifier mirroring the web renderer's allowlist
+// (IssueBody.jsx classifyLink): only absolute http(s)/mailto/tel render as
+// anchors. Anything else — empty href, javascript:/data:, //host, or a bare
+// relative path (dead inside an email client anyway) — renders as plain text
+// instead of a styled, dead link.
+function emailHref(rawHref) {
+  const href = String(rawHref ?? '').trim()
+  const lower = href.toLowerCase()
+  if (lower.startsWith('https://') || lower.startsWith('http://')) return href
+  if (lower.startsWith('mailto:') || lower.startsWith('tel:')) return href
+  return null
+}
+
 function blocksToText(blocks) {
+  let n = 0 // running counter for a consecutive numbered-list run
   return (blocks ?? [])
     .map((b) => {
-      if (b._type === 'pteImage') return b.caption ? `[Image: ${b.caption}]` : '[Image]'
-      if (b._type !== 'block') return ''
+      if (b._type === 'pteImage') {
+        n = 0
+        return b.caption ? `[Image: ${b.caption}]` : '[Image]'
+      }
+      if (b._type !== 'block') {
+        n = 0
+        return ''
+      }
       const t = (b.children ?? []).map((c) => c.text ?? '').join('')
+      if (b.listItem === 'number') {
+        n += 1
+        return `${n}. ${t}`
+      }
+      n = 0
       return b.listItem ? `- ${t}` : t
     })
     .filter((line) => line !== '')
@@ -44,15 +78,33 @@ const components = {
     blockquote: ({ children }) => `<blockquote style="margin:18px 0;padding:4px 0 4px 16px;border-left:2px solid #b7a781;font:400 17px/1.6 ${FONT};color:#432d16;">${children}</blockquote>`,
     normal: ({ children }) => `<p style="margin:0 0 16px;font:400 15px/1.7 ${FONT};color:#432d16;">${children}</p>`,
   },
+  // The schema (studio/schemaTypes/objects/blockContent.ts) is the contract:
+  // every style/list/mark it allows must have a deliberate serializer here —
+  // library defaults render unstyled and the unknown-type warning cannot fire
+  // for known constructs.
+  list: {
+    bullet: ({ children }) => `<ul style="margin:0 0 16px;padding:0 0 0 22px;">${children}</ul>`,
+    number: ({ children }) => `<ol style="margin:0 0 16px;padding:0 0 0 22px;">${children}</ol>`,
+  },
+  listItem: {
+    bullet: ({ children }) => `<li style="margin:0 0 6px;font:400 15px/1.7 ${FONT};color:#432d16;">${children}</li>`,
+    number: ({ children }) => `<li style="margin:0 0 6px;font:400 15px/1.7 ${FONT};color:#432d16;">${children}</li>`,
+  },
   marks: {
     strong: ({ children }) => `<strong>${children}</strong>`,
     em: ({ children }) => `<em>${children}</em>`,
-    link: ({ children, value }) => `<a href="${escapeHtml(value?.href ?? '#')}" style="color:#4a6878;">${children}</a>`,
+    code: ({ children }) =>
+      `<code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:#f1f1f6;border-radius:4px;padding:1px 5px;color:#08080a;">${children}</code>`,
+    link: ({ children, value }) => {
+      const href = emailHref(value?.href)
+      if (!href) return children
+      return `<a href="${escapeHtml(href)}" style="color:#4a6878;">${children}</a>`
+    },
   },
   types: {
     pteImage: ({ value }) =>
       value?.url
-        ? `<figure style="margin:22px 0;"><img src="${escapeHtml(value.url)}" alt="${escapeHtml(value.alt)}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${escapeHtml(value.caption)}</figcaption>` : ''}</figure>`
+        ? `<figure style="margin:22px 0;"><img src="${escapeHtml(sizedSanityUrl(value.url, 1120))}" alt="${escapeHtml(value.alt)}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${escapeHtml(value.caption)}</figcaption>` : ''}</figure>`
         : '',
   },
 }
