@@ -52,7 +52,7 @@ const components = {
   types: {
     pteImage: ({ value }) =>
       value?.url
-        ? `<figure style="margin:22px 0;"><img src="${value.url}" alt="${escapeHtml(value.alt)}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${escapeHtml(value.caption)}</figcaption>` : ''}</figure>`
+        ? `<figure style="margin:22px 0;"><img src="${escapeHtml(value.url)}" alt="${escapeHtml(value.alt)}" style="display:block;width:100%;border:1px solid #e6e6ef;"/>${value.caption ? `<figcaption style="margin-top:8px;font:400 12px/1.5 ${FONT};color:#9a9aa6;">${escapeHtml(value.caption)}</figcaption>` : ''}</figure>`
         : '',
   },
 }
@@ -61,8 +61,20 @@ const FROM_NAME = 'The Ground State Society'
 const ENTITY = 'The Ground State Society · operated by Altivum Inc.'
 const WHY = 'You are receiving this because you confirmed your subscription to The Signal at groundstatesociety.com.'
 
+// The CAN-SPAM/GDPR-critical Postmark token — one constant, referenced by the
+// renderer's two bodies AND the CLI's refuse-to-send compliance check.
+export const UNSUBSCRIBE_PLACEHOLDER = '{{{ pm:unsubscribe }}}'
+
 export function renderIssueEmail({ issue, siteUrl }) {
-  const bodyHtml = toHTML(issue.body ?? [], { components })
+  // Unknown Portable Text types would otherwise vanish silently from the
+  // rendered email — collect them so the CLI can surface a loud warning.
+  const unknownTypes = []
+  const bodyHtml = toHTML(issue.body ?? [], {
+    components,
+    onMissingComponent: (_message, context) => {
+      unknownTypes.push(context?.type ?? context?.nodeType ?? 'unknown')
+    },
+  })
   const webUrl = `${siteUrl}/signal/${issue.slug}`
   const date = issue.publishedAt
     ? new Date(issue.publishedAt).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' })
@@ -84,13 +96,13 @@ export function renderIssueEmail({ issue, siteUrl }) {
         </td></tr>
         <tr><td style="padding:0 32px;">${bodyHtml}</td></tr>
         <tr><td style="padding:8px 32px 0;">
-          <p style="margin:0;font:400 13px/1.6 ${FONT};color:#6b6b76;">Read this issue on the web: <a href="${webUrl}" style="color:#4a6878;">${webUrl}</a></p>
+          <p style="margin:0;font:400 13px/1.6 ${FONT};color:#6b6b76;">Read this issue on the web: <a href="${escapeHtml(webUrl)}" style="color:#4a6878;">${escapeHtml(webUrl)}</a></p>
         </td></tr>
         <tr><td style="padding:20px 32px;"><hr style="border:0;border-top:1px solid #e6e6ef;margin:0;"></td></tr>
         <tr><td style="padding:0 32px 28px;">
           <p style="margin:0 0 6px;font:400 12px/1.6 ${FONT};color:#9a9aa6;">${WHY}</p>
           <p style="margin:0 0 6px;font:400 12px/1.6 ${FONT};color:#9a9aa6;">${ENTITY}</p>
-          <p style="margin:0;font:400 12px/1.6 ${FONT};color:#9a9aa6;">{{{ pm:unsubscribe }}}</p>
+          <p style="margin:0;font:400 12px/1.6 ${FONT};color:#9a9aa6;">${UNSUBSCRIBE_PLACEHOLDER}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -109,7 +121,7 @@ Read on the web: ${webUrl}
 —
 ${WHY}
 ${ENTITY}
-{{{ pm:unsubscribe }}}`
+${UNSUBSCRIBE_PLACEHOLDER}`
 
-  return { subject: issue.title, html, text, fromName: FROM_NAME }
+  return { subject: issue.title, html, text, fromName: FROM_NAME, unknownTypes: [...new Set(unknownTypes)] }
 }
