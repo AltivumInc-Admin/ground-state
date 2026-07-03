@@ -12,16 +12,30 @@ batch send through Postmark. It is the final step in the Signal broadcast pipeli
 ## Usage
 
 ```bash
-# Dry run — prints subject, recipient count, a 3-address sample, and whether the
-# unsubscribe placeholder is present. Nothing is sent.
+# Dry run — prints the summary (subject, recipient count, 3-address sample,
+# unsubscribe-placeholder check, any unknown Portable Text types) AND writes the
+# rendered email to preview/<slug>.html + .txt for eyeballing. Nothing is sent.
 node send-issue.mjs <slug>
 
-# Real send — performs the actual batch delivery via Postmark Broadcast.
+# Real send — after the summary prints, you must type the exact recipient count
+# to proceed (forces reading the summary). Batch delivery via Postmark Broadcast.
 node send-issue.mjs <slug> --send
+
+# Scripted send — skips the confirmation prompt.
+node send-issue.mjs <slug> --send --yes
 ```
 
-The slug must match a `status=published` document in Sanity. Drafts and unpublished
-issues are rejected.
+The slug must match `^[a-z0-9-]+$` and a `status=published` document in Sanity.
+Drafts and unpublished issues are rejected.
+
+**Exit codes:** `0` clean send (or dry run) · `1` refused / invalid input /
+per-recipient failures (check the printed `failures`) · `2` **aborted mid-run** —
+earlier batches WERE delivered; the abort message prints how many were confirmed
+sent and how many remain unconfirmed, which is what the resume decision needs.
+
+All required env is validated up front (missing names listed together), including
+`AWS_REGION`/`AWS_PROFILE` — an unpinned scan could silently target the wrong
+account's table. `POSTMARK_TOKEN`/`FROM_ADDRESS` are only required with `--send`.
 
 ## Required environment variables
 
@@ -35,13 +49,15 @@ issues are rejected.
 | `AWS_REGION` / `AWS_PROFILE` | DynamoDB access credentials |
 | `SITE_URL` | Defaults to `https://groundstatesociety.com` |
 
-`POSTMARK_TOKEN` lives in AWS Secrets Manager under `gss/subscribe`. Retrieve it with:
+`POSTMARK_TOKEN` lives in AWS Secrets Manager under `gss/subscribe`. Extract ONLY
+that field via command substitution — never print the full multi-key secret into
+scrollback, and never paste the token into a command line (shell history):
 
 ```bash
-aws secretsmanager get-secret-value \
-  --secret-id gss/subscribe \
-  --region us-east-2 \
-  --profile ground-state
+export POSTMARK_TOKEN=$(aws secretsmanager get-secret-value \
+  --secret-id gss/subscribe --region us-east-2 --profile ground-state \
+  --query SecretString --output text \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['POSTMARK_TOKEN'])")
 ```
 
 ## Safety guards

@@ -26,3 +26,6 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# broadcast dry-run preview artifacts (operator-local)
+backend/broadcast/preview/

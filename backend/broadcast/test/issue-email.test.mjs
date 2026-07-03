@@ -33,3 +33,30 @@ test('renderIssueEmail produces subject, html, text', () => {
   // plain-text body contains rendered block content (not just excerpt)
   assert.match(text, /The rounds/)
 })
+
+test('Sanity-derived url and slug-built webUrl are escaped at their HTML sinks', async () => {
+  const { renderIssueEmail, UNSUBSCRIBE_PLACEHOLDER } = await import('../src/issue-email.mjs')
+  const hostile = {
+    ...issue,
+    body: [{ _type: 'pteImage', _key: 'x', url: 'https://cdn.test/a.png"onerror="alert(1)', alt: 'a' }],
+  }
+  const { html } = renderIssueEmail({ issue: hostile, siteUrl: 'https://groundstatesociety.com' })
+  assert.doesNotMatch(html, /"onerror="/)
+  assert.match(html, /&quot;onerror=&quot;/)
+  // The compliance token is the shared constant, present in both bodies
+  const { html: h2, text: t2 } = renderIssueEmail({ issue, siteUrl: 'https://x.co' })
+  assert.ok(h2.includes(UNSUBSCRIBE_PLACEHOLDER))
+  assert.ok(t2.includes(UNSUBSCRIBE_PLACEHOLDER))
+})
+
+test('unknown Portable Text types are collected, not silently vanished', async () => {
+  const { renderIssueEmail } = await import('../src/issue-email.mjs')
+  const withUnknown = {
+    ...issue,
+    body: [...issue.body, { _type: 'pteChart', _key: 'z', data: [1, 2] }],
+  }
+  const { unknownTypes } = renderIssueEmail({ issue: withUnknown, siteUrl: 'https://x.co' })
+  assert.deepEqual(unknownTypes, ['pteChart'])
+  const clean = renderIssueEmail({ issue, siteUrl: 'https://x.co' })
+  assert.deepEqual(clean.unknownTypes, [])
+})
