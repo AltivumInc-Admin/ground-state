@@ -13,6 +13,33 @@ describe('motion pause store', () => {
   })
 })
 
+describe('motion pause persistence', () => {
+  it('writes the choice to localStorage so it survives reloads', () => {
+    const store = {}
+    const original = window.localStorage
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (k) => (k in store ? store[k] : null),
+        setItem: (k, v) => {
+          store[k] = String(v)
+        },
+        removeItem: (k) => {
+          delete store[k]
+        },
+      },
+    })
+    try {
+      setMotionPaused(true)
+      expect(store['gss-motion-paused']).toBe('1')
+      setMotionPaused(false)
+      expect(store['gss-motion-paused']).toBe('0')
+    } finally {
+      Object.defineProperty(window, 'localStorage', { configurable: true, value: original })
+    }
+  })
+})
+
 describe('useReducedMotion — live OS reduced-motion', () => {
   it('flips when the media query change fires (mid-session), not just at mount', () => {
     // Controllable matchMedia: a live `matches` flag + a stored change listener.
