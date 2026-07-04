@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, within, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Nav from './Nav.jsx'
 
@@ -116,6 +116,60 @@ describe('Nav mobile menu — modal overlay behavior', () => {
     expect(menu.getByRole('link', { name: /network/i })).toBeInTheDocument()
     expect(menu.getByRole('link', { name: /story/i })).toBeInTheDocument()
     expect(menu.getByRole('link', { name: /apply/i })).toHaveAttribute('href', '/apply')
+  })
+})
+
+describe('Nav scrollspy + menu behavior', () => {
+  it('marks the nav link active for the section reported in view (landing only)', () => {
+    setViewport(true)
+    // Controllable IntersectionObserver: capture the callback, expose a fire().
+    let cb
+    const original = globalThis.IntersectionObserver
+    globalThis.IntersectionObserver = class {
+      constructor(fn) {
+        cb = fn
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    try {
+      // The scrollspy observes elements by id — provide one.
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <Nav />
+          <section id="proof">proof</section>
+        </MemoryRouter>,
+      )
+      act(() => {
+        cb([{ isIntersecting: true, target: { id: 'proof' } }])
+      })
+      const proofLink = screen.getByRole('link', { name: /proof/i })
+      expect(proofLink.className).toMatch(/is-active/)
+    } finally {
+      globalThis.IntersectionObserver = original
+    }
+  })
+
+  it('closes the open menu when a section link is clicked', () => {
+    setViewport(true)
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Nav />
+      </MemoryRouter>,
+    )
+    fireEvent.click(toggle())
+    expect(toggle()).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(screen.getByRole('link', { name: /story/i }))
+    expect(toggle()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('renders the reading-progress hairline as decorative (aria-hidden)', () => {
+    setViewport(true)
+    const { container } = renderNav()
+    const bar = container.querySelector('.nav-progress')
+    expect(bar).toBeInTheDocument()
+    expect(bar).toHaveAttribute('aria-hidden', 'true')
   })
 })
 

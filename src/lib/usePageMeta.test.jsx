@@ -67,6 +67,30 @@ describe('usePageMeta — social head reset across SPA navigation', () => {
   })
 })
 
+describe('usePageMeta — per-route canonical + og:url', () => {
+  const canonicalHref = () => document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')
+
+  it('rewrites canonical + og:url to SITE + pathname on a subpage', () => {
+    render(
+      <MemoryRouter initialEntries={['/apply']}>
+        <Page title="Apply" />
+      </MemoryRouter>,
+    )
+    expect(canonicalHref()).toBe('https://groundstatesociety.com/apply')
+    expect(content('meta[property="og:url"]')).toBe('https://groundstatesociety.com/apply')
+  })
+
+  it('uses the bare origin + "/" on the homepage (not "/")', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Page />
+      </MemoryRouter>,
+    )
+    expect(canonicalHref()).toBe('https://groundstatesociety.com/')
+    expect(content('meta[property="og:url"]')).toBe('https://groundstatesociety.com/')
+  })
+})
+
 describe('usePageMeta — robots noindex/reset (deindex leak guard)', () => {
   // The seeded head (beforeEach) omits a robots tag, so the first write also
   // exercises the create-if-missing branch.

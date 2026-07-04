@@ -32,6 +32,13 @@ export default function Cursor() {
     let shown = false
 
     const frame = (t) => {
+      // A route change can unmount the framed target while it's still `target`;
+      // getBoundingClientRect on a detached node returns zeros, snapping the
+      // reticle to the top-left. Drop the dead target instead.
+      if (!t.isConnected) {
+        target = null
+        return
+      }
       const r = t.getBoundingClientRect()
       qx(r.left - PAD)
       qy(r.top - PAD)

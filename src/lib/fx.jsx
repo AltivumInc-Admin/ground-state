@@ -28,6 +28,12 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
         const scope = ref.current
         if (!scope) return
 
+        // data-count writes textContent via onUpdate — a side effect on a
+        // non-tweened property that matchMedia revert can't restore. Capture the
+        // authored value and put it back on revert/unmount so a reduced-motion
+        // flip mid-count doesn't strand the element on a partial number.
+        const countRestores = []
+
         scope.querySelectorAll('[data-fade]').forEach((el) => {
           gsap.from(el, {
             // opacity, NOT autoAlpha: these interactive reveal buckets wrap
@@ -91,6 +97,10 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
           const decimals = parseInt(el.dataset.decimals || '0', 10)
           const prefix = el.dataset.prefix || ''
           const suffix = el.dataset.suffix || ''
+          const authored = el.textContent
+          countRestores.push(() => {
+            el.textContent = authored
+          })
           const state = { n: 0 }
           gsap.to(state, {
             n: end,
@@ -103,17 +113,23 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
           })
         })
 
+        // Restore any data-count text on revert — returned from BOTH exit paths
+        // below so a count-only section (which takes the plugin-gate early
+        // return) still cleans up.
+        const restoreCounts = () => countRestores.forEach((restore) => restore())
+
         // SplitText + DrawSVGPlugin are loaded here on demand, so routes
         // without [data-split]/[data-draw] never fetch them. We're already
         // inside the motion-OK branch, so a gsap.context (not another
         // matchMedia) collects the async tweens for teardown.
         const splitEls = scope.querySelectorAll('[data-split]')
         const drawEls = scope.querySelectorAll('[data-draw]')
-        if (!splitEls.length && !drawEls.length) return
+        if (!splitEls.length && !drawEls.length) return restoreCounts
 
         let cancelled = false
         let pluginCtx
-        Promise.all([import('gsap/SplitText'), import('gsap/DrawSVGPlugin')]).then(
+        Promise.all([import('gsap/SplitText'), import('gsap/DrawSVGPlugin')])
+          .then(
           ([{ SplitText }, { DrawSVGPlugin }]) => {
             // Unmounted (or media flipped) before the import resolved — don't
             // build tweens into a dead scope.
@@ -173,12 +189,23 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
             }, scope)
           },
         )
+          .catch((err) => {
+            // A stale-deploy 404 or a flaky network on the plugin chunk must not
+            // become an unhandled rejection — motion just doesn't play here.
+            if (!cancelled) {
+              console.warn(
+                JSON.stringify({ at: 'fx_plugin_load_failed', message: err?.message }),
+              )
+            }
+          })
 
         // matchMedia revert (incl. useGSAP unmount) runs this — tear down the
-        // async tweens, which live outside useGSAP's own auto-context.
+        // async tweens, which live outside useGSAP's own auto-context, and
+        // restore any data-count text the tween left partial.
         return () => {
           cancelled = true
           pluginCtx?.revert()
+          restoreCounts()
         }
       })
 
