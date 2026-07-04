@@ -93,3 +93,14 @@ test('seo fallback contract: authored values win, absent values fall back — no
     assert.equal(typeof i.seo.description, 'string')
   }
 })
+
+test('guardEmptyIssues nags when the flag is stale (issues exist but the flag is still set)', async (t) => {
+  const { guardEmptyIssues } = await import('./fetch-issues.mjs')
+  const warnSpy = t.mock.method(console, 'warn', () => {})
+  guardEmptyIssues([{ slug: 'first-light' }], { GSS_ALLOW_EMPTY_ISSUES: '1' }) // must not throw
+  assert.match(warnSpy.mock.calls[0].arguments[0], /STALE/)
+  assert.match(warnSpy.mock.calls[0].arguments[0], /first-issue-publish\.md/)
+  // and stays silent when the flag is absent and issues exist
+  guardEmptyIssues([{ slug: 'first-light' }], {})
+  assert.equal(warnSpy.mock.calls.length, 1)
+})
