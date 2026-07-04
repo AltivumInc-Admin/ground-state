@@ -36,9 +36,17 @@ applications are live. The free Signal tier is the only active conversion path.
   `/story → /story.html`, `/apply → /apply.html`, `/signal → /signal.html`,
   `/signal/<slug> → /signal/<slug>.html`, SPA catch-all → `/index.html`
   (the catch-all regex excludes static extensions incl. `xml`, so the sitemap serves statically).
-- **Cache caveat:** Amplify's CloudFront caches with `s-maxage=31536000` (1 yr) and
-  ignores query strings in the cache key. After a rewrite-rule or `customHttp.yml` change,
-  a **redeploy** (`aws amplify start-job --job-type RELEASE`) is what invalidates the edge cache.
+- **Cache caveat:** Amplify's CloudFront ignores query strings in the cache key, and the
+  managed distribution is not directly invalidatable from this account (it lives in an
+  Amazon-owned account — `cloudfront list-distributions` returns nothing). Amplify's
+  deploy-time invalidation proved unreliable for this app: prerendered HTML (`/`, `/story`,
+  `/apply`, `/signal`) was held at the edge under a 1-yr `s-maxage` with a monotonically
+  climbing `age`, so a merged HTML change (the #54 nav treatment) stayed stale until forced.
+  **Fix (#55, `customHttp.yml`):** `Cache-Control: public, max-age=0, must-revalidate` on the
+  HTML/dynamic paths (`/`, `/*`, `/signal/*`) so CloudFront revalidates against origin via the
+  ETag — HTML now reflects each deploy immediately; `/assets/**` + `/fonts/**` keep their long
+  cache (non-overlapping patterns). Verify after deploy: `curl -sI …/story.html | grep -i
+  age` should reset low (was ever-climbing).
 - Post-deploy check: `./scripts/verify-deploy.sh https://groundstatesociety.com [checkout-api]`.
 
 ## Backend security & CSP (cutover 2026-06-25, deployed + verified live)

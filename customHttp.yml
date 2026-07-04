@@ -24,3 +24,35 @@ customHeaders:
       # (incl. the apply origin at intake-open) is not listed here.
       - key: 'Content-Security-Policy'
         value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.groundstatesociety.com https://checkout.groundstatesociety.com https://apply.groundstatesociety.com; img-src 'self' data: https://cdn.sanity.io; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+
+  # Cache-Control for prerendered HTML + regenerated root files. Amplify's
+  # default gives these a 1-year edge s-maxage and relies on a deploy-time
+  # CloudFront invalidation — which on this app was NOT flushing them, so a
+  # merged change (e.g. the prerendered nav treatment) stayed stale at the edge
+  # under x-cache HITs with an ever-climbing age. Overriding Cache-Control makes
+  # CloudFront revalidate against origin (via the ETag Amplify already sends), so
+  # every deploy's HTML is picked up immediately.
+  #
+  # Scope is deliberately NON-OVERLAPPING with /assets/** and /fonts/** (Amplify
+  # header precedence across same-key patterns is undocumented): those keep their
+  # working long cache untouched. These patterns only add the Cache-Control key;
+  # the '**' block above still supplies security headers to every path.
+  #   '/'          → homepage
+  #   '/*'         → every root single-segment path: the extensionless routes
+  #                  (/story, /apply, /signal, /activate, /welcome, /confirm),
+  #                  the direct *.html files, and the regenerated sitemap.xml /
+  #                  robots.txt. (favicon.svg / og.png revalidate too — harmless.)
+  #   '/signal/*'  → per-issue reader pages (/signal/<slug> and <slug>.html)
+  # New indexable HTML routes at a new depth must be added here.
+  - pattern: '/'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate'
+  - pattern: '/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate'
+  - pattern: '/signal/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=0, must-revalidate'
