@@ -15,7 +15,16 @@ const ISSUE_QUERY = `*[_type == "issue" && status == "published" && slug.current
 export async function fetchIssue({ slug, projectId, dataset, apiVersion = '2026-06-01' }) {
   // timeout (ms) is @sanity/client's request timeout — bounded so a hung
   // Sanity API fails loudly instead of hanging the CLI indefinitely.
-  const client = createClient({ projectId, dataset, apiVersion, useCdn: false, timeout: 15000 })
+  // token mirrors fetch-issues.mjs: the documented private-dataset
+  // contingency must cover BOTH GROQ consumers, not just the web build.
+  const client = createClient({
+    projectId,
+    dataset,
+    apiVersion,
+    useCdn: false,
+    timeout: 15000,
+    token: process.env.SANITY_READ_TOKEN || undefined,
+  })
   return client.fetch(ISSUE_QUERY, { slug })
 }
 
