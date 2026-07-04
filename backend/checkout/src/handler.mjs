@@ -1,6 +1,4 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb'
 
 /*
  * Stripe Checkout backend — one Lambda, three routes (HTTP API payload v2):
@@ -46,13 +44,32 @@ if (!process.env.STRIPE_SECRET_KEY && process.env.SECRETS_ARN) {
   }
 }
 
-// Webhook idempotency. Exported so tests can stub `send`. Disabled (claimEvent
-// returns true) when EVENTS_TABLE is unset, as in local dev and the test suite.
-export const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}))
+// Webhook idempotency. `ddb` is a thin delegate: tests keep stubbing
+// t.mock.method(ddb, 'send', ...) exactly as before, while the DynamoDB SDK —
+// used only by the /webhook route — loads on first use instead of taxing
+// every cold start on the user-facing /checkout and /session paths.
+// Disabled (claimEvent returns true) when EVENTS_TABLE is unset, as in local
+// dev and the test suite.
+let sdkPromise
+const sdk = () =>
+  (sdkPromise ??= Promise.all([
+    import('@aws-sdk/client-dynamodb'),
+    import('@aws-sdk/lib-dynamodb'),
+  ]).then(([{ DynamoDBClient }, lib]) => ({
+    client: lib.DynamoDBDocumentClient.from(new DynamoDBClient({})),
+    PutCommand: lib.PutCommand,
+  })))
+
+export const ddb = {
+  async send(cmd) {
+    return (await sdk()).client.send(cmd)
+  },
+}
 const EVENT_TTL_SEC = 60 * 60 * 24 * 7 // 7 days > Stripe's max retry window
 
 async function claimEvent(eventId) {
   if (!process.env.EVENTS_TABLE || typeof eventId !== 'string') return true
+  const { PutCommand } = await sdk()
   try {
     await ddb.send(
       new PutCommand({
@@ -68,32 +85,55 @@ async function claimEvent(eventId) {
   }
 }
 
-async function stripeRequest(method, path, params) {
-  const res = await fetch(`${STRIPE_API}/${path}`, {
-    method,
-    headers: {
-      authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-      ...(params && { 'content-type': 'application/x-www-form-urlencoded' }),
-    },
-    ...(params && { body: new URLSearchParams(params) }),
-    // Bounded: a hung Stripe must fail inside the designed 502 path (with its
-    // alarmed stripe_error log), not ride to the 15s Lambda kill pinning one of
-    // the 10 reserved-concurrency slots the webhook route shares.
-    signal: AbortSignal.timeout(8000),
-  })
-  const data = await res.json()
-  if (!res.ok) {
-    // Log the detail server-side; callers only ever see a generic error
+/* The ONE place Stripe-call failures are logged. Callers map the throw to a
+   response; the router's catch-all stays reserved for genuine surprises.
+   expectStatuses: outcomes that are part of normal operation (getSession's
+   publicly-triggerable 404) — they still throw {status} for the caller to
+   branch on, but must not page the operator via the alarmed stripe_error log. */
+async function stripeRequest(method, path, params, { expectStatuses = [] } = {}) {
+  let res
+  try {
+    res = await fetch(`${STRIPE_API}/${path}`, {
+      method,
+      headers: {
+        authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        ...(params && { 'content-type': 'application/x-www-form-urlencoded' }),
+      },
+      ...(params && { body: new URLSearchParams(params) }),
+      // Bounded: a hung Stripe must fail inside the designed 502 path (with its
+      // alarmed stripe_error log), not ride to the 15s Lambda kill pinning one of
+      // the 10 reserved-concurrency slots the webhook route shares.
+      signal: AbortSignal.timeout(8000),
+    })
+  } catch (err) {
+    // A network-level failure (DNS, reset, the timeout above) never reaches
+    // the !res.ok branch — log it here so it is alarmed and diagnosable.
     console.error(
       JSON.stringify({
         at: 'stripe_error',
         path,
-        status: res.status,
-        type: data.error?.type,
-        code: data.error?.code,
-        message: data.error?.message,
+        network: true,
+        name: err?.name,
+        message: err?.message,
       }),
     )
+    throw err
+  }
+  const data = await res.json()
+  if (!res.ok) {
+    if (!expectStatuses.includes(res.status)) {
+      // Log the detail server-side; callers only ever see a generic error
+      console.error(
+        JSON.stringify({
+          at: 'stripe_error',
+          path,
+          status: res.status,
+          type: data.error?.type,
+          code: data.error?.code,
+          message: data.error?.message,
+        }),
+      )
+    }
     throw Object.assign(new Error('stripe_error'), { status: res.status })
   }
   return data
@@ -125,18 +165,26 @@ async function createCheckout(event) {
   }
 
   const site = process.env.SITE_URL
-  const session = await stripeRequest('POST', 'checkout/sessions', {
-    mode: 'subscription',
-    'line_items[0][price]': price,
-    'line_items[0][quantity]': '1',
-    // {CHECKOUT_SESSION_ID} is substituted by Stripe, not by us
-    success_url: `${site}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${site}/activate`,
-    'metadata[plan]': plan,
-    'subscription_data[metadata][tier]': 'round',
-    'subscription_data[metadata][plan]': plan,
-    ...(email && { customer_email: email }),
-  })
+  let session
+  try {
+    session = await stripeRequest('POST', 'checkout/sessions', {
+      mode: 'subscription',
+      'line_items[0][price]': price,
+      'line_items[0][quantity]': '1',
+      // {CHECKOUT_SESSION_ID} is substituted by Stripe, not by us
+      success_url: `${site}/welcome?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${site}/activate`,
+      'metadata[plan]': plan,
+      'subscription_data[metadata][tier]': 'round',
+      'subscription_data[metadata][plan]': plan,
+      ...(email && { customer_email: email }),
+    })
+  } catch {
+    // stripeRequest already logged (HTTP or network) — map to the generic
+    // upstream failure. The router's unhandled catch stays reserved for
+    // genuine surprises, so its alarm line means "look for a bug".
+    return json(502, { error: 'upstream_error' })
+  }
   return json(200, { url: session.url })
 }
 
@@ -147,7 +195,11 @@ async function getSession(event) {
   }
   let s
   try {
-    s = await stripeRequest('GET', `checkout/sessions/${id}`)
+    // 404 is expected, benign, and publicly triggerable (any well-formed id
+    // probes it) — it must not page the operator via the stripe_error log.
+    s = await stripeRequest('GET', `checkout/sessions/${id}`, undefined, {
+      expectStatuses: [404],
+    })
   } catch (err) {
     return err.status === 404
       ? json(404, { error: 'not_found' })
@@ -192,21 +244,32 @@ function signatureIsValid(payload, header, secret) {
 
 async function webhook(event) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
+  // Every rejection logs a fixed-reason webhook_rejected line (never payload
+  // content — it is attacker-controlled). All three reasons are terms in the
+  // alarmed metric filter, invalid_signature DELIBERATELY included: a wrong
+  // live-mode signing secret makes every REAL Stripe delivery fail signature
+  // verification — the silent-dead-ledger case — and that outweighs scanner
+  // noise pre-launch. Revisit (split the metric) only if noise materializes.
+  const rejected = (statusCode, reason) => {
+    console.error(JSON.stringify({ at: 'webhook_rejected', reason }))
+    return json(statusCode, { error: reason === 'not_configured' ? 'webhook_not_configured' : reason })
+  }
+
   // Fail closed: with no signing secret there is no way to authenticate
-  if (!secret) return json(503, { error: 'webhook_not_configured' })
+  if (!secret) return rejected(503, 'not_configured')
 
   const payload = event.isBase64Encoded
     ? Buffer.from(event.body ?? '', 'base64').toString('utf8')
     : (event.body ?? '')
   if (!signatureIsValid(payload, event.headers?.['stripe-signature'], secret)) {
-    return json(400, { error: 'invalid_signature' })
+    return rejected(400, 'invalid_signature')
   }
 
   let evt
   try {
     evt = JSON.parse(payload)
   } catch {
-    return json(400, { error: 'invalid_payload' })
+    return rejected(400, 'invalid_payload')
   }
 
   // Idempotency: Stripe delivers at-least-once and retries failures. Drop a
@@ -251,7 +314,11 @@ export async function handler(event) {
     if (method === 'POST' && path === '/webhook') return await webhook(event)
     return json(404, { error: 'not_found' })
   } catch (err) {
-    console.error(JSON.stringify({ at: 'unhandled', message: err?.message }))
+    // Fleet shape (subscribe/apply carry route too); name distinguishes
+    // TimeoutError/TypeError at a glance when the alarm fires.
+    console.error(
+      JSON.stringify({ at: 'unhandled', route: path, name: err?.name, message: err?.message }),
+    )
     return json(502, { error: 'upstream_error' })
   }
 }
