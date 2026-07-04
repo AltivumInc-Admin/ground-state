@@ -38,3 +38,22 @@ jobs:
       - run: npm run build
         env:
           GSS_ALLOW_EMPTY_ISSUES: '1'
+
+  # The Studio is a separate package deployed manually (`npx sanity deploy`),
+  # so nothing else gates it — a type-broken schema change would merge green
+  # and be discovered at deploy time. Typecheck is the cheap CI-shaped gate.
+  studio-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
