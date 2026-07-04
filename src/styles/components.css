@@ -1709,6 +1709,20 @@ select {
   max-width: 38ch;
 }
 
+/* The inline byline link (the E-E-A-T credential) sits in prose, so an
+   always-on underline is the non-color link cue WCAG 1.4.1 (Level A) requires —
+   without it the link is the same ink-mute as the surrounding text. */
+.footer-tag a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s var(--ease-out);
+}
+
+.footer-tag a:hover {
+  color: var(--ink);
+}
+
 .footer h4 {
   color: var(--sand);
   margin-bottom: 1.3rem;

@@ -12,12 +12,17 @@ const SECTIONS = [
 ]
 
 export default function Nav() {
-  const [open, setOpen] = useState(false)
-  const [active, setActive] = useState('')
-  const [overDark, setOverDark] = useState(true)
-  const progressRef = useRef(null)
   const { pathname } = useLocation()
   const onLanding = pathname === '/'
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState('')
+  // Seed the treatment from the route so the PRERENDERED non-landing HTML paints
+  // the correct light nav on first paint. Prerender runs no effects, so seeding
+  // true here would ship a black nav bar over every ghost-sheet page until
+  // hydration. Landing seeds dark (it floats over the black hero); the scroll
+  // effect below then measures the hero and flips it at the boundary.
+  const [overDark, setOverDark] = useState(onLanding)
+  const progressRef = useRef(null)
 
   // Reading-progress hairline along the nav's bottom edge
   useGSAP(() => {

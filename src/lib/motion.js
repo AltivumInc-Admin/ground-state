@@ -48,12 +48,31 @@ export function useMotionPaused() {
   return useSyncExternalStore(subscribe, get, () => false)
 }
 
-/* True when the visitor's OS asks for reduced motion. Shared by the scene
-   wrappers (HeroScene, BlochFigure); SSR-safe — the prerender pass has no
-   window, and the static render is the reduced one anyway. */
+/* True when the visitor's OS asks for reduced motion. One-shot read — kept for
+   non-React callers; React consumers should use useReducedMotion() so a
+   mid-session OS change is honored live. SSR-safe. */
 export function prefersReducedMotion() {
   return (
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
+}
+
+/* Live reduced-motion, built like useMotionPaused: subscribe to the media
+   query's change event so a visitor who flips OS 'Reduce motion' WHILE the page
+   is open stops the perpetual scenes immediately — matching the live behavior
+   the CSS gate (.el-excite) and the Fx scroll system already have. SSR snapshot
+   false; guarded for the prerender pass. */
+const RM_QUERY = '(prefers-reduced-motion: reduce)'
+function subscribeReducedMotion(fn) {
+  if (typeof window === 'undefined' || !window.matchMedia) return () => {}
+  const mq = window.matchMedia(RM_QUERY)
+  mq.addEventListener('change', fn)
+  return () => mq.removeEventListener('change', fn)
+}
+const getReducedMotion = () =>
+  typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(RM_QUERY).matches
+
+export function useReducedMotion() {
+  return useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false)
 }

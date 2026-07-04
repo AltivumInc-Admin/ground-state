@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import SceneBoundary from '../SceneBoundary.jsx'
-import { prefersReducedMotion, useMotionPaused } from '../../lib/motion.js'
+import { useReducedMotion, useMotionPaused } from '../../lib/motion.js'
 
 /* The three.js bundle loads lazily so the page paints first. */
 const GroundStateScene = lazy(() => import('../../three/GroundStateScene.jsx'))
@@ -18,7 +18,9 @@ export default function HeroScene({ energyRef, onFailed }) {
   // frame on demand.
   const [ready, setReady] = useState(false)
   const [lost, setLost] = useState(false)
-  const [reduced] = useState(prefersReducedMotion)
+  // Live: a mid-session OS 'Reduce motion' flip settles the cloud immediately
+  // (was frozen at mount).
+  const reduced = useReducedMotion()
   // The visitor's pause toggle reuses the reduced-motion path: static
   // cloud, still camera, frameloop on demand
   const paused = useMotionPaused()

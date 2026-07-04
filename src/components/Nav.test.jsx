@@ -118,3 +118,24 @@ describe('Nav mobile menu — modal overlay behavior', () => {
     expect(menu.getByRole('link', { name: /apply/i })).toHaveAttribute('href', '/apply')
   })
 })
+
+describe('Nav dark-treatment seed (prerender FOUC guard)', () => {
+  const renderAt = (path) =>
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <Nav />
+      </MemoryRouter>,
+    )
+
+  it('a non-landing route seeds the LIGHT treatment (no on-dark) on first render', () => {
+    setViewport(false)
+    const { container } = renderAt('/story')
+    expect(container.querySelector('header.nav').className).not.toMatch(/on-dark/)
+  })
+
+  it('the landing route seeds the DARK treatment (on-dark) over the hero', () => {
+    setViewport(false)
+    const { container } = renderAt('/')
+    expect(container.querySelector('header.nav').className).toMatch(/on-dark/)
+  })
+})
