@@ -1,9 +1,12 @@
 # Deploy parameters for the checkout stack. Secrets are NEVER stored here —
-# pass them on the command line:
-#   sam deploy --parameter-overrides \
-#     StripeSecretKey=$STRIPE_SECRET_KEY \
-#     StripeWebhookSecret=$STRIPE_WEBHOOK_SECRET \
-#     PriceMonthly=price_... PriceAnnual=price_...
+# they live in the gss/checkout Secrets Manager secret; the stack takes only
+# its ARN (the old StripeSecretKey/StripeWebhookSecret CFN params were removed
+# in the Secrets Manager cutover):
+#   sam build && sam deploy --parameter-overrides \
+#     "CheckoutSecretsArn=arn:aws:secretsmanager:us-east-2:...:secret:gss/checkout-..." \
+#     "PriceMonthly=price_..." "PriceAnnual=price_..." \
+#     "CheckoutDomainName=checkout.groundstatesociety.com" "CheckoutCertArn=arn:aws:acm:..." \
+#     "SiteUrl=https://groundstatesociety.com" "AlarmEmail=..." "ReservedConcurrency=-1"
 version = 0.1
 
 [default.deploy.parameters]

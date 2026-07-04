@@ -185,7 +185,13 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckoutLogGroup
-      FilterPattern: '?"stripe_error" ?"\"at\":\"unhandled\""'
+      # webhook_rejected is deliberately alarmed even though scanners can
+      # trigger invalid_signature: a wrong live-mode signing secret makes every
+      # REAL Stripe delivery fail verification (the silent-dead-ledger case),
+      # and pre-launch that outweighs scanner noise. Split the metric only if
+      # noise materializes post-launch. The contract with handler.mjs's log
+      # tags is pinned by the filter-terms test in test/handler.test.mjs.
+      FilterPattern: '?"stripe_error" ?"\"at\":\"unhandled\"" ?"\"at\":\"webhook_rejected\""'
       MetricTransformations:
         - MetricNamespace: GSS/Checkout
           MetricName: CheckoutFailures

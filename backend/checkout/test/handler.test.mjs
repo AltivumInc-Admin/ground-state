@@ -161,13 +161,20 @@ test('annual plan maps to the annual price; email omitted when absent', async (t
   assert.equal(res.statusCode, 200)
 })
 
-test('a network failure surfaces as 502 upstream_error, never a stack trace', async (t) => {
+test('a network failure surfaces as 502 upstream_error with ONE alarmed stripe_error line', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => {
     throw new Error('socket hang up')
   })
+  const errSpy = t.mock.method(console, 'error', () => {})
   const res = await handler(event({ body: { plan: 'monthly' } }))
   assert.equal(res.statusCode, 502)
   assert.equal(JSON.parse(res.body).error, 'upstream_error')
+  // stripeRequest is the single logging layer: exactly one stripe_error
+  // (network-flagged), and NO unhandled line — that tag is reserved for bugs.
+  const lines = errSpy.mock.calls.map((c) => JSON.parse(c.arguments[0]))
+  assert.equal(lines.filter((l) => l.at === 'stripe_error').length, 1)
+  assert.equal(lines[0].network, true)
+  assert.equal(lines.filter((l) => l.at === 'unhandled').length, 0)
 })
 
 test('a hung Stripe aborts at the fetch timeout and surfaces as the same 502', async (t) => {
@@ -178,9 +185,13 @@ test('a hung Stripe aborts at the fetch timeout and surfaces as the same 502', a
       name: 'TimeoutError',
     })
   })
+  const errSpy = t.mock.method(console, 'error', () => {})
   const res = await handler(event({ body: { plan: 'monthly' } }))
   assert.equal(res.statusCode, 502)
   assert.equal(JSON.parse(res.body).error, 'upstream_error')
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'stripe_error')
+  assert.equal(line.name, 'TimeoutError')
 })
 
 /* -------------------------------------------------------------- /session */
@@ -378,4 +389,100 @@ test('a first-delivery event is claimed and processed', async (t) => {
   assert.equal(res.statusCode, 200)
   assert.deepEqual(JSON.parse(res.body), { received: true })
   assert.equal(loggedCompletion(logs), true, 'first delivery writes the ledger line')
+})
+
+/* ------------------------------------- observability + durability tails */
+
+test('a benign /session 404 does NOT log the alarmed stripe_error line', async (t) => {
+  // Any well-formed session id probes this publicly — it must not page.
+  t.mock.method(globalThis, 'fetch', async () => new Response(
+    JSON.stringify({ error: { type: 'invalid_request_error', code: 'resource_missing' } }),
+    { status: 404 },
+  ))
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(
+    event({ method: 'GET', path: '/session', query: { session_id: `cs_test_${'a'.repeat(24)}` } }),
+  )
+  assert.equal(res.statusCode, 404)
+  assert.equal(JSON.parse(res.body).error, 'not_found')
+  assert.equal(errSpy.mock.calls.length, 0)
+})
+
+test('a real /session network failure logs the alarmed stripe_error line (was silent)', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('socket hang up')
+  })
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(
+    event({ method: 'GET', path: '/session', query: { session_id: `cs_test_${'a'.repeat(24)}` } }),
+  )
+  assert.equal(res.statusCode, 502)
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'stripe_error')
+  assert.equal(line.network, true)
+})
+
+test('all three webhook rejection paths log an alarmed webhook_rejected line (no payload content)', async (t) => {
+  const errSpy = t.mock.method(console, 'error', () => {})
+  // 1. not_configured (fail-closed 503)
+  delete process.env.STRIPE_WEBHOOK_SECRET
+  let res = await handler(webhookEvent(COMPLETED_EVENT, sign(COMPLETED_EVENT)))
+  assert.equal(res.statusCode, 503)
+  // 2. invalid_signature
+  process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET
+  t.after(() => delete process.env.STRIPE_WEBHOOK_SECRET)
+  res = await handler(webhookEvent(COMPLETED_EVENT, sign(COMPLETED_EVENT, 'whsec_wrong')))
+  assert.equal(res.statusCode, 400)
+  // 3. invalid_payload (valid signature over garbage)
+  const garbage = 'not json {'
+  res = await handler(webhookEvent(garbage, sign(garbage)))
+  assert.equal(res.statusCode, 400)
+
+  const reasons = errSpy.mock.calls
+    .map((c) => JSON.parse(c.arguments[0]))
+    .filter((l) => l.at === 'webhook_rejected')
+    .map((l) => l.reason)
+  assert.deepEqual(reasons, ['not_configured', 'invalid_signature', 'invalid_payload'])
+  // Never any payload content in the rejection lines
+  for (const c of errSpy.mock.calls) {
+    assert.doesNotMatch(String(c.arguments[0]), /not json/)
+  }
+})
+
+test('a DynamoDB failure during the idempotency claim rethrows to 502 so Stripe retries', async (t) => {
+  process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET
+  process.env.EVENTS_TABLE = 'events-test'
+  t.after(() => {
+    delete process.env.STRIPE_WEBHOOK_SECRET
+    delete process.env.EVENTS_TABLE
+  })
+  t.mock.method(ddb, 'send', async () => {
+    throw new Error('dynamodb unavailable')
+  })
+  const errSpy = t.mock.method(console, 'error', () => {})
+  const res = await handler(webhookEvent(COMPLETED_EVENT, sign(COMPLETED_EVENT)))
+  // A claim failure must NOT ack the event — the 502 makes Stripe retry.
+  assert.equal(res.statusCode, 502)
+  assert.equal(JSON.parse(res.body).error, 'upstream_error')
+  const line = JSON.parse(errSpy.mock.calls[0].arguments[0])
+  assert.equal(line.at, 'unhandled')
+  assert.equal(line.route, '/webhook')
+})
+
+test('every metric-filter term in template.yaml exists in the handler source (drift guard)', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const template = await readFile(new URL('../template.yaml', import.meta.url), 'utf8')
+  const source = await readFile(new URL('../src/handler.mjs', import.meta.url), 'utf8')
+  const patternLine = template.match(/FilterPattern: '(.+)'/)
+  assert.ok(patternLine, 'FilterPattern not found in template.yaml')
+  const terms = [...patternLine[1].matchAll(/\?"((?:[^"\\]|\\.)+)"/g)].map((m) =>
+    m[1].replace(/\\"/g, '"'),
+  )
+  assert.ok(terms.length >= 3, `expected >=3 filter terms, got ${terms.length}`)
+  for (const term of terms) {
+    // The emitted JSON must contain each term literally once serialized;
+    // check against the source's log tags (at:'x' serializes to "at":"x").
+    const tag = term.replace(/^"at":"/, '').replace(/"$/, '')
+    assert.ok(source.includes(tag), `filter term ${JSON.stringify(term)} has no source counterpart (${tag})`)
+  }
 })
