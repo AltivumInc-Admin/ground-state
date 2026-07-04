@@ -85,8 +85,92 @@ export default function Nav() {
     setOpen(false)
   }, [pathname])
 
+  const headerRef = useRef(null)
+  const toggleRef = useRef(null)
+
+  // The open mobile menu is a fullscreen overlay (position:fixed inset:0), so
+  // it must behave as a modal, not a bare disclosure: Escape closes it, Tab is
+  // contained to the visible header, the obscured page goes inert (removed from
+  // both the tab order and the a11y tree), and the body scroll locks. Gated to
+  // the overlay breakpoint — above 1240px the same <ul> is the inline nav and
+  // none of this applies.
+  useEffect(() => {
+    if (!open) return undefined
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 1240px)').matches) {
+      return undefined
+    }
+    const header = headerRef.current
+    if (!header) return undefined
+    // Capture at setup for the cleanup's focus-restore (exhaustive-deps): the
+    // toggle is the same node throughout the open state.
+    const toggleEl = toggleRef.current
+
+    // Every header control is visible in this gated state (open + overlay
+    // breakpoint), so the selector is the full set — no layout-based visibility
+    // filter (which also would not work under jsdom's no-layout DOM).
+    const getFocusable = () => [...header.querySelectorAll('a[href], button:not([disabled])')]
+
+    const bgNodes = [document.getElementById('main'), document.querySelector('footer')].filter(
+      Boolean,
+    )
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    bgNodes.forEach((n) => {
+      n.inert = true
+    })
+    // Start on the first menu item — the content that just opened — rather
+    // than stranded on the now-obscured page. (The trap below still spans the
+    // whole header, so Shift+Tab reaches the Close toggle and brand.)
+    document.getElementById('nav-menu')?.querySelector('a[href], button')?.focus()
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+      if (e.key !== 'Tab') return
+      const items = getFocusable()
+      if (items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+      bgNodes.forEach((n) => {
+        n.inert = false
+      })
+      // Return focus to the control that opened the menu — but only if the trap
+      // still owns focus, so a route-change unmount doesn't steal it.
+      const owned = !document.activeElement || header.contains(document.activeElement) || document.activeElement === document.body
+      if (owned) toggleEl?.focus()
+    }
+  }, [open])
+
+  // Opening at mobile then resizing to desktop would leave open=true: the
+  // overlay CSS drops to the inline nav while the inert/scroll-lock persisted.
+  // Close on cross-up so the modal state can never outlive the overlay.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const mq = window.matchMedia('(min-width: 1241px)')
+    const onChange = (e) => {
+      if (e.matches) setOpen(false)
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
   return (
-    <header className={`nav${overDark || open ? ' on-dark ground-dark' : ''}`}>
+    <header ref={headerRef} className={`nav${overDark || open ? ' on-dark ground-dark' : ''}`}>
       <span ref={progressRef} className="nav-progress" aria-hidden="true" />
       <div className="container nav-inner">
         <Link to="/" className="nav-brand" aria-label="The Ground State Society — home">
@@ -106,6 +190,7 @@ export default function Nav() {
 
         <nav aria-label="Page sections">
           <button
+            ref={toggleRef}
             type="button"
             className="nav-toggle label"
             aria-expanded={open}
