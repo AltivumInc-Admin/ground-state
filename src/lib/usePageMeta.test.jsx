@@ -67,6 +67,44 @@ describe('usePageMeta — social head reset across SPA navigation', () => {
   })
 })
 
+describe('usePageMeta — robots noindex/reset (deindex leak guard)', () => {
+  // The seeded head (beforeEach) omits a robots tag, so the first write also
+  // exercises the create-if-missing branch.
+  function RobotsPage({ noindex }) {
+    usePageMeta({ title: 'x', noindex })
+    return null
+  }
+  const robots = () => content('meta[name="robots"]')
+
+  it('a noindex route writes "noindex, follow" (create-if-missing)', () => {
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull() // not seeded
+    render(
+      <MemoryRouter initialEntries={['/confirm']}>
+        <RobotsPage noindex />
+      </MemoryRouter>,
+    )
+    expect(robots()).toBe('noindex, follow')
+  })
+
+  it('resets robots back to ROBOTS_INDEX on navigation to an indexable route (the leak guard)', () => {
+    render(
+      <MemoryRouter initialEntries={['/confirm']}>
+        <RobotsPage noindex />
+      </MemoryRouter>,
+    )
+    expect(robots()).toBe('noindex, follow')
+    cleanup()
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <RobotsPage />
+      </MemoryRouter>,
+    )
+    // A "only write robots when noindex" refactor would leave the prior
+    // 'noindex, follow' on the homepage and deindex the site — this catches it.
+    expect(robots()).toBe(ROBOTS_INDEX)
+  })
+})
+
 describe('usePageMeta — homepage defaults stay in sync with index.html (drift guard)', () => {
   // The hook's DEFAULT_* constants intentionally duplicate index.html's static head
   // (a snapshot at module load would capture whichever route loaded first, not the

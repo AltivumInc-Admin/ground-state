@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useMotionPaused, setMotionPaused } from '../lib/motion.js'
+import { useMotionPaused, setMotionPaused, useReducedMotion } from '../lib/motion.js'
 
 /*
  * The pause/stop mechanism WCAG 2.2.2 asks for, placed beside each
@@ -12,14 +12,16 @@ import { useMotionPaused, setMotionPaused } from '../lib/motion.js'
  */
 export default function MotionToggle() {
   const paused = useMotionPaused()
+  const reduced = useReducedMotion()
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     setMounted(true)
   }, [])
   if (!mounted) return null
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return null
-  }
+  // Hidden under reduced motion — the scenes are already static, so the control
+  // would be a no-op. Live via the hook: it appears/disappears if the OS
+  // setting flips mid-session.
+  if (reduced) return null
   return (
     <button
       type="button"

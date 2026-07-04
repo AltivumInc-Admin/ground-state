@@ -30,7 +30,13 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
 
         scope.querySelectorAll('[data-fade]').forEach((el) => {
           gsap.from(el, {
-            autoAlpha: 0,
+            // opacity, NOT autoAlpha: these interactive reveal buckets wrap
+            // focusable content (the primary Apply CTA, the FAQ disclosures,
+            // the subscribe + apply forms). autoAlpha's visibility:hidden would
+            // pull them from the a11y tree AND tab order until scrolled to;
+            // opacity keeps them reachable and self-heals — a Tab to a still-
+            // transparent control scrolls it in, firing this once-trigger.
+            opacity: 0,
             y: 28,
             duration: 0.9,
             ease: 'power3.out',
@@ -40,7 +46,9 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
 
         scope.querySelectorAll('[data-stagger]').forEach((el) => {
           gsap.from(el.children, {
-            autoAlpha: 0,
+            // opacity, NOT autoAlpha — same reason as data-fade above (this
+            // hides each pricing tier's CTA Link until reveal).
+            opacity: 0,
             y: 30,
             duration: 0.85,
             stagger: 0.1,

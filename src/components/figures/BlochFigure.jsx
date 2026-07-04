@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import BlochSphere from './BlochSphere.jsx'
 import SceneBoundary from '../SceneBoundary.jsx'
-import { prefersReducedMotion, useMotionPaused } from '../../lib/motion.js'
+import { useReducedMotion, useMotionPaused } from '../../lib/motion.js'
 
 /* fig. 04 goes live where it can: the 3D precessing Bloch sphere.
    The accurate SVG remains the figure under prefers-reduced-motion,
@@ -21,15 +21,15 @@ export default function BlochFigure() {
   const holderRef = useRef(null)
   const yawRef = useRef(0)
   const draggingRef = useRef(false)
-  // The SVG is the figure until the client proves it can do better —
-  // prerendered HTML and the hydration pass must agree, so the media
-  // query and WebGL probe run in an effect, not in render.
-  const [reduced, setReduced] = useState(true)
+  // Live reduced-motion: a mid-session OS 'Reduce motion' flip reverts the
+  // scene to the accurate SVG immediately. SSR-safe (snapshot false); the SVG
+  // still shows during hydration because `webgl` starts false and gates
+  // showScene, so prerendered HTML and the first client render agree.
+  const reduced = useReducedMotion()
   const [webgl, setWebgl] = useState(false)
   // A lost WebGL context (DOM event, not a throw) also reverts to the SVG.
   const [lost, setLost] = useState(false)
   useEffect(() => {
-    setReduced(prefersReducedMotion())
     setWebgl(hasWebGL())
   }, [])
   // Pause toggle swaps to the scientifically accurate static SVG
