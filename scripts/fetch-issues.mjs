@@ -102,7 +102,20 @@ export function normalizeIssues(rawDocs) {
    corpus must fail the build, not silently delist the archive. Pure +
    exported for tests. */
 export function guardEmptyIssues(issues, env = process.env) {
-  if (issues.length > 0) return
+  if (issues.length > 0) {
+    // The flip action, made self-enforcing: once real issues exist the flag
+    // is stale, and leaving it set means the guard is disarmed. The very
+    // first post-publish build (the publish webhook triggers one) nags here
+    // until the flag is removed from the Amplify app env.
+    if (env.GSS_ALLOW_EMPTY_ISSUES === '1') {
+      console.warn(
+        `fetch-issues: GSS_ALLOW_EMPTY_ISSUES is set but ${issues.length} issue(s) are published — ` +
+          'the flag is STALE: remove it from the Amplify app env to re-arm the zero-issue guard ' +
+          '(see docs/runbooks/first-issue-publish.md).',
+      )
+    }
+    return
+  }
   if (env.GSS_ALLOW_EMPTY_ISSUES !== '1') {
     throw new Error(
       'fetch-issues: the configured Sanity fetch returned zero publishable issues — refusing ' +
