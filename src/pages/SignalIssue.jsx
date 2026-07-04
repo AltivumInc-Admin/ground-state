@@ -10,9 +10,10 @@ export default function SignalIssue() {
   const issue = getIssueBySlug(slug)
 
   // Hooks must run unconditionally; compute meta from the issue (or fall back).
+  // normalizeIssues owns the seo fallback contract — trust seo.* as-is.
   usePageMeta({
-    title: issue ? issue.seo?.title || issue.title : 'The Signal',
-    description: issue ? issue.seo?.description || issue.excerpt : undefined,
+    title: issue ? issue.seo.title : 'The Signal',
+    description: issue ? issue.seo.description : undefined,
     noindex: issue?.seo?.noIndex === true,
   })
 

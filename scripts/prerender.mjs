@@ -82,11 +82,13 @@ ROUTES.push({
   sitemap: { priority: '0.8', changefreq: 'weekly', lastmod: '2026-06-26' },
 })
 
-// One page per published issue
+// One page per published issue. normalizeIssues (fetch-issues.mjs) owns the
+// seo fallback contract — seo.title/description arrive with title/excerpt
+// fallbacks already applied, so no re-fallback here.
 for (const issue of issues) {
   const head = {
-    title: `${issue.seo?.title || issue.title} — The Ground State Society`,
-    description: issue.seo?.description || issue.excerpt || '',
+    title: `${issue.seo.title} — The Ground State Society`,
+    description: issue.seo.description,
     canonical: `${SITE}/signal/${issue.slug}`,
     image: issue.seo?.ogImage ? `${issue.seo.ogImage}?w=1200&h=630&fit=crop&auto=format` : SIGNAL_OG,
     ogType: 'article',
@@ -94,7 +96,7 @@ for (const issue of issues) {
   // A custom issue image needs its own alt; when we fall back to the default
   // og.png, index.html's (correct) particle-art alt is left in place.
   if (issue.seo?.ogImage) {
-    head.imageAlt = issue.seo?.title || issue.title
+    head.imageAlt = issue.seo.title
   }
   if (issue.seo?.noIndex) {
     head.robots = 'noindex, follow'
