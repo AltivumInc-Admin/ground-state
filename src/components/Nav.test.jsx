@@ -175,6 +175,47 @@ describe('Nav scrollspy + menu behavior', () => {
   })
 })
 
+describe('Nav quantized transitions', () => {
+  afterEach(() => {
+    delete document.startViewTransition
+  })
+
+  const renderAt = (path) =>
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <Nav />
+      </MemoryRouter>,
+    )
+
+  it('route-changing links (Story) navigate inside a view transition', () => {
+    setViewport(false)
+    document.startViewTransition = vi.fn((cb) => {
+      cb()
+      return { finished: Promise.resolve() }
+    })
+    renderAt('/')
+    fireEvent.click(screen.getByRole('link', { name: /story/i }))
+    expect(document.startViewTransition).toHaveBeenCalledTimes(1)
+  })
+
+  it('in-page section links do NOT run a view transition', () => {
+    setViewport(false)
+    document.startViewTransition = vi.fn()
+    renderAt('/')
+    // /#proof resolves to the current pathname — a scroll, not a state change
+    fireEvent.click(screen.getByRole('link', { name: /proof/i }))
+    expect(document.startViewTransition).not.toHaveBeenCalled()
+  })
+
+  it('the brand link on the landing route is a same-route click — no transition', () => {
+    setViewport(false)
+    document.startViewTransition = vi.fn()
+    renderAt('/')
+    fireEvent.click(screen.getByRole('link', { name: /home/i }))
+    expect(document.startViewTransition).not.toHaveBeenCalled()
+  })
+})
+
 describe('Nav dark-treatment seed (prerender FOUC guard)', () => {
   const renderAt = (path) =>
     render(

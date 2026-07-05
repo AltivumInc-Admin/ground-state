@@ -2266,3 +2266,68 @@ select {
   padding-top: clamp(1.75rem, 3vw, 2.5rem);
   border-top: 1px solid var(--line);
 }
+
+/* ============ Quantized page transitions (View Transitions API) ============
+   Route changes enact the metaphor: membership is quantized, and so is the
+   navigation — the old page is excited out of its level (lifts, fades), the
+   new one relaxes in from below and settles. lib/vt.js refuses to start a
+   transition under reduced motion or the pause toggle; the kill rules at the
+   bottom are defense in depth (an OS-level flip mid-flight), because
+   base.css's global reduced-motion rule matches elements and cannot reach
+   these document-level pseudo-elements. Browsers without the API ignore all
+   of this and keep today's instant swap. */
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion-paused])::view-transition-old(root) {
+    animation: vt-excite 0.24s cubic-bezier(0.55, 0, 0.8, 0.4) both;
+  }
+
+  :root:not([data-motion-paused])::view-transition-new(root) {
+    animation: vt-relax 0.42s var(--ease-out) both;
+  }
+
+  /* The signature morph: the pressed Apply CTA becomes the application
+     page's title. vt.js names the clicked source at click time; the
+     #apply-title rule below names the destination. */
+  :root:not([data-motion-paused])::view-transition-group(apply-cta) {
+    animation-duration: 0.42s;
+    animation-timing-function: var(--ease-out);
+  }
+
+  @keyframes vt-excite {
+    to {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes vt-relax {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+}
+
+/* Destination of the CTA morph — only /apply renders this element, so the
+   name never collides within a frame. Inert without a running transition. */
+#apply-title {
+  view-transition-name: apply-cta;
+}
+
+/* Kill switches — the OS setting and the site pause toggle. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+:root[data-motion-paused]::view-transition-group(*),
+:root[data-motion-paused]::view-transition-image-pair(*),
+:root[data-motion-paused]::view-transition-old(*),
+:root[data-motion-paused]::view-transition-new(*) {
+  animation: none !important;
+}
