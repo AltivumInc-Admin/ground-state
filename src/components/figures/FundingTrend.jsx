@@ -121,21 +121,16 @@ export default function FundingTrend() {
         vectorEffect="non-scaling-stroke"
       />
       <circle cx={x(market.toYear)} cy={y(market.toUsdB)} r="3.2" fill="var(--accent-display)" />
-      <text
-        x={x(market.toYear) - 8}
-        y={y(market.toUsdB) + 14}
-        textAnchor="end"
-        className="pf-label"
-      >
+      {/* Annotate the ceiling at its clear left end (the curve is still low
+          there), not by the endpoint dot — anchored at the dot the label ran
+          straight through the steeply climbing curve in the top-right corner.
+          The dashed line IS the ~$20B level, so labeling it here reads as
+          "the projection rises to meet this ceiling by 2030". */}
+      <text x={X0 - 12} y={y(market.toUsdB) + 15} className="pf-label">
         ~${market.toUsdB}B projected market
       </text>
-      <text
-        x={x(market.toYear) - 8}
-        y={y(market.toUsdB) + 26}
-        textAnchor="end"
-        className="pf-sub"
-      >
-        {market.toYear} · dashed = projection
+      <text x={X0 - 12} y={y(market.toUsdB) + 27} className="pf-sub">
+        by {market.toYear} · dashed = projection
       </text>
       <text x={x(market.toYear)} y={BASE + 13} textAnchor="middle" className="pf-sub">
         {market.toYear}
