@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from '../lib/gsap-core.js'
+import { prefersReducedMotion } from '../lib/motion.js'
 
 /*
  * Cursor companion — a measurement reticle. Four corner ticks ride
@@ -18,7 +19,7 @@ export default function Cursor() {
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return undefined
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    if (prefersReducedMotion()) return undefined
     const el = ref.current
     if (!el) return undefined
 
