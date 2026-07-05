@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Nav from './components/Nav.jsx'
 import Footer from './components/Footer.jsx'
@@ -19,13 +19,22 @@ const Activate = lazy(() => import('./pages/Activate.jsx'))
 const Welcome = lazy(() => import('./pages/Welcome.jsx'))
 const Confirm = lazy(() => import('./pages/Confirm.jsx'))
 
+/* Layout effect, not passive: during a view transition (lib/vt.js) the
+   new-frame snapshot is captured right after the flushSync route commit — a
+   passive-effect scroll reset would land after that capture, so the
+   transition would animate into a page frozen at the OLD scroll position
+   and then visibly jump. Layout effects run inside the same commit. The
+   prerender pass renders this tree with no DOM, where server useLayoutEffect
+   warns — fall back to useEffect there (it never fires anyway). */
+const useIsomorphicLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect
+
 /* Scrolls to top on route change, or to the anchor when a hash is present.
    Keyed on location.key so re-clicking the same anchor scrolls again. */
 function ScrollManager() {
   const { pathname, hash, key } = useLocation()
   const isFirst = useRef(true)
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (hash) {
       const el = document.getElementById(hash.slice(1))
       if (el) {

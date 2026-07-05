@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Fx from '../lib/fx.jsx'
 import EnergyLevels from '../components/figures/EnergyLevels.jsx'
 import FigCaption from '../components/figures/FigCaption.jsx'
+import { useVtNavigate } from '../lib/vt.js'
 
 const ROOM = [
   {
@@ -138,6 +139,7 @@ function StackGroup({ letter, title, items, startNum }) {
 }
 
 export default function Inside() {
+  const vtNavigate = useVtNavigate()
   return (
     <Fx as="section" id="inside" className="section" aria-labelledby="inside-title">
       <div className="container">
@@ -232,7 +234,7 @@ export default function Inside() {
             <div data-draw>
               <EnergyLevels />
             </div>
-            <FigCaption num="03">
+            <FigCaption num="06">
               Discrete levels, E<sub>n</sub> ∝ n². The only transition up from the ground state
               is an application.
             </FigCaption>
@@ -262,7 +264,17 @@ export default function Inside() {
                 </ul>
               </div>
               <div className="tier-foot">
-                <Link to={t.cta.to} className={`btn ${t.cta.variant}`}>
+                <Link
+                  to={t.cta.to}
+                  className={`btn ${t.cta.variant}`}
+                  // Only the /apply routes transition — the Signal CTA is an
+                  // in-page anchor, which vt.js would skip anyway.
+                  onClick={
+                    t.cta.to === '/apply'
+                      ? (e) => vtNavigate(e, '/apply', 'apply-cta')
+                      : undefined
+                  }
+                >
                   {t.cta.label}
                 </Link>
                 <p className="tier-note">{t.note}</p>

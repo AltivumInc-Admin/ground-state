@@ -170,14 +170,21 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
                 const shapes = [...el.querySelectorAll('path, line, circle, ellipse, polyline')]
                 if (!shapes.length) return
                 const scrub = parseFloat(el.dataset.drawScrub)
-                // Stroked shapes draw in; fill-only shapes (the particle dots)
-                // materialize afterwards, one by one — wave first, then its
-                // discrete samples. One bucketing pass: getComputedStyle is a
-                // forced style resolution, so resolve each shape once.
+                // Solid strokes draw in; DASHED strokes fade in whole —
+                // DrawSVG animates by rewriting stroke-dasharray, so drawing
+                // an authored-dash shape strands it on a mangled pattern
+                // (one 3px fleck on a 700px gap) instead of its '3 5' guide
+                // dashes. Fill-only shapes (the particle dots) materialize
+                // afterwards, one by one. One bucketing pass: getComputedStyle
+                // is a forced style resolution, so resolve each shape once.
                 const drawables = []
+                const dashed = []
                 const dots = []
                 shapes.forEach((s) => {
-                  ;(getComputedStyle(s).stroke !== 'none' ? drawables : dots).push(s)
+                  const cs = getComputedStyle(s)
+                  if (cs.stroke === 'none') dots.push(s)
+                  else if (cs.strokeDasharray !== 'none') dashed.push(s)
+                  else drawables.push(s)
                 })
                 const tl = gsap.timeline({
                   scrollTrigger: {
@@ -192,11 +199,18 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
                 if (drawables.length) {
                   tl.from(drawables, { drawSVG: 0, stagger: 0.04, ease: 'none', duration: 1 })
                 }
+                if (dashed.length) {
+                  tl.from(
+                    dashed,
+                    { autoAlpha: 0, duration: 0.5, ease: 'none' },
+                    drawables.length ? '-=0.3' : 0,
+                  )
+                }
                 if (dots.length) {
                   tl.from(
                     dots,
                     { autoAlpha: 0, stagger: 0.07, duration: 0.4, ease: 'none' },
-                    drawables.length ? '-=0.25' : 0,
+                    drawables.length + dashed.length ? '-=0.25' : 0,
                   )
                 }
               })

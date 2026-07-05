@@ -4,6 +4,12 @@ import { useReducedMotion, useMotionPaused } from '../../lib/motion.js'
 
 /* The three.js bundle loads lazily so the page paints first. */
 const GroundStateScene = lazy(() => import('../../three/GroundStateScene.jsx'))
+const GroundStateSceneGPU = lazy(() => import('../../three/GroundStateSceneGPU.jsx'))
+
+/* The GPU field ships flag-gated (flip VITE_WEBGPU=1 in the Amplify env
+   after the A/B) and only where the API exists; everything else keeps the
+   tested WebGL scene. */
+const WEBGPU_ON = import.meta.env.VITE_WEBGPU === '1'
 
 /* If WebGL is unavailable (the boundary) or the context is lost (a DOM
    event the boundary can't see) the hero quietly falls back to the styled
@@ -12,6 +18,9 @@ const GroundStateScene = lazy(() => import('../../three/GroundStateScene.jsx'))
 export default function HeroScene({ energyRef, onFailed }) {
   const holderRef = useRef(null)
   const [inView, setInView] = useState(true)
+  // WebGPU exists but init failed (no adapter, blocklisted GPU…) — demote
+  // to the WebGL scene instead of losing the figure entirely.
+  const [gpuFailed, setGpuFailed] = useState(false)
   // The sim's heaviest work (the 2400-particle frame loop) waits one idle
   // frame so the wordmark entrance and the fonts.ready ScrollTrigger
   // refresh land first; until then the canvas paints a single static
@@ -52,17 +61,33 @@ export default function HeroScene({ energyRef, onFailed }) {
     onFailed?.()
   }
 
+  const wantGpu =
+    WEBGPU_ON && !gpuFailed && typeof navigator !== 'undefined' && !!navigator.gpu
+
   return (
     <div ref={holderRef} className="hero-scene" aria-hidden="true">
       {!lost && (
         <SceneBoundary onFailed={onFailed}>
           <Suspense fallback={null}>
-            <GroundStateScene
-              energyRef={energyRef}
-              reduced={reduced || paused}
-              active={inView && ready}
-              onContextLost={contextLost}
-            />
+            {wantGpu ? (
+              /* Inner boundary: a failed WebGPU init demotes to WebGL
+                 without reporting onFailed — a scene will still exist. */
+              <SceneBoundary onFailed={() => setGpuFailed(true)}>
+                <GroundStateSceneGPU
+                  energyRef={energyRef}
+                  reduced={reduced || paused}
+                  active={inView && ready}
+                  onContextLost={contextLost}
+                />
+              </SceneBoundary>
+            ) : (
+              <GroundStateScene
+                energyRef={energyRef}
+                reduced={reduced || paused}
+                active={inView && ready}
+                onContextLost={contextLost}
+              />
+            )}
           </Suspense>
         </SceneBoundary>
       )}

@@ -63,6 +63,18 @@ describe('HeroScene wrapper', () => {
     )
   })
 
+  it('keeps the WebGL scene when navigator.gpu exists but the flag is off', async () => {
+    // jsdom has no navigator.gpu — give it one; VITE_WEBGPU is unset in
+    // tests, so the selection must still be the (stubbed) WebGL scene.
+    Object.defineProperty(navigator, 'gpu', { value: {}, configurable: true })
+    try {
+      render(<HeroScene />)
+      expect(await screen.findByTestId('scene-stub')).toBeInTheDocument()
+    } finally {
+      delete navigator.gpu
+    }
+  })
+
   it('contains a scene failure: boundary renders null and reports onFailed', async () => {
     scene.shouldThrow = true
     const onFailed = vi.fn()

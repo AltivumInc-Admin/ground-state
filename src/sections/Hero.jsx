@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import HeroScene from '../components/figures/HeroScene.jsx'
 import MotionToggle from '../components/MotionToggle.jsx'
 import { gsap, ScrollTrigger, useGSAP, MOTION_OK } from '../lib/gsap-core.js'
+import { useVtNavigate } from '../lib/vt.js'
 
 export default function Hero() {
   const sectionRef = useRef(null)
+  const vtNavigate = useVtNavigate()
   // 0 = ground state, 1 = excited. The scroll scrub writes here;
   // the particle cloud reads it every frame.
   const energyRef = useRef(0)
@@ -110,7 +112,11 @@ export default function Hero() {
               <strong className="hero-roi">Refer a founder who joins — take a month free.</strong>
             </p>
             <div className="hero-actions">
-              <Link to="/apply" className="btn btn-primary">
+              <Link
+                to="/apply"
+                className="btn btn-primary"
+                onClick={(e) => vtNavigate(e, '/apply', 'apply-cta')}
+              >
                 Apply for membership
                 <span className="btn-arrow" aria-hidden="true">
                   →

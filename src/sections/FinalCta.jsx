@@ -5,6 +5,7 @@ import FigCaption from '../components/figures/FigCaption.jsx'
 import Mosaic from '../components/Mosaic.jsx'
 import MotionToggle from '../components/MotionToggle.jsx'
 import SignalSubscribe from '../components/SignalSubscribe.jsx'
+import { useVtNavigate } from '../lib/vt.js'
 
 const STEPS = [
   {
@@ -53,6 +54,7 @@ const FAQS = [
 ]
 
 export default function FinalCta() {
+  const vtNavigate = useVtNavigate()
   return (
     <Fx as="section" id="join" className="section cta-final ground-dark" aria-labelledby="join-title">
       <Mosaic className="mosaic-corner is-left" cols={8} rows={4} seed={53} />
@@ -72,7 +74,7 @@ export default function FinalCta() {
           </div>
           <figure className="qfig cta-fig" data-fade>
             <BlochFigure />
-            <FigCaption num="04">
+            <FigCaption num="07">
               A state holds both answers until it is measured. Applying is the measurement.
               Drag to rotate.
             </FigCaption>
@@ -91,7 +93,11 @@ export default function FinalCta() {
         </div>
 
         <div className="cta-actions" data-fade>
-          <Link to="/apply" className="btn btn-primary">
+          <Link
+            to="/apply"
+            className="btn btn-primary"
+            onClick={(e) => vtNavigate(e, '/apply', 'apply-cta')}
+          >
             Apply for membership
             <span className="btn-arrow" aria-hidden="true">
               →

@@ -6,7 +6,7 @@
   "description": "Landing page for The Ground State Society — the private, members-only network for funded quantum founders.",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fetch-issues.mjs && vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "build": "node scripts/fetch-issues.mjs && node scripts/fetch-signals.mjs && vite build && vite build --ssr src/entry-static.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
     "pretest": "node scripts/check-test-globs.mjs",
     "test": "node --test \"backend/checkout/test/*.test.mjs\" \"backend/subscribe/test/*.test.mjs\" \"backend/apply/test/*.test.mjs\" \"backend/broadcast/test/*.test.mjs\" \"scripts/*.test.mjs\" \"scripts/lib/*.test.mjs\"",

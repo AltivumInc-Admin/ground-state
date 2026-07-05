@@ -1,7 +1,7 @@
 import ArrowMarker from './ArrowMarker.jsx'
 
 /*
- * fig. 04 — measurement.
+ * fig. 07 — measurement.
  * A Bloch sphere with the state vector held between |0⟩ and |1⟩:
  * superposition until measured. Applying is the measurement.
  */

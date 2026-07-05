@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Mark from './Mark.jsx'
 import { gsap, useGSAP, MOTION_OK } from '../lib/gsap-core.js'
+import { useVtNavigate } from '../lib/vt.js'
 
 const SECTIONS = [
   { num: '01', id: 'network', label: 'Network' },
@@ -13,6 +14,7 @@ const SECTIONS = [
 
 export default function Nav() {
   const { pathname } = useLocation()
+  const vtNavigate = useVtNavigate()
   const onLanding = pathname === '/'
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('')
@@ -173,7 +175,12 @@ export default function Nav() {
     <header ref={headerRef} className={`nav${overDark || open ? ' on-dark ground-dark' : ''}`}>
       <span ref={progressRef} className="nav-progress" aria-hidden="true" />
       <div className="container nav-inner">
-        <Link to="/" className="nav-brand" aria-label="The Ground State Society — home">
+        <Link
+          to="/"
+          className="nav-brand"
+          aria-label="The Ground State Society — home"
+          onClick={(e) => vtNavigate(e, '/')}
+        >
           <Mark />
           <span className="nav-wordmark label">
             Ground State
@@ -218,14 +225,24 @@ export default function Nav() {
                 to="/story"
                 aria-current={pathname === '/story' ? 'page' : undefined}
                 className={`nav-link label${pathname === '/story' ? ' is-active' : ''}`}
-                onClick={() => setOpen(false)}
+                onClick={(e) => {
+                  vtNavigate(e, '/story')
+                  setOpen(false)
+                }}
               >
                 <em>06</em>
                 Story
               </Link>
             </li>
             <li>
-              <Link to="/apply" className="btn btn-primary nav-cta" onClick={() => setOpen(false)}>
+              <Link
+                to="/apply"
+                className="btn btn-primary nav-cta"
+                onClick={(e) => {
+                  vtNavigate(e, '/apply', 'apply-cta')
+                  setOpen(false)
+                }}
+              >
                 Apply
               </Link>
             </li>
