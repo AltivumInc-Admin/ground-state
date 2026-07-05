@@ -5,7 +5,7 @@ import { GHOST, POWDER, SAND } from '../lib/palette.js'
 import { clampDt, circleGeometry } from './shared.js'
 
 /*
- * fig. 04, live — a Bloch sphere with the state vector held in
+ * fig. 07, live — a Bloch sphere with the state vector held in
  * superposition between |0⟩ and |1⟩, precessing about the measurement
  * axis at constant polar angle (free evolution under H ∝ σz: θ fixed,
  * φ advancing). Drag rotates the view about the vertical axis only,

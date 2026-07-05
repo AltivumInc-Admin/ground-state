@@ -74,7 +74,7 @@ export default function FinalCta() {
           </div>
           <figure className="qfig cta-fig" data-fade>
             <BlochFigure />
-            <FigCaption num="04">
+            <FigCaption num="07">
               A state holds both answers until it is measured. Applying is the measurement.
               Drag to rotate.
             </FigCaption>

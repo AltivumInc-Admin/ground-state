@@ -234,7 +234,7 @@ export default function Inside() {
             <div data-draw>
               <EnergyLevels />
             </div>
-            <FigCaption num="03">
+            <FigCaption num="06">
               Discrete levels, E<sub>n</sub> ∝ n². The only transition up from the ground state
               is an application.
             </FigCaption>

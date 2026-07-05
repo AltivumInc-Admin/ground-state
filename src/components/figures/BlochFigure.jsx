@@ -3,7 +3,7 @@ import BlochSphere from './BlochSphere.jsx'
 import SceneBoundary from '../SceneBoundary.jsx'
 import { useReducedMotion, useMotionPaused } from '../../lib/motion.js'
 
-/* fig. 04 goes live where it can: the 3D precessing Bloch sphere.
+/* fig. 07 goes live where it can: the 3D precessing Bloch sphere.
    The accurate SVG remains the figure under prefers-reduced-motion,
    without WebGL, or if the scene ever fails. */
 const BlochScene = lazy(() => import('../../three/BlochScene.jsx'))

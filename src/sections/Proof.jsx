@@ -1,50 +1,19 @@
 import Fx from '../lib/fx.jsx'
 import Mosaic from '../components/Mosaic.jsx'
+import FigCaption from '../components/figures/FigCaption.jsx'
+import FundingTrend from '../components/figures/FundingTrend.jsx'
+import Concentration from '../components/figures/Concentration.jsx'
+import PriceSelectivity from '../components/figures/PriceSelectivity.jsx'
+import { stats, funding, concentration, networks, us, matrix, asOfDisplay } from '../lib/signals.js'
 
-// The static fallback display value is `${prefix}${n}${suffix}` — derived from
-// the count parts so there's one source of truth (no separate `value` to drift).
-const STATS = [
-  {
-    count: { n: '4.1', prefix: '$', suffix: 'B', decimals: '1' },
-    label: 'Venture capital into quantum startups in 2025 — up from $2.0B in 2024.',
-    source: 'Crunchbase',
-  },
-  {
-    count: { n: '96', prefix: '', suffix: '%', decimals: '0' },
-    label: 'Share of global quantum funding concentrated in ~45 dense clusters.',
-    source: 'The Quantum Insider',
-  },
-  {
-    count: { n: '20', prefix: '~$', suffix: 'B', decimals: '0' },
-    label: 'Projected quantum computing market by 2030, from ~$3.5B in 2025.',
-    source: 'MarketsandMarkets',
-  },
-  {
-    count: { n: '30', prefix: '~', suffix: '×', decimals: '0' },
-    label: 'Return on the $3,600 annual fee if a single warm intro lands one $100K check.',
-    source: 'The ROI math, illustrated',
-  },
-]
-
-// Display value for a stat's static fallback (before the counter animates).
-const statValue = (c) => `${c.prefix}${c.n}${c.suffix}`
-
-const NETWORKS = [
-  { name: 'Hampton', price: '~$8,500 / yr', bar: '$3M+ revenue or funding, tech focus' },
-  { name: 'EO (Entrepreneurs’ Organization)', price: '$6,000–$10,000 / yr', bar: '$1M+ revenue' },
-  { name: 'YPO', price: '$10,000+ / yr', bar: 'Large-company CEOs' },
-  { name: 'Vistage', price: '$10,000–$20,000 / yr', bar: 'Executives' },
-]
-
-const MATRIX = [
-  { attr: 'Quantum-specific domain', cells: ['yes', 'yes', 'no'] },
-  { attr: 'Founders-only peer group', cells: ['no', 'partial', 'yes'] },
-  { attr: 'Ongoing — not time-limited', cells: ['yes', 'no', 'yes'] },
-  { attr: 'Curated / selective', cells: ['no', 'yes', 'yes'] },
-  { attr: 'Confidential', cells: ['no', 'partial', 'yes'] },
-  { attr: 'Structured peer accountability', cells: ['no', 'no', 'yes'] },
-  { attr: 'Quantum-specific capital access', cells: ['no', 'partial', 'no'] },
-]
+/*
+ * Every number in this section flows from src/content/signals.source.json
+ * through fetch-signals.mjs (validated + derived at build, staleness-guarded)
+ * into lib/signals.js — the stats, the figures, and the tables all read the
+ * same generated shape, so they cannot disagree with each other. The plain
+ * tables stay as the reduced-motion / no-JS / crawler-legible backstop; the
+ * figures are the same claims as geometry.
+ */
 
 function MatrixCell({ value, className }) {
   if (value === 'yes')
@@ -88,9 +57,14 @@ export default function Proof() {
           company outcomes. And quantum is the rare market that is both flooded with capital
           and still small enough to convene.
         </p>
+        {/* The freshness IS the credibility — fetch-signals.mjs stamps and
+            guards this date at every build. */}
+        <p className="proof-asof label" data-fade>
+          figures as of {asOfDisplay} · sources cited per claim
+        </p>
 
         <div className="stats" data-stagger>
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <div key={s.label} className="stat">
               <p className="stat-value">
                 <span
@@ -99,7 +73,7 @@ export default function Proof() {
                   data-suffix={s.count.suffix}
                   data-decimals={s.count.decimals}
                 >
-                  {statValue(s.count)}
+                  {s.display}
                 </span>
               </p>
               <p className="stat-label">
@@ -108,6 +82,41 @@ export default function Proof() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* The same claims, as geometry — the lab-notebook plates continue
+            the fig. numbering in reading order (02 Problem → 03-05 here →
+            06 Inside → 07 Final CTA). */}
+        <div className="proof-figures">
+          <figure className="qfig proof-fig" data-fade>
+            <div data-draw>
+              <FundingTrend />
+            </div>
+            <FigCaption num="03">
+              Capital in, market ahead. VC into quantum went ×{funding.multipleDisplay} in one
+              year — against a projected ~${funding.market.toUsdB}B market by{' '}
+              {funding.market.toYear}. {funding.vcSource}; {funding.marketSource}.
+            </FigCaption>
+          </figure>
+          <figure className="qfig proof-fig" data-fade>
+            <div data-draw>
+              <Concentration />
+            </div>
+            <FigCaption num="04">
+              One dot per funding percentage point: {concentration.sharePct} of every 100 land
+              inside ~{concentration.clusters} dense clusters. The map is small enough to
+              convene. {concentration.source}.
+            </FigCaption>
+          </figure>
+          <figure className="qfig proof-fig" data-fade>
+            <div data-draw>
+              <PriceSelectivity />
+            </div>
+            <FigCaption num="05">
+              Annual price vs domain focus, every premium founder network. The
+              quantum-specific, founder-priced corner was empty — that corner is the product.
+            </FigCaption>
+          </figure>
         </div>
 
         <figure className="proof-quote" data-fade>
@@ -136,7 +145,7 @@ export default function Proof() {
                   </tr>
                 </thead>
                 <tbody>
-                  {NETWORKS.map((n) => (
+                  {networks.map((n) => (
                     <tr key={n.name}>
                       <th scope="row">{n.name}</th>
                       <td data-label="Price">{n.price}</td>
@@ -144,9 +153,9 @@ export default function Proof() {
                     </tr>
                   ))}
                   <tr className="is-us">
-                    <th scope="row">The Ground State Society</th>
-                    <td data-label="Price">$3,600 / yr ($300 / mo)</td>
-                    <td data-label="Bar to enter">Vetted quantum founders</td>
+                    <th scope="row">{us.name}</th>
+                    <td data-label="Price">{us.price}</td>
+                    <td data-label="Bar to enter">{us.bar}</td>
                   </tr>
                 </tbody>
               </table>
@@ -170,14 +179,16 @@ export default function Proof() {
                 <thead>
                   <tr>
                     <th scope="col">Attribute</th>
-                    <th scope="col">Free communities & consortia</th>
-                    <th scope="col">Accelerators</th>
-                    <th scope="col">Generalist premium networks</th>
-                    <th scope="col">The Ground State Society</th>
+                    {matrix.columns.map((col) => (
+                      <th key={col} scope="col">
+                        {col}
+                      </th>
+                    ))}
+                    <th scope="col">{us.name}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {MATRIX.map((row) => (
+                  {matrix.rows.map((row) => (
                     <tr key={row.attr}>
                       <th scope="row">{row.attr}</th>
                       {row.cells.map((cell, i) => (

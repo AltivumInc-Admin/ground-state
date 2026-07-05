@@ -1,0 +1,87 @@
+{
+  "asOf": "2026-07-05",
+  "stats": [
+    {
+      "count": { "n": "4.1", "prefix": "$", "suffix": "B", "decimals": "1" },
+      "label": "Venture capital into quantum startups in 2025 — up from $2.0B in 2024.",
+      "source": "Crunchbase"
+    },
+    {
+      "count": { "n": "96", "prefix": "", "suffix": "%", "decimals": "0" },
+      "label": "Share of global quantum funding concentrated in ~45 dense clusters.",
+      "source": "The Quantum Insider"
+    },
+    {
+      "count": { "n": "20", "prefix": "~$", "suffix": "B", "decimals": "0" },
+      "label": "Projected quantum computing market by 2030, from ~$3.5B in 2025.",
+      "source": "MarketsandMarkets"
+    },
+    {
+      "count": { "n": "30", "prefix": "~", "suffix": "×", "decimals": "0" },
+      "label": "Return on the $3,600 annual fee if a single warm intro lands one $100K check.",
+      "source": "The ROI math, illustrated"
+    }
+  ],
+  "funding": {
+    "vc": [
+      { "year": 2024, "usdB": 2.0 },
+      { "year": 2025, "usdB": 4.1 }
+    ],
+    "vcSource": "Crunchbase",
+    "market": { "fromYear": 2025, "fromUsdB": 3.5, "toYear": 2030, "toUsdB": 20 },
+    "marketSource": "MarketsandMarkets"
+  },
+  "concentration": {
+    "sharePct": 96,
+    "clusters": 45,
+    "source": "The Quantum Insider"
+  },
+  "networks": [
+    {
+      "name": "Hampton",
+      "price": "~$8,500 / yr",
+      "priceUsd": 8500,
+      "bar": "$3M+ revenue or funding, tech focus"
+    },
+    {
+      "name": "EO (Entrepreneurs’ Organization)",
+      "price": "$6,000–$10,000 / yr",
+      "priceUsd": 8000,
+      "bar": "$1M+ revenue"
+    },
+    {
+      "name": "YPO",
+      "price": "$10,000+ / yr",
+      "priceUsd": 10000,
+      "bar": "Large-company CEOs"
+    },
+    {
+      "name": "Vistage",
+      "price": "$10,000–$20,000 / yr",
+      "priceUsd": 15000,
+      "bar": "Executives"
+    }
+  ],
+  "us": {
+    "name": "The Ground State Society",
+    "price": "$3,600 / yr ($300 / mo)",
+    "priceUsd": 3600,
+    "bar": "Vetted quantum founders"
+  },
+  "matrix": {
+    "columns": [
+      "Free communities & consortia",
+      "Accelerators",
+      "Generalist premium networks"
+    ],
+    "rows": [
+      { "attr": "Quantum-specific domain", "cells": ["yes", "yes", "no"] },
+      { "attr": "Founders-only peer group", "cells": ["no", "partial", "yes"] },
+      { "attr": "Ongoing — not time-limited", "cells": ["yes", "no", "yes"] },
+      { "attr": "Curated / selective", "cells": ["no", "yes", "yes"] },
+      { "attr": "Confidential", "cells": ["no", "partial", "yes"] },
+      { "attr": "Structured peer accountability", "cells": ["no", "no", "yes"] },
+      { "attr": "Quantum-specific capital access", "cells": ["no", "partial", "no"] }
+    ]
+  }
+}

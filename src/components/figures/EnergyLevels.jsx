@@ -1,7 +1,7 @@
 import ArrowMarker from './ArrowMarker.jsx'
 
 /*
- * fig. 03 — quantized membership.
+ * fig. 06 — quantized membership.
  * Particle-in-a-box energy levels (E_n ∝ n²) mapped to the three tiers.
  * The only transition up from the ground state is an application: hν = ΔE.
  */

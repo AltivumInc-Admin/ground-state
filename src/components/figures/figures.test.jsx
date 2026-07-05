@@ -19,7 +19,7 @@ describe('WaveParticle (fig. 02)', () => {
   })
 })
 
-describe('EnergyLevels (fig. 03)', () => {
+describe('EnergyLevels (fig. 06)', () => {
   it('exposes its accessible name and all three tier levels', () => {
     render(<EnergyLevels />)
     expect(
