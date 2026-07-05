@@ -41,31 +41,26 @@ export default function Nav() {
     })
   }, [])
 
-  // The nav floats over the black hero (ghost ink), then switches to
-  // the light treatment once the hero scrolls away.
+  // The nav floats over the black hero (ghost ink), then switches to the light
+  // treatment once the hero scrolls away. An IntersectionObserver watches the
+  // hero cross the nav's bottom edge — no getBoundingClientRect on every scroll
+  // frame (the observer only fires at the boundary, off the main scroll path).
   useEffect(() => {
-    if (!onLanding) {
+    if (!onLanding || typeof IntersectionObserver === 'undefined') {
       setOverDark(false)
-      return
+      return undefined
     }
-    let raf = 0
-    const measure = () => {
-      raf = 0
-      const hero = document.getElementById('network')
-      if (!hero) return
-      setOverDark(hero.getBoundingClientRect().bottom > 72)
-    }
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(measure)
-    }
-    measure()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
+    const hero = document.getElementById('network')
+    if (!hero) return undefined
+    // rootMargin pulls the viewport top down to the nav height: the hero
+    // "intersects" while any of it sits below that line — i.e. still under the
+    // nav — matching the old `bottom > 72` test without per-frame layout reads.
+    const observer = new IntersectionObserver(([entry]) => setOverDark(entry.isIntersecting), {
+      rootMargin: '-72px 0px 0px 0px',
+      threshold: 0,
+    })
+    observer.observe(hero)
+    return () => observer.disconnect()
   }, [onLanding])
 
   // Scrollspy — highlight the section currently in view
@@ -209,6 +204,7 @@ export default function Nav() {
               <li key={id}>
                 <Link
                   to={`/#${id}`}
+                  aria-current={active === id && onLanding ? 'location' : undefined}
                   className={`nav-link label${active === id && onLanding ? ' is-active' : ''}`}
                   onClick={() => setOpen(false)}
                 >
@@ -220,6 +216,7 @@ export default function Nav() {
             <li>
               <Link
                 to="/story"
+                aria-current={pathname === '/story' ? 'page' : undefined}
                 className={`nav-link label${pathname === '/story' ? ' is-active' : ''}`}
                 onClick={() => setOpen(false)}
               >

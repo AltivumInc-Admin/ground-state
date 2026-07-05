@@ -77,7 +77,8 @@
 .nav-toggle {
   display: none;
   background: none;
-  border: 1px solid var(--line-strong);
+  /* control-edge, not line-strong: a control boundary needs 3:1 (WCAG 1.4.11) */
+  border: 1px solid var(--control-edge);
   padding: 0.55rem 1rem;
   cursor: pointer;
 }
