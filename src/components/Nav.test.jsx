@@ -146,6 +146,8 @@ describe('Nav scrollspy + menu behavior', () => {
       })
       const proofLink = screen.getByRole('link', { name: /proof/i })
       expect(proofLink.className).toMatch(/is-active/)
+      // the active section is conveyed to AT, not just visually
+      expect(proofLink).toHaveAttribute('aria-current', 'location')
     } finally {
       globalThis.IntersectionObserver = original
     }

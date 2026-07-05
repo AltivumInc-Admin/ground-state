@@ -22,11 +22,15 @@ export default function MotionToggle() {
   // would be a no-op. Live via the hook: it appears/disappears if the OS
   // setting flips mid-session.
   if (reduced) return null
+  // The visible label already states the action AND the current state
+  // ("Resume motion" ⇒ motion is paused). Pairing that with aria-pressed made
+  // AT announce contradictory state ("Resume motion … pressed"); the changing
+  // label is the clearer of the two canonical patterns, so it carries state
+  // alone — and the accessible name always equals the visible text (WCAG 2.5.3).
   return (
     <button
       type="button"
       className="motion-toggle label"
-      aria-pressed={paused}
       onClick={() => setMotionPaused(!paused)}
     >
       {paused ? 'Resume motion' : 'Pause motion'}

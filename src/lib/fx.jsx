@@ -1,19 +1,24 @@
 import { useRef } from 'react'
 import { gsap, useGSAP, MOTION_OK } from './gsap-core.js'
 
-/* SplitText + DrawSVGPlugin are heavy choreography plugins used only by the
-   landing and story routes. They are imported dynamically inside the motion
-   path below (not statically here), so Rollup keeps them in a runtime async
-   chunk instead of the eager, preloaded gsap chunk — the routes that never
-   animate (/signal, /apply, /activate, /welcome, /confirm) never fetch them. */
+/* SplitText + DrawSVGPlugin are heavy choreography plugins imported dynamically
+   inside the motion path below (not statically here), so Rollup keeps them in a
+   runtime async chunk instead of the eager, preloaded gsap chunk. Only a route
+   with a [data-split]/[data-draw] element on the page fetches that chunk —
+   other routes still animate their data-fade/stagger/etc. from the eager gsap
+   core; they just never pull the plugins. (/signal mounts no Fx at all.) */
 
 /*
- * Fx — declarative scroll choreography for a section.
- * Wrap a section and annotate descendants:
- *   data-split            display title: per-line mask reveal
+ * Fx — declarative scroll choreography for a section. Every behavior is opt-in
+ * via a data-* attribute. Wrap a section and annotate descendants:
+ *   data-split            display title: per-line mask reveal (async plugin)
  *   data-fade             fade-rise on enter
  *   data-stagger          children fade-rise, staggered
- *   data-draw             SVG line art draws in, scrubbed by scroll
+ *   data-cells            children materialize in a random-order stagger
+ *   data-draw             SVG line art draws in, scrubbed by scroll (async
+ *                          plugin); tune with data-draw-start / -end / -scrub
+ *   data-tilt             pointer-parallax tilt (fine pointers only)
+ *   data-drift            slight against-scroll parallax (the Mosaic motif)
  *   data-count + data-prefix/data-suffix/data-decimals
  *                          numeric counter (markup holds the final
  *                          formatted value for the static fallback)
@@ -73,8 +78,10 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
           })
         })
 
-        // Decorative mosaics drift slightly against the scroll
-        scope.querySelectorAll('.mosaic').forEach((el) => {
+        // Decorative mosaics drift slightly against the scroll. Keyed on
+        // data-drift (Mosaic emits it) so every Fx hook is a data-* attribute,
+        // not a styling class the module would silently couple to.
+        scope.querySelectorAll('[data-drift]').forEach((el) => {
           gsap.fromTo(
             el,
             { yPercent: -8 },

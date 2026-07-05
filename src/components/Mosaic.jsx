@@ -31,6 +31,7 @@ export default function Mosaic({ cols = 9, rows = 4, seed = 11, className = '' }
       style={{ '--mosaic-cols': cols }}
       aria-hidden="true"
       data-cells
+      data-drift
     >
       {cells.map((opacity, i) => (
         <span key={i} style={opacity ? { opacity } : undefined} />

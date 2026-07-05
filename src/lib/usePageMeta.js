@@ -31,10 +31,15 @@ function setPropMeta(property, content) {
 /*
  * Per-route document head: title, description, canonical, robots, and the
  * social (Open Graph / Twitter) title-description-url. An SPA has one <head>
- * for six routes — without this, every route presents as the homepage to
- * assistive tech (WCAG 2.4.2), to search, and to link unfurls. The prerendered
- * routes (/, /story) also carry these in static HTML for non-JS crawlers; this
- * hook keeps the hydrated/client-rendered routes in sync.
+ * for every route — without this, each route presents as the homepage to
+ * assistive tech (WCAG 2.4.2), to search, and to link unfurls.
+ *
+ * The prerendered routes (/, /story, /apply, /signal, /signal/<slug>) already
+ * carry a correct static <head> for non-JS crawlers; on those, this hook runs
+ * post-hydration and rewrites the same values (a no-op in practice). It is the
+ * SOLE source of the head for the client-only routes (/activate, /welcome,
+ * /confirm), which have no prerendered HTML. The robots reset on every route is
+ * what stops a noindex page leaking 'noindex' onto the homepage on SPA nav.
  */
 export default function usePageMeta({ title, description, noindex = false } = {}) {
   const { pathname } = useLocation()
