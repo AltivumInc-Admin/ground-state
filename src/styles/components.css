@@ -26,7 +26,7 @@
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: rgba(247, 247, 255, 0.92);
+  background: color-mix(in srgb, var(--ghost) 92%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   transition: opacity 0.35s var(--ease-out);
@@ -150,8 +150,8 @@
     font-size: 1rem;
     letter-spacing: 0.2em;
     padding: 1.3rem 0;
-    border-bottom: 1px solid rgba(247, 247, 255, 0.12);
-    color: rgba(247, 247, 255, 0.85);
+    border-bottom: 1px solid color-mix(in srgb, var(--ghost) 12%, transparent);
+    color: color-mix(in srgb, var(--ghost) 85%, transparent);
   }
 
   .nav-links.is-open .nav-link.is-active {
@@ -211,7 +211,7 @@
 /* Bento cell — hairline-framed box on black */
 .bx {
   border: 1px solid var(--line);
-  background: rgba(247, 247, 255, 0.025);
+  background: color-mix(in srgb, var(--ghost) 2.5%, transparent);
   padding: 0.9rem 1.2rem;
   margin: 0;
 }
@@ -759,8 +759,8 @@
   background:
     linear-gradient(90deg, var(--bg) 40%, transparent) left center / 36px 100%,
     linear-gradient(270deg, var(--bg) 40%, transparent) right center / 36px 100%,
-    linear-gradient(90deg, rgba(193, 216, 226, 0.2), transparent) left center / 14px 100%,
-    linear-gradient(270deg, rgba(193, 216, 226, 0.2), transparent) right center / 14px 100%;
+    linear-gradient(90deg, color-mix(in srgb, var(--powder) 20%, transparent), transparent) left center / 14px 100%,
+    linear-gradient(270deg, color-mix(in srgb, var(--powder) 20%, transparent), transparent) right center / 14px 100%;
   background-repeat: no-repeat;
   background-attachment: local, local, scroll, scroll;
 }
@@ -821,11 +821,11 @@
 .compare-table tr.is-us td,
 .compare-table td.is-us {
   color: var(--powder);
-  border-top-color: rgba(193, 216, 226, 0.4);
+  border-top-color: color-mix(in srgb, var(--powder) 40%, transparent);
 }
 
 .compare-table tr.is-us {
-  background: rgba(193, 216, 226, 0.06);
+  background: color-mix(in srgb, var(--powder) 6%, transparent);
 }
 
 .mark-yes {
@@ -875,7 +875,7 @@
 
   /* Composite the is-us row tint over the solid sticky background */
   .compare-table.is-matrix tr.is-us th[scope='row'] {
-    background-image: linear-gradient(rgba(193, 216, 226, 0.06), rgba(193, 216, 226, 0.06));
+    background-image: linear-gradient(color-mix(in srgb, var(--powder) 6%, transparent), color-mix(in srgb, var(--powder) 6%, transparent));
   }
 }
 
@@ -1019,7 +1019,7 @@
   padding: clamp(1.7rem, 3vw, 2.2rem) clamp(1.5rem, 2.5vw, 2rem);
   font-family: var(--font-mono);
   font-size: 0.84rem;
-  box-shadow: 12px 12px 0 rgba(193, 216, 226, 0.55);
+  box-shadow: 12px 12px 0 color-mix(in srgb, var(--powder) 55%, transparent);
 }
 
 .receipt-stamp {
@@ -1393,7 +1393,7 @@
   /* --accent (not raw powder) so the box stays legible on the light archive /
      issue grounds as well as the dark CTA ground. */
   border: 1px solid var(--accent);
-  background: rgba(193, 216, 226, 0.08);
+  background: color-mix(in srgb, var(--powder) 8%, transparent);
   padding: 1.3rem 1.4rem;
 }
 
@@ -1473,10 +1473,22 @@ textarea {
 
 select {
   appearance: none;
+  /* The chevron colour is --accent, but a data-URI SVG can't read a CSS var,
+     so it's inlined per ground: the light-ground slate (#4a6878 = --accent on
+     light) here, the dark-ground powder in the .ground-dark override below.
+     Keep both in sync with --accent — this is the one colour that can't
+     single-source through the token, and the two literals ARE that token per
+     ground (so a dark-ground select — e.g. inside .apply-side — stops freezing
+     the slate arrow it used to). */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234a6878' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.6rem;
+}
+
+.ground-dark select {
+  /* --accent on dark ground = --powder (#c1d8e2) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c1d8e2' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 
 .field {
@@ -1927,7 +1939,7 @@ select {
 /* The selected state is the ground state — settled, slightly filled */
 .plan-card.is-selected {
   border-color: var(--powder);
-  background: rgba(193, 216, 226, 0.1);
+  background: color-mix(in srgb, var(--powder) 10%, transparent);
   box-shadow: inset 0 0 0 1px var(--powder);
 }
 

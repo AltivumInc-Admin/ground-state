@@ -1,4 +1,5 @@
 import { gsap } from './gsap-core.js'
+import { prefersReducedMotion } from './motion.js'
 
 /*
  * Magnetic buttons — every .btn leans a few pixels toward the cursor
@@ -9,7 +10,7 @@ import { gsap } from './gsap-core.js'
 export function initMagnetic() {
   if (typeof window === 'undefined') return
   if (!window.matchMedia('(pointer: fine)').matches) return
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (prefersReducedMotion()) return
 
   const STRENGTH = 0.22
 
