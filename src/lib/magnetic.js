@@ -20,8 +20,12 @@ export function initMagnetic() {
     btn.dataset.magnet = '1'
     const xTo = gsap.quickTo(btn, 'x', { duration: 0.45, ease: 'power3' })
     const yTo = gsap.quickTo(btn, 'y', { duration: 0.45, ease: 'power3' })
+    // Measure once at rest: the button is at/near identity transform on entry,
+    // and the pull is relative to its home centre. Re-reading the rect every
+    // pointermove forced a reflow each frame AND fed the in-progress transform
+    // back into the maths (a subtle wobble); this closes over the resting rect.
+    const r = btn.getBoundingClientRect()
     const move = (ev) => {
-      const r = btn.getBoundingClientRect()
       xTo((ev.clientX - r.left - r.width / 2) * STRENGTH)
       yTo((ev.clientY - r.top - r.height / 2) * STRENGTH)
     }
