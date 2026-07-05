@@ -126,22 +126,29 @@ export default function Fx({ as: Tag = 'div', className, children, ...rest }) {
         const restoreCounts = () => countRestores.forEach((restore) => restore())
 
         // SplitText + DrawSVGPlugin are loaded here on demand, so routes
-        // without [data-split]/[data-draw] never fetch them. We're already
-        // inside the motion-OK branch, so a gsap.context (not another
-        // matchMedia) collects the async tweens for teardown.
+        // without [data-split]/[data-draw] never fetch them. Each plugin is
+        // gated on ITS OWN selector — /story (data-split only) no longer pulls
+        // the DrawSVGPlugin chunk, and a draw-only route wouldn't pull SplitText.
+        // We're already inside the motion-OK branch, so a gsap.context (not
+        // another matchMedia) collects the async tweens for teardown.
         const splitEls = scope.querySelectorAll('[data-split]')
         const drawEls = scope.querySelectorAll('[data-draw]')
         if (!splitEls.length && !drawEls.length) return restoreCounts
 
         let cancelled = false
         let pluginCtx
-        Promise.all([import('gsap/SplitText'), import('gsap/DrawSVGPlugin')])
+        Promise.all([
+          splitEls.length ? import('gsap/SplitText') : null,
+          drawEls.length ? import('gsap/DrawSVGPlugin') : null,
+        ])
           .then(
-          ([{ SplitText }, { DrawSVGPlugin }]) => {
+          ([splitMod, drawMod]) => {
             // Unmounted (or media flipped) before the import resolved — don't
             // build tweens into a dead scope.
             if (cancelled || !ref.current) return
-            gsap.registerPlugin(SplitText, DrawSVGPlugin)
+            const SplitText = splitMod?.SplitText
+            const DrawSVGPlugin = drawMod?.DrawSVGPlugin
+            gsap.registerPlugin(...[SplitText, DrawSVGPlugin].filter(Boolean))
             pluginCtx = gsap.context(() => {
               splitEls.forEach((el) => {
                 SplitText.create(el, {
