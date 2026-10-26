@@ -95,6 +95,13 @@ export async function run({ argv, env, deps = {} }) {
     console.error(`Missing env: ${missing.join(', ')}`)
     return 1
   }
+  // Presence is not enough: a shell-wide AWS_PROFILE default (e.g. personal-dev)
+  // satisfies it. The subscribers table lives only in the GSS account
+  // (659220242594), reached via the ground-state profile.
+  if (env.AWS_PROFILE !== 'ground-state') {
+    console.error(`AWS_PROFILE must be ground-state (GSS account 659220242594); got ${JSON.stringify(env.AWS_PROFILE)}`)
+    return 1
+  }
 
   const siteUrl = env.SITE_URL || 'https://groundstatesociety.com'
   const issue = await d.fetchIssue({
